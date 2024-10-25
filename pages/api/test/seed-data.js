@@ -16,8 +16,8 @@ const testUsers = [
     _id: userId1,
     username: "zhang_san",
     email: "zhangsan@example.com",
-    birthDate: new Date("1996-05-15"),  // 修改为 Date 对象
-    gender: "男",
+    birthDate: new Date("1996-05-15"),
+    gender: "M",  // 修改为 M/F 格式
     name: "张三",
     password: "hashedpassword123"
   },
@@ -26,7 +26,7 @@ const testUsers = [
     username: "li_si",
     email: "lisi@example.com",
     birthDate: new Date("1989-03-20"),
-    gender: "男",
+    gender: "M",
     name: "李四",
     password: "hashedpassword123"
   },
@@ -35,7 +35,7 @@ const testUsers = [
     username: "wang_wu",
     email: "wangwu@example.com",
     birthDate: new Date("1982-08-10"),
-    gender: "男",
+    gender: "M",
     name: "王五",
     password: "hashedpassword123"
   },
@@ -44,7 +44,7 @@ const testUsers = [
     username: "zhao_meiling",
     email: "zhaomeiling@example.com",
     birthDate: new Date("1992-11-25"),
-    gender: "女",
+    gender: "F",
     name: "赵美玲",
     password: "hashedpassword123"
   },
@@ -53,114 +53,84 @@ const testUsers = [
     username: "sun_xiaomei",
     email: "sunxiaomei@example.com",
     birthDate: new Date("1995-07-30"),
-    gender: "女",
+    gender: "F",
     name: "孙小梅",
     password: "hashedpassword123"
   }
 ];
 
+// 计算年龄的辅助函数
+function calculateAge(birthDate, raceDate) {
+  const birth = new Date(birthDate);
+  const race = new Date(raceDate);
+  let age = race.getFullYear() - birth.getFullYear();
+  const m = race.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && race.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 const testRecords = [
   {
-    userId: userId1.toString(),
-    finishTime: {      // 修改为对象格式
+    userId: userId1,
+    finishTime: {
       hours: 2,
       minutes: 45,
       seconds: 30
     },
-    raceDate: new Date("2024-03-15"),  // 修改为 Date 对象
-    location: "北京马拉松",
-    chipTime: {        // 修改为对象格式
-      hours: 2,
-      minutes: 45,
-      seconds: 22
-    },
-    certificateUrl: "https://example.com/cert1",
-    verificationStatus: "verified"
+    totalSeconds: 2 * 3600 + 45 * 60 + 30,  // 添加总秒数
+    gender: "M",
+    age: calculateAge(testUsers[0].birthDate, "2024-03-15"),
+    date: new Date("2024-03-15")
   },
   {
-    userId: userId2.toString(),
+    userId: userId2,
     finishTime: {
       hours: 2,
       minutes: 38,
       seconds: 15
     },
-    raceDate: new Date("2024-03-15"),
-    location: "北京马拉松",
-    chipTime: {
-      hours: 2,
-      minutes: 38,
-      seconds: 10
-    },
-    certificateUrl: "https://example.com/cert2",
-    verificationStatus: "verified"
+    totalSeconds: 2 * 3600 + 38 * 60 + 15,
+    gender: "M",
+    age: calculateAge(testUsers[1].birthDate, "2024-03-15"),
+    date: new Date("2024-03-15")
   },
   {
-    userId: userId3.toString(),
+    userId: userId3,
     finishTime: {
       hours: 3,
       minutes: 5,
       seconds: 45
     },
-    raceDate: new Date("2024-02-28"),
-    location: "厦门马拉松",
-    chipTime: {
-      hours: 3,
-      minutes: 5,
-      seconds: 40
-    },
-    certificateUrl: "https://example.com/cert3",
-    verificationStatus: "verified"
+    totalSeconds: 3 * 3600 + 5 * 60 + 45,
+    gender: "M",
+    age: calculateAge(testUsers[2].birthDate, "2024-02-28"),
+    date: new Date("2024-02-28")
   },
   {
-    userId: userId4.toString(),
+    userId: userId4,
     finishTime: {
       hours: 3,
       minutes: 12,
       seconds: 20
     },
-    raceDate: new Date("2024-03-15"),
-    location: "北京马拉松",
-    chipTime: {
-      hours: 3,
-      minutes: 12,
-      seconds: 15
-    },
-    certificateUrl: "https://example.com/cert4",
-    verificationStatus: "verified"
+    totalSeconds: 3 * 3600 + 12 * 60 + 20,
+    gender: "F",
+    age: calculateAge(testUsers[3].birthDate, "2024-03-15"),
+    date: new Date("2024-03-15")
   },
   {
-    userId: userId5.toString(),
+    userId: userId5,
     finishTime: {
       hours: 2,
       minutes: 58,
       seconds: 40
     },
-    raceDate: new Date("2024-02-28"),
-    location: "厦门马拉松",
-    chipTime: {
-      hours: 2,
-      minutes: 58,
-      seconds: 35
-    },
-    certificateUrl: "https://example.com/cert5",
-    verificationStatus: "verified"
-  },
-  {
-    userId: userId1.toString(),
-    finishTime: {
-      hours: 2,
-      minutes: 47,
-      seconds: 10
-    },
-    raceDate: new Date("2024-01-15"),
-    location: "广州马拉松",
-    chipTime: {
-      hours: 2,
-      minutes: 47,
-      seconds: 5
-    },
-    certificateUrl: "https://example.com/cert6",
-    verificationStatus: "verified"
+    totalSeconds: 2 * 3600 + 58 * 60 + 40,
+    gender: "F",
+    age: calculateAge(testUsers[4].birthDate, "2024-02-28"),
+    date: new Date("2024-02-28")
   }
 ];
 
