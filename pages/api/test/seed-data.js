@@ -1,21 +1,29 @@
-// 文件: pages/api/test/seed-data.js
+// pages/api/test/seed-data.js
 
 import { connectDB } from '../../../lib/mongodb';
 import User from '../../../models/User';
 import Record from '../../../models/Record';
+import mongoose from 'mongoose';
+
+// 创建用户 ID
+const userId1 = new mongoose.Types.ObjectId();
+const userId2 = new mongoose.Types.ObjectId();
+const userId3 = new mongoose.Types.ObjectId();
+const userId4 = new mongoose.Types.ObjectId();
+const userId5 = new mongoose.Types.ObjectId();
 
 const testUsers = [
   {
-    _id: "user1",
+    _id: userId1,
     username: "zhang_san",
     email: "zhangsan@example.com",
     birthDate: "1996-05-15",
     gender: "男",
     name: "张三",
-    password: "hashedpassword123" // 实际应用中需要加密
+    password: "hashedpassword123"
   },
   {
-    _id: "user2",
+    _id: userId2,
     username: "li_si",
     email: "lisi@example.com",
     birthDate: "1989-03-20",
@@ -24,7 +32,7 @@ const testUsers = [
     password: "hashedpassword123"
   },
   {
-    _id: "user3",
+    _id: userId3,
     username: "wang_wu",
     email: "wangwu@example.com",
     birthDate: "1982-08-10",
@@ -33,7 +41,7 @@ const testUsers = [
     password: "hashedpassword123"
   },
   {
-    _id: "user4",
+    _id: userId4,
     username: "zhao_meiling",
     email: "zhaomeiling@example.com",
     birthDate: "1992-11-25",
@@ -42,7 +50,7 @@ const testUsers = [
     password: "hashedpassword123"
   },
   {
-    _id: "user5",
+    _id: userId5,
     username: "sun_xiaomei",
     email: "sunxiaomei@example.com",
     birthDate: "1995-07-30",
@@ -54,7 +62,7 @@ const testUsers = [
 
 const testRecords = [
   {
-    userId: "user1",
+    userId: userId1.toString(),
     finishTime: "2:45:30",
     raceDate: "2024-03-15",
     location: "北京马拉松",
@@ -63,7 +71,7 @@ const testRecords = [
     verificationStatus: "verified"
   },
   {
-    userId: "user2",
+    userId: userId2.toString(),
     finishTime: "2:38:15",
     raceDate: "2024-03-15",
     location: "北京马拉松",
@@ -72,7 +80,7 @@ const testRecords = [
     verificationStatus: "verified"
   },
   {
-    userId: "user3",
+    userId: userId3.toString(),
     finishTime: "3:05:45",
     raceDate: "2024-02-28",
     location: "厦门马拉松",
@@ -81,7 +89,7 @@ const testRecords = [
     verificationStatus: "verified"
   },
   {
-    userId: "user4",
+    userId: userId4.toString(),
     finishTime: "3:12:20",
     raceDate: "2024-03-15",
     location: "北京马拉松",
@@ -90,7 +98,7 @@ const testRecords = [
     verificationStatus: "verified"
   },
   {
-    userId: "user5",
+    userId: userId5.toString(),
     finishTime: "2:58:40",
     raceDate: "2024-02-28",
     location: "厦门马拉松",
@@ -99,7 +107,7 @@ const testRecords = [
     verificationStatus: "verified"
   },
   {
-    userId: "user1",
+    userId: userId1.toString(),
     finishTime: "2:47:10",
     raceDate: "2024-01-15",
     location: "广州马拉松",
