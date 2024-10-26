@@ -1,6 +1,6 @@
-// pages/api/records.js
+// pages/api/users.js
 import { connectDB } from '../../lib/mongodb';
-import Record from '../../models/Record';
+import User from '../../models/User';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -8,14 +8,31 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('尝试连接数据库...');
     await connectDB();
-    const records = await Record.find({})
-      .sort({ totalSeconds: 1 })  // 按完赛时间排序
-      .populate('userId', 'name gender');  // 关联用户信息
+    console.log('数据库连接成功');
+
+    console.log('开始查询用户数据...');
+    const users = await User.find({}, {
+      password: 0,
+      name: 1,
+      email: 1,
+      gender: 1,
+      birthDate: 1
+    }).lean();  // 使用 lean() 提高性能
     
-    res.status(200).json({ success: true, records });
+    console.log('查询到的用户数:', users.length);
+    res.status(200).json({ success: true, users });
   } catch (error) {
-    console.error('获取记录数据错误:', error);
-    res.status(500).json({ success: false, message: '获取数据失败，请重试' });
+    console.error('详细错误信息:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: '获取数据失败，请重试',
+      debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
