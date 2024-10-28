@@ -33,10 +33,10 @@
 - Authentication: NextAuth.js
 - Deployment: Vercel
 
+
 ## 4. 环境配置
-```
-MONGODB_URI=mongodb+srv://...
-NEXTAUTH_SECRET=已配置
+MONGODB_URI=mongodb+srv://marathon:Marathon2024@cluster0.xc1i2.mongodb.net/marathon?retryWrites=true&w=majority&appName=Cluster0
+NEXTAUTH_SECRET=Zr4u7x!A%D*G-KaNdRgUkXp2s5v8y/B?
 NEXTAUTH_URL=https://marathon-ranking.vercel.app
 ```
 
