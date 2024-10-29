@@ -5,7 +5,7 @@
 ## 📌 项目信息
 - **在线访问**: https://marathon-ranking.vercel.app
 - **GitHub**: https://github.com/imalasong-admin/marathon-ranking
-- **当前版本**: 8f6be35
+- **当前版本**: 2507add
 
 ## ✨ 功能特性
 - 🔐 **用户认证系统**

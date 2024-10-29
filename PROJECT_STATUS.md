@@ -3,10 +3,10 @@
 最后更新: 2024-10-25
 
 ## 1. 当前版本信息
-- 最新稳定版本 Commit: 8f6be35
+- 最新稳定版本 Commit: 2507add
 - 部署地址: https://marathon-ranking.vercel.app
 - GitHub: https://github.com/imalasong-admin/marathon-ranking
-- 分支: main
+
 
 ## 2. 功能状态
 ### 已完成功能 ✅
@@ -16,9 +16,14 @@
 - 基础页面布局
 - MongoDB数据库连接
 - Vercel自动部署
+- 用户注册时增加性别选择、填写生日
+- 注册成功后自动登录并跳转到提交页面
 
 ### 进行中功能 🚧
-- 无
+- - 提交成绩模块优化
+  - 去除性别和年龄字段
+  - 增加比赛名称字段
+- 排行榜显示优化
 
 ### 计划中功能 📝
 - 用户个人页面
