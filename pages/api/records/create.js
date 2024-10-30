@@ -1,7 +1,9 @@
+// pages/api/records/create.js
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
 import connectDB from '../../../lib/mongodb';
 import Record from '../../../models/Record';
+import Race from '../../../models/Race';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -18,21 +20,40 @@ export default async function handler(req, res) {
     await connectDB();
 
     // 从请求中获取数据
-    const { hours, minutes, seconds, gender, age, date, totalSeconds } = 
-req.body;
+    const { 
+      hours, 
+      minutes, 
+      seconds, 
+      date, 
+      totalSeconds, 
+      raceId, 
+      proofUrl 
+    } = req.body;
+
+    // 验证比赛ID
+    const race = await Race.findById(raceId);
+    if (!race) {
+      return res.status(400).json({ message: '比赛不存在' });
+    }
+
+    // 验证成绩证明链接
+    if (!proofUrl) {
+      return res.status(400).json({ message: '请提供成绩证明链接' });
+    }
 
     // 创建成绩记录
     const record = await Record.create({
       userId: session.user.id,
+      raceId,
       finishTime: {
         hours: parseInt(hours),
         minutes: parseInt(minutes),
         seconds: parseInt(seconds)
       },
       totalSeconds,
-      gender,
-      age: parseInt(age),
-      date: new Date(date)
+      date: new Date(date),
+      proofUrl,
+      verificationStatus: 'pending'  // 新添加的字段，默认待验证
     });
 
     return res.status(201).json({

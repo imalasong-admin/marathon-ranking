@@ -1,7 +1,10 @@
-import connectDB from '../../../lib/mongodb';
-import Record from '../../../models/Record';
+// pages/api/records/index.js
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
+import connectDB from '../../../lib/mongodb';
+import Record from '../../../models/Record';
+import Race from '../../../models/Race';
+import User from '../../../models/User';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -10,55 +13,54 @@ export default async function handler(req, res) {
 
   try {
     await connectDB();
-
-    const { gender, ageGroup } = req.query;
-    let query = {};
-
-    // 添加筛选条件
-    if (gender) {
-      query.gender = gender;
-    }
-
-    if (ageGroup) {
-      const [minAge, maxAge] = ageGroup.split('-');
-      if (maxAge === '+') {
-        query.age = { $gte: parseInt(minAge) };
-      } else {
-        query.age = {
-          $gte: parseInt(minAge),
-          $lte: parseInt(maxAge)
-        };
-      }
-    }
-
-    // 获取记录并根据完成时间排序
-    const records = await Record.find(query)
-      .sort({ totalSeconds: 1 }) // 按完成时间升序排序
+    
+    const allRecords = await Record.find()
       .populate({
         path: 'userId',
-        select: 'name email'
+        model: User,
+        select: 'name gender birthDate'
       })
-      .lean();
+      .populate({
+        path: 'raceId',
+        model: Race,
+        select: 'name'
+      })
+      .sort({ totalSeconds: 1 });
 
-    const formattedRecords = records.map(record => ({
-      _id: record._id,
-      name: record.userId?.name || '未知用户',
-      totalSeconds: record.totalSeconds,
-      gender: record.gender,
-      age: record.age,
-      date: record.date,
-      finishTime: record.finishTime
-    }));
-
-    return res.status(200).json({
-      success: true,
-      records: formattedRecords
+      const recordsWithAge = allRecords.map(record => {
+        const recordObj = record.toObject();
+        
+        // 计算比赛时的年龄，添加合理性检查
+        let raceAge = null;
+        if (recordObj.userId?.birthDate && recordObj.date) {
+          const raceDate = new Date(recordObj.date);
+          const birthDate = new Date(recordObj.userId.birthDate);
+          
+          // 检查日期的合理性
+          if (raceDate >= birthDate && birthDate.getFullYear() > 1920) {
+            raceAge = raceDate.getFullYear() - birthDate.getFullYear();
+            const m = raceDate.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
+              raceAge--;
+            }
+          }
+        }
+        
+        return {
+          ...recordObj,
+          age: (raceAge && raceAge >= 0 && raceAge <= 100) ? raceAge : null,
+          userName: recordObj.userId?.name || '未知用户',
+          gender: recordObj.userId?.gender || '未知',
+          raceName: recordObj.raceId?.name || '未知比赛'
+        };
+      });
+      
+    res.status(200).json({ 
+      success: true, 
+      records: recordsWithAge 
     });
   } catch (error) {
-    console.error('获取记录列表错误:', error);
-    return res.status(500).json({
-      success: false,
-      message: '获取数据失败，请重试'
-    });
+    console.error('获取记录错误:', error);
+    res.status(500).json({ success: false, message: '获取记录失败' });
   }
 }

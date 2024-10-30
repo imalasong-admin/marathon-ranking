@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// pages/submit.js
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -7,14 +8,67 @@ export default function SubmitRecord() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [error, setError] = useState('');
+  const [races, setRaces] = useState([]);
+  const [isAddingNewRace, setIsAddingNewRace] = useState(false);
+  const [newRaceName, setNewRaceName] = useState('');
   const [formData, setFormData] = useState({
     hours: '',
     minutes: '',
     seconds: '',
-    gender: '',
-    age: '',
-    date: ''
+    date: '',
+    raceId: '',          // 现有比赛的ID
+    proofUrl: '',        // 成绩证明链接
   });
+
+  // 加载比赛列表
+  useEffect(() => {
+    const fetchRaces = async () => {
+      try {
+        const res = await fetch('/api/races');
+        const data = await res.json();
+        if (data.success) {
+          setRaces(data.races);
+        }
+      } catch (error) {
+        console.error('获取比赛列表失败:', error);
+      }
+    };
+
+    fetchRaces();
+  }, []);
+
+  // 处理添加新比赛
+  const handleAddNewRace = async () => {
+    try {
+      if (!newRaceName.trim()) {
+        setError('比赛名称不能为空');
+        return;
+      }
+
+      const res = await fetch('/api/races', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newRaceName,
+          userId: session.user.id
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setRaces([...races, data.race]);
+        setFormData({ ...formData, raceId: data.race._id });
+        setNewRaceName('');
+        setIsAddingNewRace(false);
+      } else {
+        setError(data.message || '添加比赛失败');
+      }
+    } catch (error) {
+      console.error('添加比赛错误:', error);
+      setError('添加比赛失败，请重试');
+    }
+  };
 
   // 处理登录状态
   if (status === "loading") {
@@ -35,8 +89,7 @@ export default function SubmitRecord() {
         </div>
         <Link 
           href="/login"
-          className="inline-block bg-blue-600 text-white px-6 py-2 
-rounded-md hover:bg-blue-700"
+          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
         >
           去登录
         </Link>
@@ -84,8 +137,7 @@ rounded-md hover:bg-blue-700"
   // 已登录用户看到的表单界面
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold text-center 
-mb-8">提交马拉松成绩</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">提交马拉松成绩</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
@@ -98,106 +150,128 @@ mb-8">提交马拉松成绩</h1>
           <h3 className="text-lg font-medium mb-4">完赛时间</h3>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium 
-text-gray-700">时</label>
+              <label className="block text-sm font-medium text-gray-700">时</label>
               <input
                 type="number"
                 min="0"
                 max="23"
                 value={formData.hours}
-                onChange={(e) => setFormData({...formData, hours: 
-e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 
-shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={(e) => setFormData({...formData, hours: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium 
-text-gray-700">分</label>
+              <label className="block text-sm font-medium text-gray-700">分</label>
               <input
                 type="number"
                 min="0"
                 max="59"
                 value={formData.minutes}
-                onChange={(e) => setFormData({...formData, minutes: 
-e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 
-shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={(e) => setFormData({...formData, minutes: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium 
-text-gray-700">秒</label>
+              <label className="block text-sm font-medium text-gray-700">秒</label>
               <input
                 type="number"
                 min="0"
                 max="59"
                 value={formData.seconds}
-                onChange={(e) => setFormData({...formData, seconds: 
-e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 
-shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={(e) => setFormData({...formData, seconds: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
           </div>
         </div>
 
+        {/* 比赛选择 */}
         <div>
-          <label className="block text-sm font-medium 
-text-gray-700">性别</label>
-          <select
-            value={formData.gender}
-            onChange={(e) => setFormData({...formData, gender: 
-e.target.value})}
-            className="mt-1 block w-full rounded-md border-gray-300 
-shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
-          >
-            <option value="">请选择</option>
-            <option value="M">男</option>
-            <option value="F">女</option>
-          </select>
+          <label className="block text-sm font-medium text-gray-700">比赛名称</label>
+          {!isAddingNewRace ? (
+            <div className="mt-1 flex space-x-2">
+              <select
+                value={formData.raceId}
+                onChange={(e) => setFormData({...formData, raceId: e.target.value})}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              >
+                <option value="">请选择比赛</option>
+                {races.map((race) => (
+                  <option key={race._id} value={race._id}>
+                    {race.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setIsAddingNewRace(true)}
+                className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700"
+              >
+                添加新比赛
+              </button>
+            </div>
+          ) : (
+            <div className="mt-1 flex space-x-2">
+              <input
+                type="text"
+                value={newRaceName}
+                onChange={(e) => setNewRaceName(e.target.value)}
+                placeholder="请输入比赛名称"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddNewRace}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                确认添加
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAddingNewRace(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
+              >
+                取消
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* 完赛日期 */}
         <div>
-          <label className="block text-sm font-medium 
-text-gray-700">年龄</label>
+          <label className="block text-sm font-medium text-gray-700">完赛日期</label>
           <input
-            type="number"
-            min="18"
-            max="100"
-            value={formData.age}
-            onChange={(e) => setFormData({...formData, age: 
-e.target.value})}
-            className="mt-1 block w-full rounded-md border-gray-300 
-shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({...formData, date: e.target.value})}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             required
           />
         </div>
 
+        {/* 成绩证明 */}
         <div>
-          <label className="block text-sm font-medium 
-text-gray-700">完赛日期</label>
+          <label className="block text-sm font-medium text-gray-700">
+            成绩证明链接
+            <span className="text-gray-500 text-xs ml-2">(官方成绩查询链接或截图链接)</span>
+          </label>
           <input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({...formData, date: 
-e.target.value})}
-            className="mt-1 block w-full rounded-md border-gray-300 
-shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            type="url"
+            value={formData.proofUrl}
+            onChange={(e) => setFormData({...formData, proofUrl: e.target.value})}
+            placeholder="请输入成绩证明链接"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             required
           />
         </div>
 
         <button
           type="submit"
-          className="w-full flex justify-center py-2 px-4 border 
-border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
-focus:ring-offset-2 focus:ring-blue-500"
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           提交成绩
         </button>
