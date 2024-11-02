@@ -11,11 +11,12 @@ export default function SubmitRecord() {
   const [races, setRaces] = useState([]);
   const [isAddingNewRace, setIsAddingNewRace] = useState(false);
   const [newRaceName, setNewRaceName] = useState('');
+  const [newRaceDate, setNewRaceDate] = useState('');
   const [formData, setFormData] = useState({
     hours: '',
     minutes: '',
     seconds: '',
-    date: '',
+         //date: '',  移除date字段
     raceId: '',          // 现有比赛的ID
     proofUrl: '',        // 成绩证明链接
   });
@@ -45,11 +46,17 @@ export default function SubmitRecord() {
         return;
       }
 
+      if (!newRaceDate) {
+        setError('请选择比赛日期');
+        return;
+      }
+
       const res = await fetch('/api/races', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newRaceName,
+          date: newRaceDate,
           userId: session.user.id
         })
       });
@@ -60,7 +67,9 @@ export default function SubmitRecord() {
         setRaces([...races, data.race]);
         setFormData({ ...formData, raceId: data.race._id });
         setNewRaceName('');
+        setNewRaceDate('');
         setIsAddingNewRace(false);
+        setError('');
       } else {
         setError(data.message || '添加比赛失败');
       }
@@ -137,7 +146,7 @@ export default function SubmitRecord() {
   // 已登录用户看到的表单界面
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold text-center mb-8">提交马拉松成绩</h1>
+      
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
@@ -202,7 +211,7 @@ export default function SubmitRecord() {
                 <option value="">请选择比赛</option>
                 {races.map((race) => (
                   <option key={race._id} value={race._id}>
-                    {race.name}
+                    {race.name} ({new Date(race.date).toLocaleDateString()})
                   </option>
                 ))}
               </select>
@@ -215,7 +224,7 @@ export default function SubmitRecord() {
               </button>
             </div>
           ) : (
-            <div className="mt-1 flex space-x-2">
+            <div className="mt-1 space-y-2">
               <input
                 type="text"
                 value={newRaceName}
@@ -223,35 +232,38 @@ export default function SubmitRecord() {
                 placeholder="请输入比赛名称"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
-              <button
-                type="button"
-                onClick={handleAddNewRace}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                确认添加
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsAddingNewRace(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
-              >
-                取消
-              </button>
+              <input
+                type="date"
+                value={newRaceDate}
+                onChange={(e) => setNewRaceDate(e.target.value)}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={handleAddNewRace}
+                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  确认添加
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingNewRace(false);
+                    setNewRaceName('');
+                    setNewRaceDate('');
+                    setError('');
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
+                >
+                  取消
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* 完赛日期 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">完赛日期</label>
-          <input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
-          />
-        </div>
+       
 
         {/* 成绩证明 */}
         <div>

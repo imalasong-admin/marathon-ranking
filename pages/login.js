@@ -1,122 +1,110 @@
-import React, { useState } from 'react';
+// pages/login.js
+import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
-const Login = () => {
+export default function Login() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await signIn('credentials', {
-      redirect: false,
-      email: formData.email,
-      password: formData.password
-    });
+    setError('');
+    setLoading(true);
 
-    if (result.error) {
-      setError('邮箱或密码错误');
-    } else {
-      router.push('/');
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password
+      });
+
+      if (result.error) {
+        setError('邮箱或密码错误');
+        setLoading(false);
+      } else {
+        // 登录成功后重定向到排行榜页面
+        router.replace('/rankings');
+      }
+    } catch (err) {
+      setError('登录失败，请重试');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center 
-py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold 
-text-gray-900">
-          登录账号
-        </h2>
-      </div>
+    <div className="min-h-screen flex items-up justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 text-red-500 p-3 rounded-md 
-text-sm">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">
                 {error}
               </div>
-            )}
-            
+            </div>
+          )}
+
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium 
-text-gray-700">
+              <label htmlFor="email" className="sr-only">
                 邮箱
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: 
-e.target.value})}
-                  className="appearance-none block w-full px-3 py-2 border 
-border-gray-300 rounded-md shadow-sm focus:outline-none 
-focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="邮箱地址"
+              />
             </div>
-
             <div>
-              <label htmlFor="password" className="block text-sm 
-font-medium text-gray-700">
+              <label htmlFor="password" className="sr-only">
                 密码
               </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: 
-e.target.value})}
-                  className="appearance-none block w-full px-3 py-2 border 
-border-gray-300 rounded-md shadow-sm focus:outline-none 
-focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border 
-border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 
-focus:ring-offset-2 focus:ring-blue-500"
-              >
-                登录
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="text-sm text-center">
-              <Link
-                href="/register"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                还没有账号？立即注册
-              </Link>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="密码"
+              />
             </div>
           </div>
-        </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                loading
+                  ? 'bg-blue-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            >
+              {loading ? '登录中...' : '登录'}
+            </button>
+          </div>
+
+          <div className="text-sm text-center">
+            <Link
+              href="/register"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              还没有账号？立即注册
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

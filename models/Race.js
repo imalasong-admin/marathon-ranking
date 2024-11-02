@@ -8,6 +8,10 @@ const RaceSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  date: {
+    type: Date,
+    required: [true, '请输入比赛日期']
+  },
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

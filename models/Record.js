@@ -21,9 +21,8 @@ const RecordSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
-  date: {
-    type: Date,
-    required: [true, '请选择比赛日期']
+  date: {  // 保留字段但移除 required
+    type: Date
   },
   proofUrl: {
     type: String,
@@ -35,7 +34,14 @@ const RecordSchema = new mongoose.Schema({
     default: 'pending'
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// 添加虚拟字段，用于获取比赛日期
+RecordSchema.virtual('raceDate').get(function() {
+  return this.raceId?.date;
 });
 
 export default mongoose.models.Record || mongoose.model('Record', RecordSchema);

@@ -8,8 +8,8 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const races = await Race.find({})
-        .sort({ name: 1 })  // 按名称字母顺序排序
-        .select('name');    // 只返回名称字段
+        .sort({ date: -1 })  // 按日期降序排序
+        .select('name date');    // 返回名称和日期字段
       
       res.status(200).json({ success: true, races });
     } catch (error) {
@@ -19,21 +19,40 @@ export default async function handler(req, res) {
   } 
   else if (req.method === 'POST') {
     try {
-      const { name, userId } = req.body;
+      const { name, date, userId } = req.body;
 
-      if (!name) {
-        return res.status(400).json({ success: false, message: '比赛名称不能为空' });
+      if (!name || !date) {
+        return res.status(400).json({ 
+          success: false, 
+          message: '比赛名称和日期不能为空' 
+        });
+      }
+
+      // 检查日期格式是否有效
+      const raceDate = new Date(date);
+      if (isNaN(raceDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: '无效的日期格式'
+        });
       }
 
       // 检查是否已存在
-      const existingRace = await Race.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') }});
+      const existingRace = await Race.findOne({ 
+        name: { $regex: new RegExp(`^${name}$`, 'i') }
+      });
+      
       if (existingRace) {
-        return res.status(400).json({ success: false, message: '该比赛名称已存在' });
+        return res.status(400).json({ 
+          success: false, 
+          message: '该比赛名称已存在' 
+        });
       }
 
       // 创建新比赛
       const race = await Race.create({
         name,
+        date: raceDate,
         addedBy: userId
       });
 
@@ -44,7 +63,10 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error('添加比赛错误:', error);
-      res.status(500).json({ success: false, message: '添加失败，请重试' });
+      res.status(500).json({ 
+        success: false, 
+        message: '添加失败，请重试' 
+      });
     }
   } 
   else {

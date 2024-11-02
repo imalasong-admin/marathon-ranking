@@ -19,12 +19,11 @@ export default async function handler(req, res) {
 
     await connectDB();
 
-    // 从请求中获取数据
+    // 从请求中获取数据（移除了date字段）
     const { 
       hours, 
       minutes, 
       seconds, 
-      date, 
       totalSeconds, 
       raceId, 
       proofUrl 
@@ -41,7 +40,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: '请提供成绩证明链接' });
     }
 
-    // 创建成绩记录
+    // 创建成绩记录（不再包含date字段）
     const record = await Record.create({
       userId: session.user.id,
       raceId,
@@ -51,9 +50,8 @@ export default async function handler(req, res) {
         seconds: parseInt(seconds)
       },
       totalSeconds,
-      date: new Date(date),
       proofUrl,
-      verificationStatus: 'pending'  // 新添加的字段，默认待验证
+      verificationStatus: 'pending'
     });
 
     return res.status(201).json({

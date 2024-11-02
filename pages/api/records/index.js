@@ -23,37 +23,51 @@ export default async function handler(req, res) {
       .populate({
         path: 'raceId',
         model: Race,
-        select: 'name'
+        select: 'name date'
       })
       .sort({ totalSeconds: 1 });
 
-      const recordsWithAge = allRecords.map(record => {
-        const recordObj = record.toObject();
-        
-        // 计算比赛时的年龄，添加合理性检查
-        let raceAge = null;
-        if (recordObj.userId?.birthDate && recordObj.date) {
-          const raceDate = new Date(recordObj.date);
-          const birthDate = new Date(recordObj.userId.birthDate);
-          
-          // 检查日期的合理性
-          if (raceDate >= birthDate && birthDate.getFullYear() > 1920) {
-            raceAge = raceDate.getFullYear() - birthDate.getFullYear();
-            const m = raceDate.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
-              raceAge--;
-            }
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return null;
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    };
+
+    const recordsWithAge = allRecords.map(record => {
+      const recordObj = record.toObject();
+      
+      // 使用比赛日期计算参赛年龄
+      let raceAge = null;
+      const raceDate = recordObj.raceId?.date ? new Date(recordObj.raceId.date) : null;
+      const birthDate = recordObj.userId?.birthDate ? new Date(recordObj.userId.birthDate) : null;
+      
+      if (birthDate && raceDate && !isNaN(raceDate.getTime()) && !isNaN(birthDate.getTime())) {
+        if (raceDate >= birthDate && birthDate.getFullYear() > 1920) {
+          raceAge = raceDate.getFullYear() - birthDate.getFullYear();
+          const m = raceDate.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
+            raceAge--;
           }
         }
-        
-        return {
-          ...recordObj,
-          age: (raceAge && raceAge >= 0 && raceAge <= 100) ? raceAge : null,
-          userName: recordObj.userId?.name || '未知用户',
-          gender: recordObj.userId?.gender || '未知',
-          raceName: recordObj.raceId?.name || '未知比赛'
-        };
-      });
+      }
+
+      // 格式化日期显示
+      const formattedDate = formatDate(recordObj.raceId?.date);
+      
+      return {
+        ...recordObj,
+        age: (raceAge && raceAge >= 0 && raceAge <= 100) ? raceAge : null,
+        userName: recordObj.userId?.name || '未知用户',
+        gender: recordObj.userId?.gender || '未知',
+        raceName: recordObj.raceId?.name || '未知比赛',
+        date: formattedDate || ''  // 如果没有日期，返回空字符串
+      };
+    });
       
     res.status(200).json({ 
       success: true, 

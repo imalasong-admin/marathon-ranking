@@ -1,51 +1,55 @@
-import React from 'react';
-import Link from 'next/link';  // 确保这行存在
+// components/Navbar.js
 import { useSession, signOut } from 'next-auth/react';
+import Link from 'next/link';
 
-const Navbar = () => {
+export default function Navbar() {
   const { data: session } = useSession();
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
+    <nav className="bg-white shadow">
+      <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between h-16">
-          {/* 左侧链接 */}
-          <div className="flex space-x-8 items-center">
-            <Link href="/" className="text-xl font-bold text-gray-800 hover:text-gray-900">
-              马拉松排行榜
-            </Link>
-            <div className="hidden sm:flex space-x-4">
-              <Link 
-                href="/rankings" 
-                className="px-3 py-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          <div className="flex">
+            <div className="flex-shrink-0 flex items-center">
+              <Link href="/" className="text-xl font-bold">
+                马拉松排行榜
+              </Link>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <Link
+                href="/rankings"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
                 排行榜
               </Link>
-              <Link 
-                href="/submit" 
-                className="px-3 py-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              <Link
+                href="/submit"
+                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
                 提交成绩
               </Link>
             </div>
           </div>
-          
-          {/* 右侧用户信息 */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             {session ? (
-              <>
-                <span className="text-sm text-gray-600">欢迎, {session.user.name}</span>
+              <div className="flex items-center space-x-4">
+                <Link
+                  href={`/users/${session.user.id}`}
+                  className="text-gray-700 hover:text-blue-600 hover:underline"
+                >
+                  欢迎, {session.user.name}
+                </Link>
                 <button
                   onClick={() => signOut()}
-                  className="text-sm text-red-600 hover:text-red-800"
+                  className="text-red-600 hover:text-red-700"
                 >
                   退出
                 </button>
-              </>
+              </div>
             ) : (
               <Link
                 href="/login"
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-gray-700 hover:text-gray-900"
               >
                 登录
               </Link>
@@ -55,6 +59,4 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
