@@ -166,18 +166,7 @@ export default function UserProfile() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      {/* 返回链接 */}
-      <div className="mb-6">
-        <Link
-          href="/rankings"
-          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          返回排行榜
-        </Link>
-      </div>
+      
 
       {/* 用户基本信息 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -244,7 +233,30 @@ export default function UserProfile() {
 
       {/* 成绩列表 */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold mb-4">比赛成绩</h2>
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-xl font-semibold">比赛成绩</h2>
+    {isOwnProfile && (
+      <button
+        onClick={() => window.location.href = '/submit'}
+        className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+      >
+        <svg 
+          className="w-5 h-5 mr-2" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M12 4v16m8-8H4" 
+          />
+        </svg>
+        提交成绩
+      </button>
+    )}
+  </div>
         {records.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

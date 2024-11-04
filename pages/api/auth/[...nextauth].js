@@ -21,8 +21,14 @@ export const authOptions = {
             throw new Error('用户不存在');
           }
 
-          const isValid = await bcrypt.compare(credentials.password, 
-user.password);
+          // 先检查用户是否被锁定
+          if (user.isLocked) {
+            throw new Error(user.lockReason ? 
+              `账号已被锁定：${user.lockReason}` : 
+              '账号已被锁定');
+          }
+
+          const isValid = await bcrypt.compare(credentials.password, user.password);
           if (!isValid) {
             throw new Error('密码错误');
           }
@@ -30,11 +36,11 @@ user.password);
           return {
             id: user._id.toString(),
             name: user.name,
-            email: user.email
+            email: user.email,
+            isAdmin: user.isAdmin,
           };
         } catch (error) {
-          console.error('认证错误:', error);
-          return null;
+          throw error;  // 直接抛出错误，让 Next Auth 处理
         }
       }
     })
@@ -43,12 +49,14 @@ user.password);
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.isAdmin = user.isAdmin;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
+        session.user.isAdmin = token.isAdmin;
       }
       return session;
     }
