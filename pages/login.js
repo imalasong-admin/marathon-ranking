@@ -1,4 +1,3 @@
-// pages/login.js
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -26,7 +25,16 @@ export default function Login() {
       });
 
       if (result.error) {
-        setError('邮箱或密码错误');
+        // 处理特定的错误信息
+        if (result.error.includes('账号已被锁定')) {
+          setError(result.error);  // 显示完整的锁定原因
+        } else if (result.error === '用户不存在') {
+          setError('用户不存在');
+        } else if (result.error === '密码错误') {
+          setError('密码错误');
+        } else {
+          setError('登录失败：' + result.error);
+        }
         setLoading(false);
       } else {
         // 登录成功后重定向到排行榜页面
@@ -41,8 +49,6 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-up justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-4">

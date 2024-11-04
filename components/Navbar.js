@@ -12,7 +12,7 @@ export default function Navbar() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="text-xl font-bold">
-                马拉松排行榜
+                北美华人跑榜
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -20,14 +20,15 @@ export default function Navbar() {
                 href="/rankings"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                排行榜
+                2024年马拉松榜
               </Link>
               <Link
-                href="/submit"
+                href="/"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                提交成绩
+                2024年超马榜
               </Link>
+              
             </div>
           </div>
           <div className="flex items-center">

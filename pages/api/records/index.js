@@ -1,4 +1,3 @@
-// pages/api/records/index.js
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
 import connectDB from '../../../lib/mongodb';
@@ -18,7 +17,7 @@ export default async function handler(req, res) {
       .populate({
         path: 'userId',
         model: User,
-        select: 'name gender birthDate'
+        select: 'name gender birthDate isLocked'  // 添加 isLocked 字段
       })
       .populate({
         path: 'raceId',
@@ -38,10 +37,14 @@ export default async function handler(req, res) {
       });
     };
 
-    const recordsWithAge = allRecords.map(record => {
+    // 只过滤掉锁定用户的记录
+    const filteredRecords = allRecords.filter(record => 
+      record.userId && !record.userId.isLocked
+    );
+
+    const recordsWithAge = filteredRecords.map(record => {
       const recordObj = record.toObject();
       
-      // 使用比赛日期计算参赛年龄
       let raceAge = null;
       const raceDate = recordObj.raceId?.date ? new Date(recordObj.raceId.date) : null;
       const birthDate = recordObj.userId?.birthDate ? new Date(recordObj.userId.birthDate) : null;
@@ -56,7 +59,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // 格式化日期显示
       const formattedDate = formatDate(recordObj.raceId?.date);
       
       return {
@@ -65,7 +67,7 @@ export default async function handler(req, res) {
         userName: recordObj.userId?.name || '未知用户',
         gender: recordObj.userId?.gender || '未知',
         raceName: recordObj.raceId?.name || '未知比赛',
-        date: formattedDate || ''  // 如果没有日期，返回空字符串
+        date: formattedDate || ''
       };
     });
       

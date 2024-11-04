@@ -1,9 +1,9 @@
-// pages/api/records/create.js
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
 import connectDB from '../../../lib/mongodb';
 import Record from '../../../models/Record';
 import Race from '../../../models/Race';
+import User from '../../../models/User';  // 添加 User 模型导入
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,7 +19,18 @@ export default async function handler(req, res) {
 
     await connectDB();
 
-    // 从请求中获取数据（移除了date字段）
+    // 检查用户是否被锁定
+    const user = await User.findById(session.user.id);
+    if (user.isLocked) {
+      return res.status(403).json({ 
+        success: false,
+        message: user.lockReason ? 
+          `账号已被锁定: ${user.lockReason}` : 
+          '账号已被锁定，无法提交成绩'
+      });
+    }
+
+    // 从请求中获取数据
     const { 
       hours, 
       minutes, 
@@ -40,7 +51,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: '请提供成绩证明链接' });
     }
 
-    // 创建成绩记录（不再包含date字段）
+    // 创建成绩记录
     const record = await Record.create({
       userId: session.user.id,
       raceId,
