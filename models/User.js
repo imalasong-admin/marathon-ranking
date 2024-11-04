@@ -31,6 +31,18 @@ const UserSchema = new mongoose.Schema({
   bio: {
     type: String,
     default: '',  // 设置默认值为空字符串
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
+  isLocked: {                    // 新增锁定状态字段
+    type: Boolean,
+    default: false
+  },
+  lockReason: {                  // 新增锁定原因字段
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true
