@@ -1,8 +1,8 @@
-// pages/rankings.js
+// pages/ultra-rankings.js
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function Rankings() {
+export default function UltraRankings() {
   const [records, setRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,23 +42,27 @@ export default function Rankings() {
       const data = await res.json();
       
       if (data.success) {
+        // 添加调试信息，查看API返回的数据
+        console.log('API返回的所有记录:', data.records);
+        
         const filteredRecords = data.records.filter(record => {
           const raceDate = new Date(record.date);
           const raceInfo = record.raceId;
           
-          // 先检查年份
-          if (raceDate.getFullYear() !== 2024) {
-            return false;
-          }
-          
-          // 再检查比赛类型
-          if (!raceInfo || !raceInfo.raceType) {
-            // 对于旧数据，默认显示
-            return true;
-          }
-          
-          return raceInfo.raceType === '全程马拉松';
+          // 添加调试信息，查看每条记录的详细信息
+          console.log('处理记录:', {
+            date: record.date,
+            raceName: record.raceName,
+            raceType: raceInfo?.raceType
+          });
+
+          return raceDate.getFullYear() === 2024 && 
+                 raceInfo?.raceType && 
+                 raceInfo.raceType !== '全程马拉松';
         });
+
+        // 添加调试信息，查看筛选后的记录
+        console.log('筛选后的超马记录:', filteredRecords);
         
         setRecords(filteredRecords);
         setFilteredRecords(filteredRecords);
@@ -66,6 +70,7 @@ export default function Rankings() {
         setError(data.message);
       }
     } catch (err) {
+      console.error('获取数据失败:', err);
       setError('获取数据失败');
     } finally {
       setLoading(false);
@@ -150,7 +155,7 @@ export default function Rankings() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">2024年马拉松排行榜</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">2024年超马排行榜</h1>
         <div className="text-center">加载中...</div>
       </div>
     );
@@ -158,11 +163,11 @@ export default function Rankings() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      {/* 添加标题区域 */}
+      {/* 标题区域 */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">2024年马拉松排行榜</h1>
+        <h1 className="text-3xl font-bold">2024年超马排行榜</h1>
         <button
-          onClick={() => window.location.href = '/submit'}
+          onClick={() => window.location.href = 'users/ultra-submit'}
           className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
         >
           <svg 

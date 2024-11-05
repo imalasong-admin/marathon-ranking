@@ -12,13 +12,14 @@ export default function SubmitRecord() {
   const [isAddingNewRace, setIsAddingNewRace] = useState(false);
   const [newRaceName, setNewRaceName] = useState('');
   const [newRaceDate, setNewRaceDate] = useState('');
+  const [newRaceLocation, setNewRaceLocation] = useState('');
+  const [newRaceWebsite, setNewRaceWebsite] = useState('');
   const [formData, setFormData] = useState({
     hours: '',
     minutes: '',
     seconds: '',
-         //date: '',  移除date字段
-    raceId: '',          // 现有比赛的ID
-    proofUrl: '',        // 成绩证明链接
+    raceId: '',
+    proofUrl: '',
   });
 
   // 加载比赛列表
@@ -28,7 +29,12 @@ export default function SubmitRecord() {
         const res = await fetch('/api/races');
         const data = await res.json();
         if (data.success) {
-          setRaces(data.races);
+          // 只显示2024年且类型为全程马拉松的比赛
+          const filteredRaces = data.races.filter(race => {
+            const raceDate = new Date(race.date);
+            return raceDate.getFullYear() === 2024 && race.raceType === '全程马拉松';
+          });
+          setRaces(filteredRaces);
         }
       } catch (error) {
         console.error('获取比赛列表失败:', error);
@@ -51,12 +57,21 @@ export default function SubmitRecord() {
         return;
       }
 
+      const raceDate = new Date(newRaceDate);
+      if (raceDate.getFullYear() !== 2024) {
+        setError('只能添加2024年的比赛');
+        return;
+      }
+
       const res = await fetch('/api/races', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newRaceName,
           date: newRaceDate,
+          raceType: '全程马拉松',
+          location: newRaceLocation.trim(),
+          website: newRaceWebsite.trim(),
           userId: session.user.id
         })
       });
@@ -68,6 +83,8 @@ export default function SubmitRecord() {
         setFormData({ ...formData, raceId: data.race._id });
         setNewRaceName('');
         setNewRaceDate('');
+        setNewRaceLocation('');
+        setNewRaceWebsite('');
         setIsAddingNewRace(false);
         setError('');
       } else {
@@ -112,11 +129,40 @@ export default function SubmitRecord() {
     setError('');
 
     try {
+      // 验证是否在添加新比赛
+      if (isAddingNewRace) {
+        setError('请先完成新比赛添加或点击取消');
+        return;
+      }
+
+      // 验证是否选择了比赛
+      if (!formData.raceId) {
+        setError('请选择比赛');
+        return;
+      }
+
+      // 验证成绩时间
+      if (!formData.hours && !formData.minutes && !formData.seconds) {
+        setError('请填写完赛时间');
+        return;
+      }
+
+      // 验证成绩证明链接
+      if (!formData.proofUrl) {
+        setError('请提供成绩证明链接');
+        return;
+      }
+
       // 计算总秒数
       const totalSeconds = 
-        parseInt(formData.hours) * 3600 + 
-        parseInt(formData.minutes) * 60 + 
-        parseInt(formData.seconds);
+        parseInt(formData.hours || 0) * 3600 + 
+        parseInt(formData.minutes || 0) * 60 + 
+        parseInt(formData.seconds || 0);
+
+      if (totalSeconds <= 0) {
+        setError('请填写有效的完赛时间');
+        return;
+      }
 
       const res = await fetch('/api/records/create', {
         method: 'POST',
@@ -146,7 +192,7 @@ export default function SubmitRecord() {
   // 已登录用户看到的表单界面
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      
+      <h1 className="text-3xl font-bold mb-8">提交2024年马拉松成绩</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
@@ -232,10 +278,38 @@ export default function SubmitRecord() {
                 placeholder="请输入比赛名称"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">比赛日期 (2024年)</label>
+                <input
+                  type="date"
+                  value={newRaceDate}
+                  onChange={(e) => setNewRaceDate(e.target.value)}
+                  min="2024-01-01"
+                  max="2024-12-31"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">比赛类型</label>
+                <input
+                  type="text"
+                  value="全程马拉松"
+                  disabled
+                  className="block w-full rounded-md bg-gray-100 border-gray-300 shadow-sm"
+                />
+              </div>
               <input
-                type="date"
-                value={newRaceDate}
-                onChange={(e) => setNewRaceDate(e.target.value)}
+                type="text"
+                value={newRaceLocation}
+                onChange={(e) => setNewRaceLocation(e.target.value)}
+                placeholder="比赛地点（选填）"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <input
+                type="url"
+                value={newRaceWebsite}
+                onChange={(e) => setNewRaceWebsite(e.target.value)}
+                placeholder="官方网站（选填）"
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
               <div className="flex space-x-2">
@@ -252,6 +326,8 @@ export default function SubmitRecord() {
                     setIsAddingNewRace(false);
                     setNewRaceName('');
                     setNewRaceDate('');
+                    setNewRaceLocation('');
+                    setNewRaceWebsite('');
                     setError('');
                   }}
                   className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
@@ -262,8 +338,6 @@ export default function SubmitRecord() {
             </div>
           )}
         </div>
-
-       
 
         {/* 成绩证明 */}
         <div>

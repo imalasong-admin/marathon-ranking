@@ -237,7 +237,7 @@ export default function UserProfile() {
     <h2 className="text-xl font-semibold">比赛成绩</h2>
     {isOwnProfile && (
       <button
-        onClick={() => window.location.href = '/submit'}
+        onClick={() => window.location.href = '/users/submit'}
         className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
       >
         <svg 

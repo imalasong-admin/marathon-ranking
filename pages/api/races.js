@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     try {
       const races = await Race.find({})
         .sort({ date: -1 })  // 按日期降序排序
-        .select('name date');    // 返回名称和日期字段
+        .select('name date raceType location');  // 返回需要的字段
       
       res.status(200).json({ success: true, races });
     } catch (error) {
@@ -19,12 +19,13 @@ export default async function handler(req, res) {
   } 
   else if (req.method === 'POST') {
     try {
-      const { name, date, userId } = req.body;
+      const { name, date, raceType, location, website, userId } = req.body;
 
-      if (!name || !date) {
+      // 验证必填字段
+      if (!name || !date || !raceType) {
         return res.status(400).json({ 
           success: false, 
-          message: '比赛名称和日期不能为空' 
+          message: '比赛名称、日期和类型不能为空' 
         });
       }
 
@@ -37,7 +38,24 @@ export default async function handler(req, res) {
         });
       }
 
-      // 检查是否已存在
+      // 检查比赛类型是否有效
+      const validRaceTypes = [
+        '全程马拉松',
+        '超马50K',
+        '超马50M',
+        '超马100K',
+        '超马100迈',
+        '超马计时赛',
+        '超马多日赛'
+      ];
+      if (!validRaceTypes.includes(raceType)) {
+        return res.status(400).json({
+          success: false,
+          message: '无效的比赛类型'
+        });
+      }
+
+      // 检查是否已存在相同名称的比赛
       const existingRace = await Race.findOne({ 
         name: { $regex: new RegExp(`^${name}$`, 'i') }
       });
@@ -53,6 +71,9 @@ export default async function handler(req, res) {
       const race = await Race.create({
         name,
         date: raceDate,
+        raceType,
+        location: location || '',  // 如果没有提供则为空字符串
+        website: website || '',    // 如果没有提供则为空字符串
         addedBy: userId
       });
 

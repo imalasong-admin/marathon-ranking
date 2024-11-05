@@ -1,6 +1,7 @@
 // components/Navbar.js
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -11,8 +12,15 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold">
-                北美华人跑榜
+              <Link href="/" className="relative">
+                <Image
+                  src="/images/logo.png"  // 确保图片保存在 public/images/ 目录下
+                  alt="iMaLaSong.com Logo"
+                  width={240}  // 根据实际logo调整尺寸
+                  height={60}  // 根据实际logo调整尺寸
+                  priority
+                  className="h-auto"
+                />
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -23,12 +31,11 @@ export default function Navbar() {
                 2024年马拉松榜
               </Link>
               <Link
-                href="/"
+                href="/ultra-rankings"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
                 2024年超马榜
               </Link>
-              
             </div>
           </div>
           <div className="flex items-center">

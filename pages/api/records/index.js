@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       .populate({
         path: 'raceId',
         model: Race,
-        select: 'name date'
+        select: 'name date raceType'  // 添加 raceType 字段
       })
       .sort({ totalSeconds: 1 });
 

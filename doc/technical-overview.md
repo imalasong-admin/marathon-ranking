@@ -24,54 +24,67 @@
 - 使用原生表单处理方式
 - 未使用专门的表单处理库
 
+
 ## 2. 项目结构
 ```
 /
 ├── .next/                  # Next.js 构建输出目录
-│   ├── cache
-│   ├── server
-│   └── static
 ├── components/            # React 组件
 │   └── Navbar.js         # 导航栏组件
 ├── lib/                  # 工具库
 │   └── mongodb.js        # MongoDB 连接配置
 ├── models/               # 数据模型
-│   ├── Race.js          # 比赛模型
+│   ├── Race.js          # 比赛模型（已更新字段）
 │   ├── Record.js        # 记录模型
-│   └── User.js          # 用户模型（新增管理员字段）
+│   └── User.js          # 用户模型
 ├── pages/               # 页面组件和 API 路由
-│   ├── admin/          # 管理员相关页面（新增）
-│   │   └── index.js    # 管理员控制台
+│   ├── index.js        # 新增：默认首页
+│   ├── rankings.js     # 马拉松排行榜页面
+│   ├── ultra-rankings.js # 新增：超马排行榜页面
+│   ├── submit.js       # 原始提交页面（rankings.js使用。2024年、全程马拉松限定）
 │   ├── users/
-│   │   └── [id].js     # 用户个人中心页面
-│   ├── api/
-│   │   ├── admin/      # 管理员 API（新增）
-│   │   │   ├── users.js
-│   │   │   ├── set-admin.js
-│   │   │   └── toggle-lock.js
-│   │   ├── auth/
-│   │   │   ├── [...nextauth].js
-│   │   │   └── register.js
-│   │   ├── users/
-│   │   │   └── [id]/
-│   │   │       ├── index.js    # 获取用户信息
-│   │   │       └── update.js   # 更新用户信息
-│   │   ├── records/
-│   │   │   ├── create.js
-│   │   │   └── index.js
-│   │   └── races.js
-│   ├── _app.js
-│   ├── index.js
-│   ├── login.js        # 更新锁定状态处理
-│   ├── rankings.js     # 更新过滤逻辑
-│   ├── register.js
-│   └── submit.js
-├── styles/              # 样式文件
-│   └── globals.css      # 全局样式
-```
+│   │   ├── [id].js    # 用户个人中心页面
+│   │   └── submit.js  # 新增：分步骤提交页面（用户个人中心使用）
+│   │   └── ultra-submit.js  # 新增：分步骤提交页面(ultra-ranking.js使用。2024年、非全程马拉松限定)
+│   ├── admin/         # 管理员相关页面
+│   │   └── index.js   # 管理员控制台
+│   └── api/          # API 路由
+│       ├── admin/    # 管理员API
+│       ├── auth/     # 认证相关
+│       ├── races/    # 比赛管理
+│       ├── records/  # 成绩记录
+│       └── users/    # 用户管理
+├── public/           # 静态资源
+│   └── images/      # 新增：图片资源目录
+│       └── logo.png # 网站 logo
+├── styles/          # 样式文件
+└── scripts/         # 新增：脚本目录
+└── migrations/  # 数据迁移脚本
 
 ## 3. 数据模型
 ```javascript
+// Race Model（更新）
+{
+  name: String,
+  date: Date,
+  raceType: {
+    type: String,
+    required: true,
+    enum: [
+      '全程马拉松',
+      '超马50K',
+      '超马50M',
+      '超马100K',
+      '超马100迈',
+      '超马计时赛',
+      '超马多日赛'
+    ]
+  },
+  location: String,        // 新增
+  website: String,         // 新增
+  addedBy: ObjectId (ref: User)
+}
+
 // User Model（更新）
 {
   name: String,
@@ -164,9 +177,10 @@
 
 ## 6. 开发说明
 1. 代码风格：
-   - 使用 JavaScript (未使用 TypeScript)
+   - 使用 JavaScript
    - 页面级组件位于 pages 目录
-   - API 路由使用 Next.js API Routes 特性
+   - API 路由使用 Next.js API Routes
+   - 复用组件和逻辑避免重复代码
 
 2. 部署信息：
    - 部署平台：Vercel
@@ -178,8 +192,14 @@
    - 数据关联：用户锁定状态影响相关数据展示
    - 环境变量：需要同步更新到 Vercel
    - 代码修改：需要重启开发服务器(npm run dev)
+   - 新增：不同入口的提交流程有不同限制
+   - 新增：比赛类型字段的处理需要特别注意
+4. 未来扩展考虑：
+   - 预留多语言支持
+   - 考虑响应式设计
+   - 保持代码结构的可扩展性
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：e1df740
-- 最后更新：2024-11-03
+- 最新稳定版本：d2d3997
+- 最后更新：2024-11-05

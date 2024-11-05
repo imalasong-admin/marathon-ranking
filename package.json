@@ -4,11 +4,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "migrate:races": "node -r dotenv/config scripts/migrateRaces.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
     "mongodb": "^5.7.0",
     "mongoose": "^7.8.2",
     "next": "13.4.19",
