@@ -1,7 +1,7 @@
 // models/Record.js
 import mongoose from 'mongoose';
 
-const RecordSchema = new mongoose.Schema({
+const recordSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -10,38 +10,28 @@ const RecordSchema = new mongoose.Schema({
   raceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Race',
-    required: [true, '请选择比赛名称']
+    required: true
   },
   finishTime: {
-    hours: { type: Number, required: true },
-    minutes: { type: Number, required: true },
-    seconds: { type: Number, required: true }
+    hours: Number,
+    minutes: Number,
+    seconds: Number
   },
-  totalSeconds: { 
-    type: Number, 
-    required: true 
-  },
-  date: {  // 保留字段但移除 required
-    type: Date
-  },
-  proofUrl: {
+  totalSeconds: Number,
+  proofUrl: String,
+  // 在 Record 模型中新增字段
+  ultraDistance: {
     type: String,
-    required: [true, '请提供成绩证明链接']
-  },
-  verificationStatus: {
-    type: String,
-    enum: ['pending', 'verified', 'rejected'],
-    default: 'pending'
+    enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
+    // 允许为空，因为马拉松不需要这个字段
+    required: function() {
+      return this.raceType === '超马';
+    }
   }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  timestamps: true
 });
 
-// 添加虚拟字段，用于获取比赛日期
-RecordSchema.virtual('raceDate').get(function() {
-  return this.raceId?.date;
-});
+const Record = mongoose.models.Record || mongoose.model('Record', recordSchema);
 
-export default mongoose.models.Record || mongoose.model('Record', RecordSchema);
+export default Record;

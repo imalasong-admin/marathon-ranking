@@ -1,16 +1,19 @@
 {
   "name": "marathon-ranking-new",
   "version": "1.0.0",
+
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "migrate:races": "node -r dotenv/config scripts/migrateRaces.js"
+    "migrate:races": "node -r dotenv/config scripts/migrateRaces.js",
+     "migrate:types": "node scripts/migrate-race-types.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "lucide-react": "^0.263.1",
     "mongodb": "^5.7.0",
     "mongoose": "^7.8.2",
     "next": "13.4.19",

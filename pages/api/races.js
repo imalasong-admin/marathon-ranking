@@ -41,12 +41,7 @@ export default async function handler(req, res) {
       // 检查比赛类型是否有效
       const validRaceTypes = [
         '全程马拉松',
-        '超马50K',
-        '超马50M',
-        '超马100K',
-        '超马100迈',
-        '超马计时赛',
-        '超马多日赛'
+        '超马'
       ];
       if (!validRaceTypes.includes(raceType)) {
         return res.status(400).json({

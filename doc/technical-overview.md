@@ -110,14 +110,21 @@
   }
 }
 
-// Race Model
+// Race Model（更新）
 {
   name: String,
   date: Date,
+  raceType: {
+    type: String,
+    required: true,
+    enum: ['全程马拉松', '超马']
+  },
+  location: String,        
+  website: String,         
   addedBy: ObjectId (ref: User)
 }
 
-// Record Model
+// Record Model（更新）
 {
   userId: ObjectId (ref: User),
   raceId: ObjectId (ref: Race),
@@ -128,10 +135,12 @@
   },
   totalSeconds: Number,
   proofUrl: String,
-  verificationStatus: {
+  ultraDistance: {
     type: String,
-    enum: ['pending', 'verified', 'rejected'],
-    default: 'pending'
+    enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
+    required: function() {
+      return this.raceType === '超马';
+    }
   }
 }
 ```
@@ -157,6 +166,7 @@
 ### 成绩管理
 - GET /api/records - 获取成绩列表（更新过滤逻辑）
 - POST /api/records/create - 提交新成绩
+     新增 ultraDistance 字段，用于记录超马项目类型
 
 ## 5. 权限控制机制
 ### 管理员等级（新增）
@@ -201,5 +211,5 @@
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：d2d3997
+- 最新稳定版本：c7cbee9
 - 最后更新：2024-11-05

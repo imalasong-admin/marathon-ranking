@@ -1,6 +1,7 @@
 // pages/rankings.js
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 
 export default function Rankings() {
   const [records, setRecords] = useState([]);
@@ -42,23 +43,19 @@ export default function Rankings() {
       const data = await res.json();
       
       if (data.success) {
-        const filteredRecords = data.records.filter(record => {
-          const raceDate = new Date(record.date);
-          const raceInfo = record.raceId;
-          
-          // 先检查年份
-          if (raceDate.getFullYear() !== 2024) {
-            return false;
-          }
-          
-          // 再检查比赛类型
-          if (!raceInfo || !raceInfo.raceType) {
-            // 对于旧数据，默认显示
-            return true;
-          }
-          
-          return raceInfo.raceType === '全程马拉松';
-        });
+        // 一次性完成筛选和排序
+        const filteredRecords = data.records
+          .filter(record => {
+            const raceDate = new Date(record.date);
+            return raceDate.getFullYear() === 2024 && 
+                   (!record.raceId?.raceType || record.raceId.raceType === '全程马拉松');
+          })
+          .sort((a, b) => {
+            // 按完赛时间排序
+            const timeA = a.finishTime.hours * 3600 + a.finishTime.minutes * 60 + a.finishTime.seconds;
+            const timeB = b.finishTime.hours * 3600 + b.finishTime.minutes * 60 + b.finishTime.seconds;
+            return timeA - timeB;
+          });
         
         setRecords(filteredRecords);
         setFilteredRecords(filteredRecords);
@@ -281,9 +278,6 @@ export default function Rankings() {
                   姓名
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  比赛
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   成绩
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -291,6 +285,9 @@ export default function Rankings() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   年龄
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  比赛
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   日期
@@ -311,6 +308,26 @@ export default function Rankings() {
                       {record.userName}
                     </Link>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatTime(record.finishTime)}
+                    {record.proofUrl && (
+                      <a 
+                        href={record.proofUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block ml-2 text-gray-400 hover:text-blue-500"
+                        title="查看成绩证明"
+                      >
+                        <ExternalLink size={16} />
+                      </a>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {record.gender === 'M' ? '男' : '女'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {record.age || '-'}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
                       onClick={() => handleRaceClick(record.raceId?._id)}
@@ -322,15 +339,6 @@ export default function Rankings() {
                     >
                       {record.raceName}
                     </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatTime(record.finishTime)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.gender === 'M' ? '男' : '女'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.age || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(record.date)}

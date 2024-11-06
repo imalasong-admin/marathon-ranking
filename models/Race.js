@@ -13,16 +13,8 @@ const RaceSchema = new mongoose.Schema({
   },
   raceType: {
     type: String,
-    required: [true, '请选择比赛类型'],
-    enum: [
-      '全程马拉松',
-      '超马50K',
-      '超马50M',
-      '超马100K',
-      '超马100迈',
-      '超马计时赛',
-      '超马多日赛'
-    ]
+    required: true,
+    enum: ['全程马拉松', '超马']
   },
   location: {
     type: String,
