@@ -147,11 +147,6 @@ export default function SubmitRecord() {
         return;
       }
 
-      // 验证成绩证明链接
-      if (!formData.proofUrl) {
-        setError('请提供成绩证明链接');
-        return;
-      }
 
       // 计算总秒数
       const totalSeconds = 
@@ -164,15 +159,18 @@ export default function SubmitRecord() {
         return;
       }
 
+      const submitData = {
+        ...formData,
+        totalSeconds,
+        proofUrl: formData.proofUrl || ''  // 如果未填写则传空字符串
+      };
+  
       const res = await fetch('/api/records/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          totalSeconds
-        }),
+        body: JSON.stringify(submitData),
       });
 
       const data = await res.json();
@@ -201,48 +199,7 @@ export default function SubmitRecord() {
           </div>
         )}
 
-        <div>
-          <h3 className="text-lg font-medium mb-4">完赛时间</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">时</label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                value={formData.hours}
-                onChange={(e) => setFormData({...formData, hours: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">分</label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={formData.minutes}
-                onChange={(e) => setFormData({...formData, minutes: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">秒</label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={formData.seconds}
-                onChange={(e) => setFormData({...formData, seconds: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
+        
         {/* 比赛选择 */}
         <div>
           <label className="block text-sm font-medium text-gray-700">比赛名称</label>
@@ -339,19 +296,62 @@ export default function SubmitRecord() {
           )}
         </div>
 
+        <div>
+          <h3 className="text-lg font-medium mb-4">完赛时间</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">时</label>
+              <input
+                type="number"
+                min="0"
+                max="23"
+                value={formData.hours}
+                onChange={(e) => setFormData({...formData, hours: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">分</label>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                value={formData.minutes}
+                onChange={(e) => setFormData({...formData, minutes: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">秒</label>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                value={formData.seconds}
+                onChange={(e) => setFormData({...formData, seconds: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+
         {/* 成绩证明 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            成绩证明链接
-            <span className="text-gray-500 text-xs ml-2">(官方成绩查询链接或截图链接)</span>
-          </label>
+        <label className="block text-sm font-medium text-gray-700">
+  官方成绩证明链接
+  <span className="text-gray-500 text-xs ml-2">(选填)</span>
+</label>
           <input
             type="url"
             value={formData.proofUrl}
             onChange={(e) => setFormData({...formData, proofUrl: e.target.value})}
             placeholder="请输入成绩证明链接"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
+            // required
           />
         </div>
 

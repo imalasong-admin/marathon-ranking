@@ -63,27 +63,6 @@
 
 ## 3. 数据模型
 ```javascript
-// Race Model（更新）
-{
-  name: String,
-  date: Date,
-  raceType: {
-    type: String,
-    required: true,
-    enum: [
-      '全程马拉松',
-      '超马50K',
-      '超马50M',
-      '超马100K',
-      '超马100迈',
-      '超马计时赛',
-      '超马多日赛'
-    ]
-  },
-  location: String,        // 新增
-  website: String,         // 新增
-  addedBy: ObjectId (ref: User)
-}
 
 // User Model（更新）
 {
@@ -134,12 +113,12 @@
     seconds: Number
   },
   totalSeconds: Number,
-  proofUrl: String,
-  ultraDistance: {
+  proofUrl: String,  // 选填
+  ultraDistance: {    // 更新了验证规则
     type: String,
     enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
     required: function() {
-      return this.raceType === '超马';
+      return this.raceId?.raceType === '超马';
     }
   }
 }
@@ -211,5 +190,5 @@
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：c7cbee9
+- 最新稳定版本：ca73411
 - 最后更新：2024-11-05

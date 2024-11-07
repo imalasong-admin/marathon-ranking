@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
-// 辅助函数保持不变
+// 辅助函数
 const formatTime = (time) => {
   if (!time) return '-';
   return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
@@ -47,6 +47,18 @@ const getVerificationStatusClass = (status) => {
   }
 };
 
+// 获取项目显示文本
+const getDistanceDisplay = (record) => {
+  if (!record?.raceId?.raceType) return '-';
+  
+  if (record.raceId.raceType === '超马' && record.ultraDistance) {
+    return record.ultraDistance;
+  } else if (record.raceId.raceType === '全程马拉松') {
+    return '26.2英里';
+  }
+  return '-';
+};
+
 export default function UserProfile() {
   const router = useRouter();
   const { id } = router.query;
@@ -68,17 +80,14 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (userData?.data?.user) {
-      console.log('设置初始 bio:', userData.data.user.bio);
       setBio(userData.data.user.bio || '');
     }
   }, [userData]);
 
   const fetchUserData = async () => {
     try {
-      console.log('开始获取用户数据:', id);
       const res = await fetch(`/api/users/${id}`);
       const data = await res.json();
-      console.log('获取到的用户数据:', data);
 
       if (data.success) {
         setUserData(data);
@@ -99,7 +108,6 @@ export default function UserProfile() {
     setError('');
 
     try {
-      console.log('准备提交更新:', { bio });
       const res = await fetch(`/api/users/${id}/update`, {
         method: 'PATCH',
         headers: {
@@ -109,10 +117,8 @@ export default function UserProfile() {
       });
 
       const data = await res.json();
-      console.log('更新响应:', data);
 
       if (data.success) {
-        console.log('更新成功，新数据:', data.user);
         setUserData(prev => ({
           success: true,
           data: {
@@ -120,8 +126,7 @@ export default function UserProfile() {
             user: {
               ...prev.data.user,
               bio: data.user.bio
-            },
-            records: prev.data.records
+            }
           }
         }));
         setEditMode(false);
@@ -166,8 +171,6 @@ export default function UserProfile() {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      
-
       {/* 用户基本信息 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div>
@@ -233,30 +236,31 @@ export default function UserProfile() {
 
       {/* 成绩列表 */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-xl font-semibold">比赛成绩</h2>
-    {isOwnProfile && (
-      <button
-        onClick={() => window.location.href = '/users/submit'}
-        className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
-      >
-        <svg 
-          className="w-5 h-5 mr-2" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M12 4v16m8-8H4" 
-          />
-        </svg>
-        提交成绩
-      </button>
-    )}
-  </div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">比赛成绩</h2>
+          {isOwnProfile && (
+            <button
+              onClick={() => window.location.href = '/users/submit'}
+              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+            >
+              <svg 
+                className="w-5 h-5 mr-2" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 4v16m8-8H4" 
+                />
+              </svg>
+              提交成绩
+            </button>
+          )}
+        </div>
+
         {records.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -264,6 +268,9 @@ export default function UserProfile() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     比赛
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    项目
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     成绩
@@ -281,6 +288,9 @@ export default function UserProfile() {
                   <tr key={record._id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {record.raceName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {getDistanceDisplay(record)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatTime(record.finishTime)}

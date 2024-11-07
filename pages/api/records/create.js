@@ -1,9 +1,10 @@
+// pages/api/records/create.js
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
 import connectDB from '../../../lib/mongodb';
 import Record from '../../../models/Record';
 import Race from '../../../models/Race';
-import User from '../../../models/User';  // 添加 User 模型导入
+import User from '../../../models/User';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -37,8 +38,14 @@ export default async function handler(req, res) {
       seconds, 
       totalSeconds, 
       raceId, 
-      proofUrl 
+      proofUrl,
+      ultraDistance
     } = req.body;
+
+    // 基础验证
+    if (!raceId) {
+      return res.status(400).json({ message: '请选择比赛' });
+    }
 
     // 验证比赛ID
     const race = await Race.findById(raceId);
@@ -46,13 +53,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: '比赛不存在' });
     }
 
-    // 验证成绩证明链接
-    if (!proofUrl) {
-      return res.status(400).json({ message: '请提供成绩证明链接' });
+    // 验证完赛时间
+    if (totalSeconds <= 0) {
+      return res.status(400).json({ message: '请填写有效的完赛时间' });
     }
 
-    // 创建成绩记录
-    const record = await Record.create({
+    // 如果是超马比赛，验证 ultraDistance
+    if (race.raceType === '超马' && !ultraDistance) {
+      return res.status(400).json({ message: '请选择超马项目' });
+    }
+
+    // 构建记录数据
+    const recordData = {
       userId: session.user.id,
       raceId,
       finishTime: {
@@ -61,9 +73,17 @@ export default async function handler(req, res) {
         seconds: parseInt(seconds)
       },
       totalSeconds,
-      proofUrl,
+      proofUrl: proofUrl || '',
       verificationStatus: 'pending'
-    });
+    };
+
+    // 只在超马比赛时添加 ultraDistance 字段
+    if (race.raceType === '超马') {
+      recordData.ultraDistance = ultraDistance;
+    }
+
+    // 创建成绩记录
+    const record = await Record.create(recordData);
 
     return res.status(201).json({
       success: true,

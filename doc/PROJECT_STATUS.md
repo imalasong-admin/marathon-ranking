@@ -1,11 +1,23 @@
 # Marathon Ranking Project Status
 
 ## 当前版本信息
-- 最新稳定版本: [c7cbee9]
+- 最新稳定版本: [ca73411]
 - 最后更新: 2024-11-05
 - 部署地址: https://marathon-ranking.vercel.app
 
 ## 最近完成的功能
+ ✅ 成绩展示和提交优化（2024-11-06）
+   - 个人中心比赛成绩列表增加项目列显示
+   - 马拉松成绩项目直接显示"26.2英里"
+   - 超马成绩显示具体项目类型
+   - 修复马拉松成绩提交时的验证问题
+   - 优化了数据返回和展示逻辑
+
+ ✅ 数据模型优化（2024-11-05）
+   - 简化比赛类型为全程马拉松和超马两类
+   - Record模型增加ultraDistance字段
+   - 完成数据迁移工作
+
  ✅ 数据模型优化（2024-11-05）
    - 简化比赛类型为全程马拉松和超马两类
    - Record模型增加ultraDistance字段
@@ -133,7 +145,7 @@
   addedBy: ObjectId (ref: User)
 }
 
-// Record Model
+// Record Model（更新）
 {
   userId: ObjectId (ref: User),
   raceId: ObjectId (ref: Race),
@@ -143,12 +155,12 @@
     seconds: Number
   },
   totalSeconds: Number,
-  proofUrl: String,
-  ultraDistance: {
+  proofUrl: String,  // 选填
+  ultraDistance: {    // 更新了验证规则
     type: String,
     enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
     required: function() {
-      return this.raceType === '超马';
+      return this.raceId?.raceType === '超马';
     }
   }
 }

@@ -46,6 +46,19 @@ export default function UserSubmitRecord() {
     fetchRaces();
   }, []);
 
+  // 处理比赛选择
+  const handleRaceSelect = (e) => {
+    const selectedRaceId = e.target.value;
+    setFormData({
+      ...formData,
+      raceId: selectedRaceId,
+      ultraDistance: '' // 重置超马项目选择，确保用户重新选择
+    });
+    if (selectedRaceId) {
+      alert('请选择具体的超马项目');
+    }
+  };
+
   // 处理添加新比赛
   const handleAddNewRace = async () => {
     try {
@@ -82,13 +95,18 @@ export default function UserSubmitRecord() {
 
       if (data.success) {
         setRaces([...races, data.race]);
-        setFormData({ ...formData, raceId: data.race._id });
+        setFormData({ 
+          ...formData, 
+          raceId: data.race._id,
+          ultraDistance: '' // 重置超马项目选择，确保用户重新选择
+        });
         setNewRaceName('');
         setNewRaceDate('');
         setNewRaceLocation('');
         setNewRaceWebsite('');
         setIsAddingNewRace(false);
         setError('');
+        alert('比赛添加成功，请选择具体的超马项目');
       } else {
         setError(data.message || '添加比赛失败');
       }
@@ -134,15 +152,23 @@ export default function UserSubmitRecord() {
         return;
       }
 
+      // 明确列出所有要提交的字段
+      const submitData = {
+        raceId: formData.raceId,
+        hours: parseInt(formData.hours || 0),
+        minutes: parseInt(formData.minutes || 0),
+        seconds: parseInt(formData.seconds || 0),
+        totalSeconds,
+        ultraDistance: formData.ultraDistance,  // 确保这个字段被正确传递
+        proofUrl: formData.proofUrl || ''  // 允许为空
+      };
+
       const res = await fetch('/api/records/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          totalSeconds,
-        }),
+        body: JSON.stringify(submitData),
       });
 
       const data = await res.json();
@@ -158,6 +184,7 @@ export default function UserSubmitRecord() {
       setError('提交失败，请重试');
     }
   };
+
 
   // 处理登录状态
   if (status === "loading") {
@@ -197,48 +224,7 @@ export default function UserSubmitRecord() {
           </div>
         )}
 
-        {/* 完赛时间 */}
-        <div>
-          <h3 className="text-lg font-medium mb-4">完赛时间</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">时</label>
-              <input
-                type="number"
-                min="0"
-                max="999"
-                value={formData.hours}
-                onChange={(e) => setFormData({...formData, hours: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">分</label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={formData.minutes}
-                onChange={(e) => setFormData({...formData, minutes: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">秒</label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={formData.seconds}
-                onChange={(e) => setFormData({...formData, seconds: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-        </div>
+       
 
         {/* 比赛选择 */}
         <div>
@@ -359,11 +345,54 @@ export default function UserSubmitRecord() {
           </select>
         </div>
 
-        {/* 成绩证明 */}
-        <div>
+ {/* 完赛时间 */}
+ <div>
+          <h3 className="text-lg font-medium mb-4">完赛时间</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">时</label>
+              <input
+                type="number"
+                min="0"
+                max="999"
+                value={formData.hours}
+                onChange={(e) => setFormData({...formData, hours: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">分</label>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                value={formData.minutes}
+                onChange={(e) => setFormData({...formData, minutes: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">秒</label>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                value={formData.seconds}
+                onChange={(e) => setFormData({...formData, seconds: e.target.value})}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+       {/* 成绩证明链接 - 改为选填 */}
+       <div>
           <label className="block text-sm font-medium text-gray-700">
-            成绩证明链接
-            <span className="text-gray-500 text-xs ml-2">(官方成绩查询链接或截图链接)</span>
+            官方成绩证明链接
+            <span className="text-gray-500 text-xs ml-2">(选填)</span>
           </label>
           <input
             type="url"
@@ -371,7 +400,6 @@ export default function UserSubmitRecord() {
             onChange={(e) => setFormData({...formData, proofUrl: e.target.value})}
             placeholder="请输入成绩证明链接"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            required
           />
         </div>
 
