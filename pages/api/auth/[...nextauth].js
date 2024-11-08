@@ -38,6 +38,8 @@ export const authOptions = {
             name: user.name,
             email: user.email,
             isAdmin: user.isAdmin,
+            emailVerified: user.emailVerified,  // 添加这行
+            createdAt: user.createdAt          // 添加这行
           };
         } catch (error) {
           throw error;  // 直接抛出错误，让 Next Auth 处理
@@ -50,6 +52,8 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.isAdmin = user.isAdmin;
+        token.emailVerified = user.emailVerified;  // 添加这行
+        token.createdAt = user.createdAt;         // 添加这行
       }
       return token;
     },
@@ -57,6 +61,8 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.isAdmin = token.isAdmin;
+        session.user.emailVerified = token.emailVerified;  // 添加这行
+        session.user.createdAt = token.createdAt;         // 添加这行
       }
       return session;
     }

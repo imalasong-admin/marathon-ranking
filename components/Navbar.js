@@ -2,11 +2,13 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
+import VerificationAlert from './VerificationAlert';
 
 export default function Navbar() {
   const { data: session } = useSession();
 
   return (
+    <>
     <nav className="bg-white shadow">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between h-16">
@@ -45,7 +47,7 @@ export default function Navbar() {
                   href={`/users/${session.user.id}`}
                   className="text-gray-700 hover:text-blue-600 hover:underline"
                 >
-                  欢迎, {session.user.name}
+                 {session.user.name}
                 </Link>
                 <button
                   onClick={() => signOut()}
@@ -66,5 +68,7 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    <VerificationAlert />
+  </>
   );
 }

@@ -43,6 +43,17 @@ const UserSchema = new mongoose.Schema({
   lockReason: {                  // 新增锁定原因字段
     type: String,
     default: ''
+  },
+  emailVerified: {
+    type: Boolean,
+    default: true  // 改为默认true，这样之前的用户自动为已验证状态
+  },
+  verificationCode: {
+    type: String,
+    length: 4
+  },
+  verificationExpires: {
+    type: Date
   }
 }, {
   timestamps: true

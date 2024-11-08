@@ -1,10 +1,10 @@
 // pages/users/[id].js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';  // 添加 signOut
 import Link from 'next/link';
 
-// 辅助函数
+// 辅助函数部分保持不变
 const formatTime = (time) => {
   if (!time) return '-';
   return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
@@ -47,7 +47,6 @@ const getVerificationStatusClass = (status) => {
   }
 };
 
-// 获取项目显示文本
 const getDistanceDisplay = (record) => {
   if (!record?.raceId?.raceType) return '-';
   
@@ -69,6 +68,12 @@ export default function UserProfile() {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [bio, setBio] = useState('');
+  
+  // 添加修改密码相关的状态
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const isOwnProfile = session?.user?.id === id;
 
@@ -141,6 +146,44 @@ export default function UserProfile() {
     }
   };
 
+  // 添加修改密码处理函数
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordLoading(true);
+
+    // 验证两次输入的密码是否一致
+    if (newPassword !== confirmPassword) {
+      setPasswordError('两次输入的密码不一致');
+      setPasswordLoading(false);
+      return;
+    }
+
+    try {
+        const res = await fetch(`/api/users/${id}/change-password`,  {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newPassword }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('密码修改成功！请重新登录。');
+        // 登出并跳转到登录页
+        signOut({ callbackUrl: '/login' });
+      } else {
+        setPasswordError(data.message || '修改失败，请重试');
+      }
+    } catch (error) {
+      setPasswordError('修改失败，请重试');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto py-8 px-4">
@@ -181,6 +224,51 @@ export default function UserProfile() {
           </div>
         </div>
       </div>
+
+      {/* 修改密码表单 - 只在查看自己的个人中心时显示 */}
+      {isOwnProfile && (
+        <div className="mt-8 bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium">修改密码</h3>
+          <form onSubmit={handleChangePassword} className="mt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                新密码
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={6}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                确认新密码
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={6}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+              />
+            </div>
+            {passwordError && (
+              <div className="text-red-600 text-sm">{passwordError}</div>
+            )}
+            <button
+              type="submit"
+              disabled={passwordLoading}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {passwordLoading ? '修改中...' : '修改密码'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* 用户简介 */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">

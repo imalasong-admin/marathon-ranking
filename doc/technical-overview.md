@@ -1,5 +1,32 @@
 # Marathon Ranking 技术概览文档
 
+## 项目开发规范和注意事项
+
+### 1. 代码修改原则
+- 在修改代码前，必须先完整阅读和理解现有代码
+- 保持项目的一致性，不随意改变已有的结构
+- 尊重项目的设计模式，特别是路由结构
+
+### 2. 路由结构说明
+- API路由设计采用一致的模式
+- 用户相关API统一在 users/[id] 目录下
+- API调用路径需要匹配文件结构
+  例如：用户密码修改
+  - API文件位置：/pages/api/users/[id]/change-password.js
+  - 调用路径：/api/users/${id}/change-password
+
+### 3. 开发经验教训
+✘ 错误做法：
+- 不理解现有代码就开始修改
+- 试图改变已证明可行的结构
+- 武断地认为某种模式是错误的
+
+✓ 正确做法：
+- 先阅读和理解现有代码
+- 遵循项目已有的设计模式
+- 保持项目的一致性和连续性
+- 在修改前确认问题的真正原因
+
 ## 1. 技术栈
 ### 核心框架
 - Next.js: 13.4.19
@@ -24,6 +51,10 @@
 - 使用原生表单处理方式
 - 未使用专门的表单处理库
 
+## Resend 邮件服务
+### 新增依赖
+- Resend: ^1.0.0 (邮件服务)
+
 
 ## 2. 项目结构
 ```
@@ -31,8 +62,10 @@
 ├── .next/                  # Next.js 构建输出目录
 ├── components/            # React 组件
 │   └── Navbar.js         # 导航栏组件
+│   └── VerificationAlert.js         # 验证码提醒
 ├── lib/                  # 工具库
 │   └── mongodb.js        # MongoDB 连接配置
+│   └── email.js         # 邮件服务工具
 ├── models/               # 数据模型
 │   ├── Race.js          # 比赛模型（已更新字段）
 │   ├── Record.js        # 记录模型
@@ -42,6 +75,11 @@
 │   ├── rankings.js     # 马拉松排行榜页面
 │   ├── ultra-rankings.js # 新增：超马排行榜页面
 │   ├── submit.js       # 原始提交页面（rankings.js使用。2024年、全程马拉松限定）
+│   ├── verify-email.js  # 邮箱验证页面
+│   ├── reset-password.js         # 重置密码
+│   ├── _app_.js         # 
+│   ├── login.js         # 登录
+│   └── registerr.js         # 注册
 │   ├── users/
 │   │   ├── [id].js    # 用户个人中心页面
 │   │   └── submit.js  # 新增：分步骤提交页面（用户个人中心使用）
@@ -86,6 +124,17 @@
   lockReason: {         // 新增锁定原因
     type: String,
     default: ''
+  },
+  emailVerified: {
+    type: Boolean,
+    default: true  // 旧用户默认已验证
+  },
+  verificationCode: {
+    type: String,
+    length: 4
+  },
+  verificationExpires: {
+    type: Date
   }
 }
 
@@ -147,6 +196,20 @@
 - POST /api/records/create - 提交新成绩
      新增 ultraDistance 字段，用于记录超马项目类型
 
+### 验证邮箱验证码
+- POST /api/auth/verify-email - 验证邮箱验证码
+
+### 身份验证相关：
+- /api/auth/forgot-password - 发送重置验证码
+- /api/auth/verify-reset-code - 验证重置验证码
+- /api/auth/reset-password - 重置密码
+
+### 密码管理：
+- 修改密码：/api/users/[id]/change-password
+- 重置密码：/api/auth/reset-password
+
+
+
 ## 5. 权限控制机制
 ### 管理员等级（新增）
 1. 超级管理员(admin)
@@ -188,7 +251,25 @@
    - 考虑响应式设计
    - 保持代码结构的可扩展性
 
+5. 邮箱验证机制
+   1. 验证流程：
+   - 新用户注册时生成4位验证码
+   - 发送验证邮件
+   - 24小时内完成验证
+   - 验证成功需重新登录
+
+  2. 开发环境：
+   - 验证码统一发送到测试邮箱
+   - 测试邮箱：imalasong2024@gmail.com
+   - 允许重复注册测试
+   - 完整日志记录
+
+  3. 生产环境：
+   - 严格邮箱唯一性检查
+   - 真实邮箱验证
+   - 额度监控
+
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：ca73411
-- 最后更新：2024-11-05
+- 最新稳定版本：340adc7
+- 最后更新：2024-11-06

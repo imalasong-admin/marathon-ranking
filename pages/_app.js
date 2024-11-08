@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import { SessionProvider } from 'next-auth/react';
 import Navbar from '../components/Navbar';
+import VerificationAlert from '../components/VerificationAlert';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
@@ -9,6 +10,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         <Navbar />
         <main className="container mx-auto px-4 py-8">
           <Component {...pageProps} />
+          <VerificationAlert />
         </main>
       </div>
     </SessionProvider>

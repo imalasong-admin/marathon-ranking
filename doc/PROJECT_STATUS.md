@@ -1,11 +1,44 @@
 # Marathon Ranking Project Status
 
 ## 当前版本信息
-- 最新稳定版本: [ca73411]
-- 最后更新: 2024-11-05
+- 最新稳定版本: [340adc7]
+- 最后更新: 2024-11-06
 - 部署地址: https://marathon-ranking.vercel.app
 
 ## 最近完成的功能
+✅ 个人中心修改密码功能（2024-11-08）
+  - 个人中心添加密码修改模块
+  - 修改成功后自动退出登录
+  - API：/api/users/[id]/change-password
+
+✅ 忘记密码功能（2024-11-08）
+  - 登录页添加忘记密码入口
+  - 邮箱验证码验证
+  - 密码重置流程
+  - 开发环境验证码处理优化
+
+✅ 项目规范强化/开发规范更新（2024-11-08）
+  - 明确路由结构规范
+  - 添加代码修改原则
+  - 总结开发经验教训
+
+     ## 注意事项
+       1. 代码修改必须遵循项目的一致性原则
+       2. 特别注意动态路由[id]的结构设计
+       3. API调用路径需要匹配文件结构
+       4. 修改前必须理解现有代码
+
+✅ 邮箱验证功能（2024-11-08）
+  - 新用户注册需要验证邮箱
+  - 验证码 24 小时有效期
+  - 未验证用户显示顶部验证提示
+  - 验证成功后需重新登录
+  - 旧用户默认已验证
+
+✅ 开发调试优化（2024-11-08）
+  - 开发环境邮件统一发送到测试邮箱
+  - 开发环境允许重复注册测试
+
  ✅ 成绩展示和提交优化（2024-11-06）
    - 个人中心比赛成绩列表增加项目列显示
    - 马拉松成绩项目直接显示"26.2英里"
@@ -103,13 +136,7 @@
    - 注册后自动登录
    - 自动跳转到成绩提交页面
 
-## 下一步计划
-1. 待定
 
-2. 🚧 数据展示优化
-   - 添加数据导出功能
-   - 优化移动端显示
-   - 完善筛选功能
 
 ## 数据模型
 ```javascript
@@ -135,6 +162,17 @@
   lockReason: {
     type: String,
     default: ''
+  },
+  emailVerified: {
+    type: Boolean,
+    default: true  // 旧用户默认已验证
+  },
+  verificationCode: {
+    type: String,
+    length: 4
+  },
+  verificationExpires: {
+    type: Date
   }
 }
 
@@ -194,6 +232,13 @@
 - GET /api/admin/users - 获取用户列表
 - POST /api/records/create - 提交新成绩（更新字段）
        新增 ultraDistance 字段，用于记录超马项目类
+- POST /api/auth/verify-email - 验证邮箱验证码
+用户相关API：
+  - /api/users/[id]/change-password：用户修改密码
+auth相关API：
+  - /api/auth/forgot-password：发送重置验证码
+  - /api/auth/verify-reset-code：验证重置验证码
+  - /api/auth/reset-password：重置密码
 
 ## 注意事项
 1. 管理员权限控制
@@ -220,11 +265,29 @@
     - ultra-rankings 页面：限定2024年非马拉松
     - 个人中心：自由选择年份和类型
 
-## 环境配置
-```env
+11. Resend 邮件服务
+# 免费额度
+- 每月100封邮件
+- 开发环境统一发送到测试邮箱
+- 基本邮件功能支持
+
+# 监控方法
+1. 登录 Resend 控制台
+2. 查看邮件发送统计
+3. 监控发送量接近限制
+
+# 避免超额
+1. 开发环境使用测试邮箱
+2. 生产环境谨慎使用
+3. 设置额度提醒
+
+
+### 环境配置
+```.env.local
 MONGODB_URI=mongodb+srv://...
 NEXTAUTH_SECRET=...
 NEXTAUTH_URL=https://marathon-ranking.vercel.app
+RESEND_API_KEY=your_api_key（邮件服务密钥）
 ```
 
 ## 每次新对话开始时复制：
@@ -232,13 +295,4 @@ NEXTAUTH_URL=https://marathon-ranking.vercel.app
 仓库：https://github.com/imalasong-admin/marathon-ranking
 部署：https://marathon-ranking.vercel.app
 状态：
-✅ 最近完成：
-- 页面架构优化（首页分离、图片logo）
-- 超马榜单开发（展示和提交）
-- 成绩提交流程优化（分步骤提交）
-- 比赛管理功能增强（类型和额外信息）
 
-
-
-本次目标：[描述要实现的功能]
-```
