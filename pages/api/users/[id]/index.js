@@ -54,7 +54,7 @@ export default async function handler(req, res) {
 
         // 查询用户的所有成绩记录
         const records = await Record.find({ userId: id })
-          .select('finishTime totalSeconds proofUrl ultraDistance verificationStatus') // 添加字段选择
+        .select('finishTime totalSeconds proofUrl ultraDistance verificationStatus verifiedCount verifiedBy reportedBy')
           .populate({
             path: 'raceId',
             model: Race,
@@ -90,7 +90,11 @@ export default async function handler(req, res) {
             raceType: recordObj.raceId?.raceType,
             userName: user.name,
             gender: user.gender,
-            ultraDistance: recordObj.ultraDistance  // 确保返回超马项目信息
+            ultraDistance: recordObj.ultraDistance,  // 确保返回超马项目信息
+            verificationStatus: recordObj.verificationStatus,
+            verifiedCount: recordObj.verifiedCount,
+            verifiedBy: recordObj.verifiedBy,
+            reportedBy: recordObj.reportedBy
           };
         });
 

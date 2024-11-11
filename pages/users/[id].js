@@ -1,10 +1,11 @@
 // pages/users/[id].js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signOut } from 'next-auth/react';  // 添加 signOut
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 
-// 辅助函数部分保持不变
+// 辅助函数
 const formatTime = (time) => {
   if (!time) return '-';
   return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
@@ -69,11 +70,22 @@ export default function UserProfile() {
   const [saving, setSaving] = useState(false);
   const [bio, setBio] = useState('');
   
-  // 添加修改密码相关的状态
+  // 修改密码相关状态
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // 成绩证明相关状态
+  const [editingRecordId, setEditingRecordId] = useState(null);
+  const [proofUrl, setProofUrl] = useState('');
+  const [isSubmittingProof, setIsSubmittingProof] = useState(false);
+
+  // 验证相关状态
+const [verifyingRecordId, setVerifyingRecordId] = useState(null);
+const [isSubmittingVerify, setIsSubmittingVerify] = useState(false);
+const [verifyError, setVerifyError] = useState('');
 
   const isOwnProfile = session?.user?.id === id;
 
@@ -146,13 +158,11 @@ export default function UserProfile() {
     }
   };
 
-  // 添加修改密码处理函数
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
     setPasswordLoading(true);
 
-    // 验证两次输入的密码是否一致
     if (newPassword !== confirmPassword) {
       setPasswordError('两次输入的密码不一致');
       setPasswordLoading(false);
@@ -160,7 +170,7 @@ export default function UserProfile() {
     }
 
     try {
-        const res = await fetch(`/api/users/${id}/change-password`,  {
+      const res = await fetch(`/api/users/${id}/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +182,6 @@ export default function UserProfile() {
 
       if (data.success) {
         alert('密码修改成功！请重新登录。');
-        // 登出并跳转到登录页
         signOut({ callbackUrl: '/login' });
       } else {
         setPasswordError(data.message || '修改失败，请重试');
@@ -181,6 +190,73 @@ export default function UserProfile() {
       setPasswordError('修改失败，请重试');
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const handleSubmitProof = async (recordId) => {
+    if (!proofUrl.trim()) return;
+    
+    setIsSubmittingProof(true);
+    try {
+      const res = await fetch(`/api/records/${recordId}/update-proof`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proofUrl: proofUrl.trim() })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // 更新本地数据
+        const updatedRecords = userData.data.records.map(r => 
+          r._id === recordId ? { ...r, proofUrl: proofUrl.trim() } : r
+        );
+        setUserData(prev => ({
+          ...prev,
+          data: { ...prev.data, records: updatedRecords }
+        }));
+        setEditingRecordId(null);
+        setProofUrl('');
+      } else {
+        alert(data.message || '保存失败，请重试');
+      }
+    } catch (error) {
+      alert('保存失败，请重试');
+    } finally {
+      setIsSubmittingProof(false);
+    }
+  };
+
+  const handleVerify = async (recordId, action) => {
+    setIsSubmittingVerify(true);
+    setVerifyError('');
+    try {
+      const res = await fetch(`/api/records/${recordId}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // 更新本地数据
+        const updatedRecords = userData.data.records.map(r => 
+          r._id === recordId ? { 
+            ...r, 
+            verifiedCount: action === 'verify' ? (r.verifiedCount || 0) + 1 : r.verifiedCount 
+          } : r
+        );
+        setUserData(prev => ({
+          ...prev,
+          data: { ...prev.data, records: updatedRecords }
+        }));
+        setVerifyingRecordId(null);
+      } else {
+        setVerifyError(data.message || '操作失败');
+      }
+    } catch (error) {
+      setVerifyError('操作失败，请重试');
+    } finally {
+      setIsSubmittingVerify(false);
     }
   };
 
@@ -220,53 +296,62 @@ export default function UserProfile() {
           <h1 className="text-2xl font-bold mb-2">{user.name}</h1>
           <div className="text-gray-600 space-y-1">
             <p>性别: {user.gender === 'M' ? '男' : '女'}</p>
-            <p>年龄: {user.age || '-'}</p>
+            <p>生日: {formatDate(user.birthDate)}</p>
           </div>
         </div>
       </div>
 
-      {/* 修改密码表单 - 只在查看自己的个人中心时显示 */}
+      {/* 修改密码部分 */}
       {isOwnProfile && (
-        <div className="mt-8 bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium">修改密码</h3>
-          <form onSubmit={handleChangePassword} className="mt-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                新密码
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={6}
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                确认新密码
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                minLength={6}
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              />
-            </div>
-            {passwordError && (
-              <div className="text-red-600 text-sm">{passwordError}</div>
-            )}
-            <button
-              type="submit"
-              disabled={passwordLoading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {passwordLoading ? '修改中...' : '修改密码'}
-            </button>
-          </form>
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <button
+            onClick={() => setShowPasswordForm(!showPasswordForm)}
+            className="flex items-center text-gray-700 hover:text-gray-900"
+          >
+            <span className="font-medium">修改密码</span>
+            <span className="ml-2">{showPasswordForm ? '▼' : '▶'}</span>
+          </button>
+          
+          {showPasswordForm && (
+            <form onSubmit={handleChangePassword} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  新密码
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={6}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  确认新密码
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  required
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                />
+              </div>
+              {passwordError && (
+                <div className="text-red-600 text-sm">{passwordError}</div>
+              )}
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {passwordLoading ? '修改中...' : '修改密码'}
+              </button>
+            </form>
+          )}
         </div>
       )}
 
@@ -328,81 +413,155 @@ export default function UserProfile() {
           <h2 className="text-xl font-semibold">比赛成绩</h2>
           {isOwnProfile && (
             <button
-              onClick={() => window.location.href = '/users/submit'}
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+              onClick={() => router.push('/users/submit')}
+              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
-              <svg 
-                className="w-5 h-5 mr-2" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 4v16m8-8H4" 
-                />
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               提交成绩
             </button>
           )}
         </div>
 
-        {records.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    比赛
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    项目
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    成绩
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    日期
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    状态
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {records.map((record) => (
-                  <tr key={record._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {record.raceName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {getDistanceDisplay(record)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatTime(record.finishTime)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(record.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                        ${getVerificationStatusClass(record.verificationStatus)}`}
-                      >
-                        {getVerificationStatusText(record.verificationStatus)}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">比赛</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">项目</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成绩</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成绩链接</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {records.map((record) => (
+                <tr key={record._id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.raceName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getDistanceDisplay(record)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatTime(record.finishTime)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(record.date)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {isOwnProfile ? (
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getVerificationStatusClass(record.verificationStatus)}`}>
+                        {record.verifiedCount > 0 ? `${record.verifiedCount}人验证` : getVerificationStatusText(record.verificationStatus)}
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-4 text-gray-500">
-            暂无比赛成绩
-          </div>
-        )}
+                    ) : (
+                      verifyingRecordId === record._id ? (
+                        <div className="text-sm space-y-2">
+                          <p>如果您愿意确认 {user.name} 在这场比赛的成绩，请点击：</p>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleVerify(record._id, 'verify')}
+                              disabled={isSubmittingVerify}
+                              className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50"
+                            >
+                              {isSubmittingVerify ? '处理中...' : '该成绩正确'}
+                            </button>
+                            <button
+                              onClick={() => handleVerify(record._id, 'report')}
+                              disabled={isSubmittingVerify}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+                            >
+                              {isSubmittingVerify ? '处理中...' : '该成绩不正确'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setVerifyingRecordId(null);
+                                setVerifyError('');
+                              }}
+                              className="text-gray-500 hover:text-gray-700 text-sm"
+                            >
+                              取消
+                            </button>
+                          </div>
+                          {verifyError && <p className="text-red-600 text-xs">{verifyError}</p>}
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getVerificationStatusClass(record.verificationStatus)}`}>
+                            {record.verifiedCount > 0 ? `${record.verifiedCount}人验证` : getVerificationStatusText(record.verificationStatus)}
+                          </span>
+                          {session?.user?.id && (
+  typeof record.userId === 'object' ? 
+    record.userId?.toString() !== session.user.id :
+    record.userId !== session.user.id
+) && (
+  <button
+    onClick={() => setVerifyingRecordId(record._id)}
+    className="text-blue-600 hover:text-blue-800 text-sm"
+  >
+    验证
+  </button>
+)}
+                        </div>
+                      )
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {record.proofUrl ? (
+                      <a 
+                        href={record.proofUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-blue-500"
+                        title="查看成绩证明"
+                      >
+                        <ExternalLink size={16} />
+                      </a>
+                    ) : (
+                      isOwnProfile ? (
+                        editingRecordId === record._id ? (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="url"
+                              value={proofUrl}
+                              onChange={(e) => setProofUrl(e.target.value)}
+                              placeholder="输入成绩链接"
+                              className="w-48 px-2 py-1 text-sm border rounded"
+                            />
+                            <button
+                              onClick={() => handleSubmitProof(record._id)}
+                              disabled={isSubmittingProof || !proofUrl.trim()}
+                              className="text-blue-600 hover:text-blue-800 text-sm disabled:opacity-50"
+                            >
+                              {isSubmittingProof ? '保存中...' : '保存'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingRecordId(null);
+                                setProofUrl('');
+                              }}
+                              className="text-gray-500 hover:text-gray-700 text-sm"
+                            >
+                              取消
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setEditingRecordId(record._id)}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            点击提供成绩证明
+                          </button>
+                        )
+                      ) : (
+                        <span className="text-gray-500 text-sm">
+                          未提供成绩证明
+                        </span>
+                      )
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {records.length === 0 && (
+            <div className="text-center py-4 text-gray-500">暂无比赛成绩</div>
+          )}
+        </div>
       </div>
     </div>
   );

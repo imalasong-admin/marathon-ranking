@@ -55,36 +55,34 @@
 ### 新增依赖
 - Resend: ^1.0.0 (邮件服务)
 
-
 ## 2. 项目结构
 ```
 /
 ├── .next/                  # Next.js 构建输出目录
 ├── components/            # React 组件
 │   └── Navbar.js         # 导航栏组件
-│   └── VerificationAlert.js         # 验证码提醒
+│   └── VerificationAlert.js # 验证码提醒
 ├── lib/                  # 工具库
 │   └── mongodb.js        # MongoDB 连接配置
 │   └── email.js         # 邮件服务工具
 ├── models/               # 数据模型
-│   ├── Race.js          # 比赛模型（已更新字段）
+│   ├── Race.js          # 比赛模型
 │   ├── Record.js        # 记录模型
 │   └── User.js          # 用户模型
 ├── pages/               # 页面组件和 API 路由
-│   ├── index.js        # 新增：默认首页
+│   ├── index.js        # 默认首页
 │   ├── rankings.js     # 马拉松排行榜页面
-│   ├── ultra-rankings.js # 新增：超马排行榜页面
-│   ├── submit.js       # 原始提交页面（rankings.js使用。2024年、全程马拉松限定）
-│   ├── verify-email.js  # 邮箱验证页面
-│   ├── reset-password.js         # 重置密码
-│   ├── _app_.js         # 
-│   ├── login.js         # 登录
-│   └── registerr.js         # 注册
+│   ├── ultra-rankings.js # 超马排行榜页面
+│   ├── verify-email.js # 邮箱验证页面
+│   ├── reset-password.js # 重置密码
+│   ├── _app_.js        # 应用入口 
+│   ├── login.js        # 登录页面
+│   └── register.js     # 注册页面
 │   ├── users/
 │   │   ├── [id].js    # 用户个人中心页面
-│   │   └── submit.js  # 新增：分步骤提交页面（用户个人中心使用）
-│   │   └── ultra-submit.js  # 新增：分步骤提交页面(ultra-ranking.js使用。2024年、非全程马拉松限定)
-│   ├── admin/         # 管理员相关页面
+│   │   └── submit.js  # 分步骤提交页面
+│   │   └── ultra-submit.js # 超马成绩提交页面
+│   ├── admin/         # 管理员页面
 │   │   └── index.js   # 管理员控制台
 │   └── api/          # API 路由
 │       ├── admin/    # 管理员API
@@ -93,16 +91,12 @@
 │       ├── records/  # 成绩记录
 │       └── users/    # 用户管理
 ├── public/           # 静态资源
-│   └── images/      # 新增：图片资源目录
-│       └── logo.png # 网站 logo
-├── styles/          # 样式文件
-└── scripts/         # 新增：脚本目录
-└── migrations/  # 数据迁移脚本
+└── styles/          # 样式文件
+```
 
 ## 3. 数据模型
 ```javascript
-
-// User Model（更新）
+// User Model
 {
   name: String,
   email: String,
@@ -113,15 +107,15 @@
     type: String,
     default: ''
   },
-  isAdmin: {            // 新增管理员字段
+  isAdmin: {
     type: Boolean,
     default: false
   },
-  isLocked: {           // 新增锁定字段
+  isLocked: {
     type: Boolean,
     default: false
   },
-  lockReason: {         // 新增锁定原因
+  lockReason: {
     type: String,
     default: ''
   },
@@ -138,7 +132,7 @@
   }
 }
 
-// Race Model（更新）
+// Race Model
 {
   name: String,
   date: Date,
@@ -147,29 +141,61 @@
     required: true,
     enum: ['全程马拉松', '超马']
   },
-  location: String,        
-  website: String,         
+  location: String,  
+  website: String,  
   addedBy: ObjectId (ref: User)
 }
 
 // Record Model（更新）
 {
-  userId: ObjectId (ref: User),
-  raceId: ObjectId (ref: Race),
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  raceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Race',
+    required: true
+  },
   finishTime: {
     hours: Number,
     minutes: Number,
     seconds: Number
   },
   totalSeconds: Number,
-  proofUrl: String,  // 选填
-  ultraDistance: {    // 更新了验证规则
+  proofUrl: String,
+  ultraDistance: {
     type: String,
     enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
     required: function() {
       return this.raceId?.raceType === '超马';
     }
-  }
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'verified', 'rejected'],
+    default: 'pending'
+  },
+  verifiedCount: {
+    type: Number,
+    default: 0
+  },
+  verifiedBy: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    verifiedAt: Date
+  }],
+  reportedBy: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    reportedAt: Date,
+    reason: String
+  }]
 }
 ```
 
@@ -178,40 +204,33 @@
 - POST /api/auth/register - 用户注册
 - [...nextauth] - Next Auth 认证路由
 
+### 验证相关
+- POST /api/auth/verify-email - 验证邮箱验证码
+- POST /api/auth/forgot-password - 发送重置验证码
+- POST /api/auth/verify-reset-code - 验证重置验证码
+- POST /api/auth/reset-password - 重置密码
+
 ### 管理员功能（新增）
 - GET /api/admin/users - 获取用户列表
 - POST /api/admin/set-admin - 设置管理员权限
 - PATCH /api/admin/toggle-lock - 锁定/解锁用户
 
 ### 用户管理
-- GET /api/users/[id] - 获取用户信息
+- GET /api/users/[id] - 获取用户信息（包含验证状态）
 - PATCH /api/users/[id]/update - 更新用户信息
+- POST /api/users/[id]/change-password - 修改密码
 
 ### 比赛管理
 - GET /api/races - 获取比赛列表
 - POST /api/races - 添加新比赛
 
 ### 成绩管理
-- GET /api/records - 获取成绩列表（更新过滤逻辑）
+- GET /api/records - 获取成绩列表
 - POST /api/records/create - 提交新成绩
-     新增 ultraDistance 字段，用于记录超马项目类型
-
-### 验证邮箱验证码
-- POST /api/auth/verify-email - 验证邮箱验证码
-
-### 身份验证相关：
-- /api/auth/forgot-password - 发送重置验证码
-- /api/auth/verify-reset-code - 验证重置验证码
-- /api/auth/reset-password - 重置密码
-
-### 密码管理：
-- 修改密码：/api/users/[id]/change-password
-- 重置密码：/api/auth/reset-password
-
-
+- POST /api/records/[id]/verify - 验证/举报成绩
 
 ## 5. 权限控制机制
-### 管理员等级（新增）
+### 管理员等级
 1. 超级管理员(admin)
    - 可以设置/取消其他用户的管理员权限
    - 可以锁定/解锁任何普通用户
@@ -221,6 +240,17 @@
    - 可以锁定/解锁普通用户
    - 可以查看用户列表
    - 不能修改其他用户的管理员权限
+
+### 成绩验证规则
+1. 验证权限控制
+   - 用户不能验证自己的记录
+   - 不能重复验证同一记录
+   - 被锁定用户无法进行验证
+
+2. 验证状态管理
+   - pending: 待验证（默认）
+   - verified: 已验证
+   - rejected: 已拒绝
 
 ### 访问控制
 - 使用 Next Auth 中间件验证
@@ -244,32 +274,16 @@
    - 数据关联：用户锁定状态影响相关数据展示
    - 环境变量：需要同步更新到 Vercel
    - 代码修改：需要重启开发服务器(npm run dev)
-   - 新增：不同入口的提交流程有不同限制
-   - 新增：比赛类型字段的处理需要特别注意
-4. 未来扩展考虑：
-   - 预留多语言支持
-   - 考虑响应式设计
-   - 保持代码结构的可扩展性
+   - 不同入口：成绩提交流程有不同限制
+   - 类型字段：比赛类型和验证状态字段处理需要特别注意
 
-5. 邮箱验证机制
-   1. 验证流程：
-   - 新用户注册时生成4位验证码
-   - 发送验证邮件
-   - 24小时内完成验证
-   - 验证成功需重新登录
-
-  2. 开发环境：
-   - 验证码统一发送到测试邮箱
-   - 测试邮箱：imalasong2024@gmail.com
-   - 允许重复注册测试
-   - 完整日志记录
-
-  3. 生产环境：
-   - 严格邮箱唯一性检查
-   - 真实邮箱验证
-   - 额度监控
+4. 验证相关说明
+   - 成绩验证为非强制性功能
+   - 验证状态会影响成绩显示
+   - 举报功能需要管理员及时处理
+   - 验证记录需要完整保存
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：340adc7
-- 最后更新：2024-11-06
+- 最新稳定版本：[新的commit id]
+- 最后更新：2024-11-11
