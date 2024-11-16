@@ -1,30 +1,21 @@
+// models/Race.js
 import mongoose from 'mongoose';
 
-const RaceSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, '请输入比赛名称'],
-    unique: true,
-    trim: true
+const raceSchema = new mongoose.Schema({
+  seriesId: {           // 关联到标准赛事
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Series',      // 关联 Series 模型
+    required: true
   },
-  date: {
+  date: {               // 比赛日期
     type: Date,
-    required: [true, '请输入比赛日期']
+    required: true
   },
-  raceType: {
-    type: String,
-    required: true,
-    enum: ['全程马拉松', '超马']
+  isLocked: {           // 锁定状态
+    type: Boolean,
+    default: false
   },
-  location: {
-    type: String,
-    trim: true
-  },
-  website: {
-    type: String,
-    trim: true
-  },
-  addedBy: {
+  addedBy: {            // 添加人
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -33,4 +24,4 @@ const RaceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-export default mongoose.models.Race || mongoose.model('Race', RaceSchema);
+export default mongoose.models.Race || mongoose.model('Race', raceSchema);
