@@ -8,16 +8,16 @@ export default async function handler(req, res) {
   await connectDB();
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session?.user?.isAdmin) {
-    return res.status(403).json({ success: false, message: '需要管理员权限' });
-  }
-
   if (req.method === 'POST') {
+    // POST 方法保持不变
+    if (!session?.user?.isAdmin) {
+      return res.status(403).json({ success: false, message: '需要管理员权限' });
+    }
+
     try {
       const { seriesId, date } = req.body;
-      console.log('收到的数据:', { seriesId, date });  // 添加这行
+      console.log('收到的数据:', { seriesId, date });
   
-      // 验证必填字段
       if (!seriesId || !date) {
         return res.status(400).json({ 
           success: false, 
@@ -25,12 +25,9 @@ export default async function handler(req, res) {
         });
       }
 
-      // 调整时区，确保保存的是当天中午12点
       const adjustedDate = new Date(date);
       adjustedDate.setHours(12, 0, 0, 0);
-     
       
-      // 检查是否已存在相同场次
       const existingRace = await Race.findOne({
         seriesId,
         date: adjustedDate
@@ -43,10 +40,9 @@ export default async function handler(req, res) {
         });
       }
 
-      // 创建新场次
       const race = await Race.create({
         seriesId,
-        date: new Date(date),  // 直接保存，不做时区调整
+        date: new Date(date),
         addedBy: session.user.id
       });
 
@@ -66,14 +62,35 @@ export default async function handler(req, res) {
   } 
   else if (req.method === 'GET') {
     try {
-      // 获取场次列表时关联查询赛事信息
-      const races = await Race.find()
-        .populate('seriesId', 'name raceType')  // 关联查询赛事名称和类型
-        .sort({ date: -1 });                    // 按日期倒序
+      // 获取查询参数
+      const { year, type } = req.query;
+      
+      // 构建查询条件
+      let query = {};
+      
+      // 如果提供了年份，添加日期范围条件
+      if (year) {
+        const startDate = new Date(year, 0, 1);
+        const endDate = new Date(year, 11, 31);
+        query.date = {
+          $gte: startDate,
+          $lte: endDate
+        };
+      }
+
+      // 获取场次列表并关联查询赛事信息
+      let races = await Race.find(query)
+        .populate('seriesId', 'name raceType location website')
+        .sort({ date: -1 });
+      
+      // 如果提供了类型，在内存中过滤
+      if (type) {
+        races = races.filter(race => race.seriesId?.raceType === type);
+      }
 
       res.status(200).json({ 
         success: true, 
-        races 
+        races
       });
     } catch (error) {
       console.error('获取场次列表错误:', error);

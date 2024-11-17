@@ -26,12 +26,11 @@ export default function UltraRankings() {
       if (data.success) {
         // 筛选2024年超马记录并按日期降序排序
         const filteredRecords = data.records
-          .filter(record => {
-            const raceDate = new Date(record.date);
-            const raceInfo = record.raceId;
-            return raceDate.getFullYear() === 2024 && 
-                   raceInfo?.raceType === '超马';
-          })
+  .filter(record => {
+    const raceDate = new Date(record.raceId?.date);  // 从 raceId 获取日期
+    return raceDate.getFullYear() === 2024 && 
+           record.raceId?.seriesId?.raceType === '超马';  // 从 seriesId 获取类型
+  })
           .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         setRecords(filteredRecords);
@@ -70,10 +69,11 @@ export default function UltraRankings() {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '-';
-      return date.toLocaleDateString('zh-CN', {
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
+        month: 'numeric',
+        day: 'numeric',
+        timeZone: 'UTC'
       }).replace(/\//g, '-');
     } catch (error) {
       return '-';
@@ -95,7 +95,7 @@ export default function UltraRankings() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">2024年超马排行榜</h1>
         <button
-          onClick={() => window.location.href = '/users/ultra-submit'}
+          onClick={() => window.location.href = '/users/submit'}
           className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
         >
           <svg 
@@ -167,7 +167,7 @@ export default function UltraRankings() {
                     </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {record.raceName}
+                      {record.raceId?.seriesId?.name || '未知比赛'}  
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {record.ultraDistance}

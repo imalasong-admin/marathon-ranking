@@ -66,8 +66,9 @@
 │   └── mongodb.js        # MongoDB 连接配置
 │   └── email.js         # 邮件服务工具
 ├── models/               # 数据模型
-│   ├── Race.js          # 比赛模型
+│   ├── Race.js          # 场次模型
 │   ├── Record.js        # 记录模型
+│   ├── Series.js         # 赛事模型
 │   └── User.js          # 用户模型
 ├── pages/               # 页面组件和 API 路由
 │   ├── index.js        # 默认首页
@@ -84,12 +85,15 @@
 │   │   └── ultra-submit.js # 超马成绩提交页面
 │   ├── admin/         # 管理员页面
 │   │   └── index.js   # 管理员控制台
+│   │   └── series.js  # 赛事管理页面
+│   │   └── races.js   # 场次管理页面
 │   └── api/          # API 路由
 │       ├── admin/    # 管理员API
 │       ├── auth/     # 认证相关
-│       ├── races/    # 比赛管理
+│       ├── races/    # 场次管理
 │       ├── records/  # 成绩记录
 │       └── users/    # 用户管理
+│       └── series/   # 赛事管理
 ├── public/           # 静态资源
 └── styles/          # 样式文件
 ```
@@ -146,6 +150,29 @@
   addedBy: ObjectId (ref: User)
 }
 
+ // Series Model（新增）
+```javascript
+const seriesSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  raceType: {
+    type: String,
+    required: true,
+    enum: ['全程马拉松', '超马']
+  },
+  location: String,
+  website: String,
+  addedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+}, {
+  timestamps: true
+});
+
 // Record Model（更新）
 {
   userId: {
@@ -198,6 +225,34 @@
   }]
 }
 ```
+## 日期处理规范
+1. 数据库存储
+- 所有日期统一使用 UTC 时间存储
+- 存储时统一设置为当天的 12:00:00（UTC）
+- 示例：date: "2024-02-01T12:00:00.000Z"
+
+2. API 处理
+- POST/PUT 请求时：date + 'T12:00:00.000Z'
+- 示例：
+```javascript
+const adjustedDate = new Date(date + 'T12:00:00.000Z');
+
+3. 前端显示
+- 统一使用 UTC 时区显示
+- 使用标准格式化函数：
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  try {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      timeZone: 'UTC'
+    });
+  } catch (error) {
+    return '-';
+  }
+};
 
 ## 4. API 路由
 ### 用户认证
@@ -220,14 +275,25 @@
 - PATCH /api/users/[id]/update - 更新用户信息
 - POST /api/users/[id]/change-password - 修改密码
 
-### 比赛管理
-- GET /api/races - 获取比赛列表
-- POST /api/races - 添加新比赛
 
 ### 成绩管理
 - GET /api/records - 获取成绩列表
 - POST /api/records/create - 提交新成绩
 - POST /api/records/[id]/verify - 验证/举报成绩
+
+### 赛事管理
+
+GET /api/series - 获取赛事列表
+POST /api/series - 添加赛事
+GET /api/series/[id] - 获取单个赛事
+PUT /api/series/[id] - 更新赛事
+
+### 场次管理
+
+POST /api/races - 添加场次
+GET /api/races - 获取场次列表
+PUT /api/races/[id] - 更新场次
+PATCH /api/races/[id]/toggle-lock - 切换锁定状态
 
 ## 5. 权限控制机制
 ### 管理员等级
@@ -285,5 +351,5 @@
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[74989a5]
-- 最后更新：2024-11-11
+- 最新稳定版本：[ca73411]
+- 最后更新：2024-11-15

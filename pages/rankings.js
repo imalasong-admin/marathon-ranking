@@ -43,18 +43,19 @@ export default function Rankings() {
       const data = await res.json();
       
       if (data.success) {
-        // 一次性完成筛选和排序
         const filteredRecords = data.records
           .filter(record => {
-            const raceDate = new Date(record.date);
+            const raceDate = new Date(record.raceId?.date);
+            // 从 seriesId 中获取比赛类型
             return raceDate.getFullYear() === 2024 && 
-                   (!record.raceId?.raceType || record.raceId.raceType === '全程马拉松');
+                   record.raceId?.seriesId?.raceType === '全程马拉松';
           })
           .sort((a, b) => {
-            // 按完赛时间排序
-            const timeA = a.finishTime.hours * 3600 + a.finishTime.minutes * 60 + a.finishTime.seconds;
-            const timeB = b.finishTime.hours * 3600 + b.finishTime.minutes * 60 + b.finishTime.seconds;
-            return timeA - timeB;
+            // 修改排序逻辑：由快到慢 = 由小到大
+            return a.totalSeconds - b.totalSeconds;
+            // 或者用完赛时间计算：
+            // return (a.finishTime.hours * 3600 + a.finishTime.minutes * 60 + a.finishTime.seconds) 
+            //      - (b.finishTime.hours * 3600 + b.finishTime.minutes * 60 + b.finishTime.seconds);
           });
         
         setRecords(filteredRecords);
@@ -68,7 +69,6 @@ export default function Rankings() {
       setLoading(false);
     }
   };
-
   // 筛选逻辑
   const applyFilters = () => {
     let result = [...records];
@@ -134,10 +134,11 @@ export default function Rankings() {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '-';
-      return date.toLocaleDateString('zh-CN', {
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
+        month: 'numeric',
+        day: 'numeric',
+        timeZone: 'UTC'
       }).replace(/\//g, '-');
     } catch (error) {
       return '-';
@@ -159,7 +160,7 @@ export default function Rankings() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">2024年马拉松排行榜</h1>
         <button
-          onClick={() => window.location.href = '/submit'}
+          onClick={() => window.location.href = '/users/submit'}
           className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
         >
           <svg 
@@ -329,16 +330,16 @@ export default function Rankings() {
                     {record.age || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleRaceClick(record.raceId?._id)}
-                      className={`hover:text-blue-800 hover:underline focus:outline-none ${
-                        filters.selectedRace === record.raceId?._id
-                          ? 'text-blue-600 font-medium'
-                          : 'text-blue-500'
-                      }`}
-                    >
-                      {record.raceName}
-                    </button>
+                  <button
+  onClick={() => handleRaceClick(record.raceId?._id)}
+  className={`hover:text-blue-800 hover:underline focus:outline-none ${
+    filters.selectedRace === record.raceId?._id
+      ? 'text-blue-600 font-medium'
+      : 'text-blue-500'
+  }`}
+>
+  {record.raceId?.seriesId?.name || '未知比赛'}
+</button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(record.date)}

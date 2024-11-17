@@ -47,31 +47,35 @@ export default function UserSubmitRecord() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({length: 10}, (_, i) => (currentYear - i).toString());
 
-  // 获取比赛列表
-  useEffect(() => {
-    if (step === 2) {
-      const fetchRaces = async () => {
-        try {
-          const res = await fetch('/api/races');
-          const data = await res.json();
-          if (data.success) {
-            // 根据第一步选择过滤比赛
-            const filteredRaces = data.races.filter(race => {
-              const raceDate = new Date(race.date);
-              return raceDate.getFullYear() === parseInt(selectedYear) && 
-                     race.raceType === selectedType;
-            });
-            setRaces(filteredRaces);
-          }
-        } catch (error) {
-          console.error('获取比赛列表失败:', error);
-          setError('获取比赛列表失败');
+// 获取比赛列表
+useEffect(() => {
+  if (step === 2) {
+    const fetchRaces = async () => {
+      try {
+        // 使用筛选参数获取场次
+        const res = await fetch(`/api/races?year=${selectedYear}&type=${selectedType}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // 场次数据中，赛事信息现在在 seriesId 字段中
+          const formattedRaces = data.races.map(race => ({
+            _id: race._id,
+            name: race.seriesId.name,  // 赛事名称从 seriesId 中获取
+            date: race.date,
+            isLocked: race.isLocked
+          }));
+          
+          setRaces(formattedRaces);
         }
-      };
+      } catch (error) {
+        console.error('获取比赛列表失败:', error);
+        setError('获取比赛列表失败');
+      }
+    };
 
-      fetchRaces();
-    }
-  }, [step, selectedYear, selectedType]);
+    fetchRaces();
+  }
+}, [step, selectedYear, selectedType]);
 
   // 处理第一步提交
   const handleStepOneSubmit = (e) => {
@@ -91,40 +95,76 @@ export default function UserSubmitRecord() {
   // 处理添加新比赛
   const handleAddNewRace = async () => {
     try {
+      // 基础验证保持不变
       if (!newRaceName.trim()) {
         setError('比赛名称不能为空');
         return;
       }
-
       if (!newRaceDate) {
         setError('请选择比赛日期');
         return;
       }
-
       const raceDate = new Date(newRaceDate);
       if (raceDate.getFullYear() !== parseInt(selectedYear)) {
         setError(`只能添加 ${selectedYear} 年的比赛`);
         return;
       }
-
-      const res = await fetch('/api/races', {
+  
+      // 1. 创建赛事 - 仅包含赛事相关信息
+      const seriesRes = await fetch('/api/series', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newRaceName,
-          date: newRaceDate,
-          raceType: selectedType,
+          name: newRaceName.trim(),
+          raceType: selectedType,  // 使用第一步选择的类型
           location: newRaceLocation.trim(),
-          website: newRaceWebsite.trim(),
-          userId: session.user.id
+          website: newRaceWebsite.trim()
         })
       });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setRaces([...races, data.race]);
-        setFormData({ ...formData, raceId: data.race._id });
+  
+      const seriesData = await seriesRes.json();
+      
+      if (!seriesData.success) {
+        setError(seriesData.message || '添加赛事失败');
+        return;
+      }
+  
+      // 2. 创建场次 - 仅包含日期和关联赛事ID
+      const raceRes = await fetch('/api/races', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seriesId: seriesData.series._id,
+          date: newRaceDate + 'T12:00:00.000Z'  // 添加 UTC 时间
+        })
+      });
+  
+      const raceData = await raceRes.json();
+  
+      if (raceData.success) {
+        // 更新列表保持不变
+        setRaces([...races, {
+          _id: raceData.race._id,
+          name: seriesData.series.name,
+          date: raceData.race.date,
+          isLocked: false
+        }]);
+        // 日期显示统一使用一个格式化函数
+        const formatDate = (dateString) => {
+          if (!dateString) return '-';
+          try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'numeric',
+              day: 'numeric',
+              timeZone: 'UTC'
+            });
+          } catch (error) {
+            return '-';
+          }
+        };
+        
+        // 重置表单保持不变
         setNewRaceName('');
         setNewRaceDate('');
         setNewRaceLocation('');
@@ -132,11 +172,11 @@ export default function UserSubmitRecord() {
         setIsAddingNewRace(false);
         setError('');
       } else {
-        setError(data.message || '添加比赛失败');
+        setError(raceData.message || '添加场次失败');
       }
     } catch (error) {
       console.error('添加比赛错误:', error);
-      setError('添加比赛失败，请重试');
+      setError('添加失败，请重试');
     }
   };
 
@@ -345,18 +385,23 @@ const submitData = {
               {!isAddingNewRace ? (
                 <div className="mt-1 flex space-x-2">
                   <select
-                    value={formData.raceId}
-                    onChange={(e) => setFormData({...formData, raceId: e.target.value})}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">请选择比赛</option>
-                    {races.map((race) => (
-                      <option key={race._id} value={race._id}>
-                        {race.name} ({new Date(race.date).toLocaleDateString()})
-                      </option>
-                    ))}
-                  </select>
+  value={formData.raceId}
+  onChange={(e) => setFormData({...formData, raceId: e.target.value})}
+  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  required
+>
+  <option value="">请选择比赛</option>
+  {races.map((race) => (
+    <option key={race._id} value={race._id}>
+    {race.name} ({new Date(race.date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      timeZone: 'UTC'
+    })})
+  </option>
+  ))}
+</select>
                   <button
                     type="button"
                     onClick={() => setIsAddingNewRace(true)}

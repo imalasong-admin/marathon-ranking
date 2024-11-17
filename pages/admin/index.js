@@ -153,7 +153,7 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold mb-6">管理员控制台</h1>
+        <h1 className="text-2xl font-bold mb-6">用户管理</h1>
         
         {/* 用户列表 */}
         <div className="overflow-x-auto">
