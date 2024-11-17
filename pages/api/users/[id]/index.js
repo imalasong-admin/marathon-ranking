@@ -3,6 +3,7 @@ import connectDB from '../../../../lib/mongodb';
 import User from '../../../../models/User';
 import Record from '../../../../models/Record';
 import Race from '../../../../models/Race';
+import Series from '../../../../models/Series'; 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]';
 
@@ -21,7 +22,6 @@ function calculateAge(birthDate) {
   
   return age;
 }
-
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -54,13 +54,17 @@ export default async function handler(req, res) {
 
         // 查询用户的所有成绩记录
         const records = await Record.find({ userId: id })
-        .select('finishTime totalSeconds proofUrl ultraDistance verificationStatus verifiedCount verifiedBy reportedBy')
+          .select('finishTime userId raceId totalSeconds proofUrl verificationStatus verifiedCount verifiedBy reportedBy createdAt updatedAt ultraDistance')
           .populate({
             path: 'raceId',
-            model: Race,
-            select: 'name date raceType'
+            populate: {
+              path: 'seriesId',
+              select: 'name raceType'
+            }
           })
-          .sort({ 'raceId.date': -1 });
+          .sort({ date: -1 });
+
+          console.log('Raw Record:', JSON.stringify(records[0], null, 2));
 
         // 计算年龄并格式化记录
         const recordsWithDetails = records.map(record => {
@@ -85,12 +89,12 @@ export default async function handler(req, res) {
           return {
             ...recordObj,
             age,
-            raceName: recordObj.raceId?.name || '未知比赛',
+            raceName: recordObj.raceId?.seriesId?.name || '未知比赛',
             date: recordObj.raceId?.date,
-            raceType: recordObj.raceId?.raceType,
+            raceType: recordObj.raceId?.seriesId?.raceType,
             userName: user.name,
             gender: user.gender,
-            ultraDistance: recordObj.ultraDistance,  // 确保返回超马项目信息
+            ultraDistance: recordObj.ultraDistance,
             verificationStatus: recordObj.verificationStatus,
             verifiedCount: recordObj.verifiedCount,
             verifiedBy: recordObj.verifiedBy,
@@ -116,8 +120,9 @@ export default async function handler(req, res) {
       }
       break;
 
-    // ... PATCH 方法保持不变 ...
+    default:
+      res.setHeader('Allow', ['GET']);
+      res.status(405).json({ success: false, message: `不支持 ${method} 请求方法` });
+      break;
   }
 }
-
-// ... calculateAge 函数保持不变 ...

@@ -49,11 +49,13 @@ const getVerificationStatusClass = (status) => {
 };
 
 const getDistanceDisplay = (record) => {
-  if (!record?.raceId?.raceType) return '-';
+  // 从场次关联的赛事中获取比赛类型
+  const raceType = record.raceId?.seriesId?.raceType;
+  if (!raceType) return '-';
   
-  if (record.raceId.raceType === '超马' && record.ultraDistance) {
+  if (raceType === '超马' && record.ultraDistance) {
     return record.ultraDistance;
-  } else if (record.raceId.raceType === '全程马拉松') {
+  } else if (raceType === '全程马拉松') {
     return '26.2英里';
   }
   return '-';
@@ -439,8 +441,12 @@ const [verifyError, setVerifyError] = useState('');
             <tbody className="bg-white divide-y divide-gray-200">
               {records.map((record) => (
                 <tr key={record._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.raceName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getDistanceDisplay(record)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.raceId?.seriesId?.name || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{console.log('Record:', record)}
+                      {/* 使用 JSON.stringify 显示完整数据 */}
+  {console.log('Record:', JSON.stringify(record, null, 2))}
+                    {getDistanceDisplay(record)}
+                    </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatTime(record.finishTime)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(record.date)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">

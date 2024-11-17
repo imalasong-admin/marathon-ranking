@@ -5,6 +5,7 @@ import connectDB from '../../../lib/mongodb';
 import Record from '../../../models/Record';
 import Race from '../../../models/Race';
 import User from '../../../models/User';
+import Series from '../../../models/Series';  
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -48,7 +49,7 @@ export default async function handler(req, res) {
     }
 
     // 验证比赛ID
-    const race = await Race.findById(raceId);
+    const race = await Race.findById(raceId).populate('seriesId');
     if (!race) {
       return res.status(400).json({ message: '比赛不存在' });
     }
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
     }
 
     // 如果是超马比赛，验证 ultraDistance
-    if (race.raceType === '超马' && !ultraDistance) {
+    if (race.seriesId?.raceType === '超马' && !ultraDistance) {
       return res.status(400).json({ message: '请选择超马项目' });
     }
 
@@ -78,7 +79,7 @@ export default async function handler(req, res) {
     };
 
     // 只在超马比赛时添加 ultraDistance 字段
-    if (race.raceType === '超马') {
+    if (race.seriesId?.raceType === '超马') {
       recordData.ultraDistance = ultraDistance;
     }
 
