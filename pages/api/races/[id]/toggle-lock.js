@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     }
 
     race.isLocked = !race.isLocked;
+    race.lastModifiedBy = session.user.id;
     await race.save();
 
     res.status(200).json({

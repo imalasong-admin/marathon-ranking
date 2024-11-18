@@ -136,22 +136,33 @@
   }
 }
 
-// Race Model
+// Race Model（更新）
 {
-  name: String,
-  date: Date,
-  raceType: {
-    type: String,
-    required: true,
-    enum: ['全程马拉松', '超马']
+  seriesId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Series',
+    required: true
   },
-  location: String,  
-  website: String,  
-  addedBy: ObjectId (ref: User)
+  date: {
+    type: Date,
+    required: true
+  },
+  isLocked: {
+    type: Boolean,
+    default: false
+  },
+  addedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  lastModifiedBy: {             // 新增
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
 }
 
  // Series Model（新增）
-```javascript
 const seriesSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -166,6 +177,10 @@ const seriesSchema = new mongoose.Schema({
   location: String,
   website: String,
   addedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  lastModifiedBy: {             // 新增
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
@@ -292,7 +307,7 @@ PUT /api/series/[id] - 更新赛事
 
 POST /api/races - 添加场次
 GET /api/races - 获取场次列表
-PUT /api/races/[id] - 更新场次
+PUT /api/races/[id] - 更新场次（更新：支持修改关联赛事）
 PATCH /api/races/[id]/toggle-lock - 切换锁定状态
 
 ## 5. 权限控制机制
@@ -351,5 +366,5 @@ PATCH /api/races/[id]/toggle-lock - 切换锁定状态
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[ca73411]
-- 最后更新：2024-11-15
+- 最新稳定版本：[83d9656]
+- 最后更新：2024-11-16

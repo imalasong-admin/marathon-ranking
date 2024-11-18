@@ -153,7 +153,29 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold mb-6">用户管理</h1>
+      <div className="flex gap-4 mb-6">
+  {/* 当前页面按钮使用深色背景 */}
+  <button 
+    className="px-4 py-2 bg-gray-800 text-white rounded-md"
+    disabled
+  >
+    用户管理
+  </button>
+  
+  <button
+    onClick={() => router.push('/admin/series')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    赛事管理
+  </button>
+  
+  <button
+    onClick={() => router.push('/admin/races')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    场次管理
+  </button>
+</div>
         
         {/* 用户列表 */}
         <div className="overflow-x-auto">

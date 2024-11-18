@@ -34,18 +34,21 @@ export default function SeriesManagement() {
 
  // 获取赛事列表
  const fetchSeries = async () => {
-   try {
-     const res = await fetch('/api/series');
-     const data = await res.json();
-     if (data.success) {
-       setSeries(data.series);
-     }
-   } catch (err) {
-     setError('加载失败');
-   } finally {
-     setLoading(false);
-   }
- };
+  try {
+    const res = await fetch('/api/series');
+    const data = await res.json();
+    if (data.success) {
+      setSeries(data.series.map(s => ({
+        ...s,
+        addedBy: s.addedBy || null
+      })));
+    }
+  } catch (err) {
+    setError('加载失败');
+  } finally {
+    setLoading(false);
+  }
+};
 
  // 添加/编辑赛事
  const handleSubmit = async () => {
@@ -108,7 +111,29 @@ export default function SeriesManagement() {
 
      <div className="bg-white rounded-lg shadow-sm p-6">
        <div className="flex justify-between items-center mb-6">
-         <h1 className="text-2xl font-bold">赛事管理</h1>
+       <div className="flex gap-4 mb-6">
+  <button
+    onClick={() => router.push('/admin')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    用户管理
+  </button>
+  
+  {/* 当前页面使用深色背景 */}
+  <button 
+    className="px-4 py-2 bg-gray-800 text-white rounded-md"
+    disabled
+  >
+    赛事管理
+  </button>
+  
+  <button
+    onClick={() => router.push('/admin/races')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    场次管理
+  </button>
+</div>
          <button
            onClick={() => setShowAddDialog(true)}
            className="bg-blue-600 text-white px-4 py-2 rounded-md"
@@ -124,26 +149,48 @@ export default function SeriesManagement() {
                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">赛事名称</th>
                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">地点</th>
+               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作人</th>
                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
              </tr>
            </thead>
            <tbody className="bg-white divide-y divide-gray-200">
-             {series.map((s) => (
-               <tr key={s._id}>
-                 <td className="px-6 py-4">{s.name}</td>
-                 <td className="px-6 py-4">{s.raceType}</td>
-                 <td className="px-6 py-4">{s.location || '-'}</td>
-                 <td className="px-6 py-4 space-x-2">
-                   <button
-                     onClick={() => handleEdit(s)}
-                     className="text-blue-600 hover:text-blue-900"
-                   >
-                     编辑
-                   </button>
-
-                 </td>
-               </tr>
-             ))}
+           {series.map((s) => (
+  <tr key={s._id}>
+    <td className="px-6 py-4">{s.name}</td>
+    <td className="px-6 py-4">{s.raceType}</td>
+    <td className="px-6 py-4">{s.location || '-'}</td>
+    {/* 修改这部分，显示最后修改者 */}
+    <td className="px-6 py-4">
+      {s.lastModifiedBy ? (
+        <div className="flex items-center">
+          <span className="text-sm text-gray-600">{s.lastModifiedBy.name}</span>
+          {s.lastModifiedBy.isAdmin && (
+            <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+              管理员
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center">
+          <span className="text-sm text-gray-600">{s.addedBy?.name}</span>
+          {s.addedBy?.isAdmin && (
+            <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+              管理员
+            </span>
+          )}
+        </div>
+      )}
+    </td>
+    <td className="px-6 py-4 space-x-2">
+      <button
+        onClick={() => handleEdit(s)}
+        className="text-blue-600 hover:text-blue-900"
+      >
+        编辑
+      </button>
+    </td>
+  </tr>
+))}
            </tbody>
          </table>
        </div>

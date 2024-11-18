@@ -162,7 +162,30 @@ const fetchRaces = async () => {
 
 <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">比赛场次管理</h1>
+    
+        <div className="flex gap-4 mb-6">
+  <button
+    onClick={() => router.push('/admin')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    用户管理
+  </button>
+  
+  <button
+    onClick={() => router.push('/admin/series')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    赛事管理
+  </button>
+  
+  {/* 当前页面使用深色背景 */}
+  <button 
+    className="px-4 py-2 bg-gray-800 text-white rounded-md"
+    disabled
+  >
+    场次管理
+  </button>
+</div>
         <button
           onClick={() => setShowAddDialog(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -174,60 +197,86 @@ const fetchRaces = async () => {
       {/* 添加场次列表 */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">赛事名称</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">比赛时间</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {races.map((race) => (
-              <tr key={race._id}>
-                <td className="px-6 py-4">{race.seriesId?.name || '-'}</td>
-                <td className="px-6 py-4">{race.seriesId?.raceType || '-'}</td>
-                <td className="px-6 py-4">
-  {race.date ? new Date(race.date).toLocaleDateString('en-US', { 
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    timeZone: 'UTC'  // 使用UTC时区显示
-  }) : '-'}
-</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    race.isLocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                  }`}>
-                    {race.isLocked ? '已锁定' : '正常'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 space-x-2">
-                  <button
-                    onClick={() => handleEdit(race)}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    编辑
-                  </button>
-                  <button
-  onClick={() => handleToggleLock(race)}
-  className={`${race.isLocked ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}`}
->
-  {race.isLocked ? '解锁' : '锁定'}
-</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+<thead className="bg-gray-50">
+  <tr>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">赛事名称</th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">比赛时间</th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作人</th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+  </tr>
+</thead>
+<tbody className="bg-white divide-y divide-gray-200">
+  {races.map((race) => (
+    <tr key={race._id}>
+      <td className="px-6 py-4">{race.seriesId?.name || '-'}</td>
+      <td className="px-6 py-4">{race.seriesId?.raceType || '-'}</td>
+      <td className="px-6 py-4">
+        {race.date ? new Date(race.date).toLocaleDateString('en-US', { 
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          timeZone: 'UTC'
+        }) : '-'}
+      </td>
+      <td className="px-6 py-4">
+        <span className={`px-2 py-1 rounded-full text-xs ${
+          race.isLocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+        }`}>
+          {race.isLocked ? '已锁定' : '正常'}
+        </span>
+      </td>
+      {/* 操作人列 */}
+      <td className="px-6 py-4">
+        {race.lastModifiedBy ? (
+          <div className="flex items-center">
+            <span className="text-sm text-gray-600">{race.lastModifiedBy.name}</span>
+            {race.lastModifiedBy.isAdmin && (
+              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                管理员
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <span className="text-sm text-gray-600">{race.addedBy?.name}</span>
+            {race.addedBy?.isAdmin && (
+              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                管理员
+              </span>
+            )}
+          </div>
+        )}
+      </td>
+      {/* 操作按钮列 */}
+      <td className="px-6 py-4 space-x-2">
+        <button
+          onClick={() => handleEdit(race)}
+          className="text-blue-600 hover:text-blue-900"
+        >
+          编辑
+        </button>
+        <button
+          onClick={() => handleToggleLock(race)}
+          className={`${race.isLocked ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}`}
+        >
+          {race.isLocked ? '解锁' : '锁定'}
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
         </table>
       </div>
     </div>
-
+ 
      {showAddDialog && (
        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
          <div className="bg-white rounded-lg max-w-md w-full p-6">
-           <h3 className="text-lg font-semibold mb-4">添加场次</h3>
+         <h3 className="text-lg font-semibold mb-4">
+  {editId ? '编辑场次' : '添加场次'}
+</h3>
            <div className="space-y-4">
              <div>
                <label className="block text-sm font-medium mb-2">选择赛事</label>

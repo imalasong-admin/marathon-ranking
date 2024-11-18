@@ -7,32 +7,38 @@ export default async function handler(req, res) {
   await connectDB();
   const session = await getServerSession(req, res, authOptions);
 
-  console.log('API session:', session); // 调试用
-
   if (!session) {
     return res.status(401).json({ success: false, message: '请先登录' });
-  }
-
-  if (!session.user.isAdmin) {
-    return res.status(403).json({ success: false, message: '需要管理员权限' });
   }
 
   if (req.method === 'GET') {
     try {
       const series = await Series.find({})
+        .populate({
+          path: 'addedBy',      // 保留原有的
+          select: 'name isAdmin'
+        })
+        .populate({
+          path: 'lastModifiedBy',  // 添加新的
+          select: 'name isAdmin'
+        })
         .sort({ name: 1 });
+      
+      // 添加调试日志
+      console.log('获取的赛事数据:', series);
+      
       res.status(200).json({ success: true, series });
     } catch (error) {
       console.error('获取赛事列表错误:', error);
       res.status(500).json({ success: false, message: '获取赛事列表失败' });
     }
-  } 
+  }
   else if (req.method === 'POST') {
-    // 检查管理员权限
-    if (!session.user.isAdmin) {
-      return res.status(403).json({ success: false, message: '需要管理员权限' });
+    // 只检查是否登录，不检查管理员权限
+    if (!session) {
+      return res.status(401).json({ success: false, message: '请先登录' });
     }
-
+  
     try {
       const { name, raceType, location, website } = req.body;
 
@@ -58,7 +64,8 @@ export default async function handler(req, res) {
         name,
         raceType,
         location: location || '',
-        website: website || ''
+        website: website || '',
+        addedBy: session.user.id  // 添加这一行
       });
 
       res.status(201).json({ 

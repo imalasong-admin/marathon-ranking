@@ -55,25 +55,31 @@ export default async function handler(req, res) {
         }
 
         const updatedSeries = await Series.findByIdAndUpdate(
-          id,
-          { name, raceType, location, website },
-          { new: true, runValidators: true }
-        );
-
-        if (!updatedSeries) {
-          return res.status(404).json({ success: false, message: '赛事不存在' });
+            id,
+            { 
+              name, 
+              raceType, 
+              location, 
+              website,
+              lastModifiedBy: session.user.id  // 添加这行
+            },
+            { new: true, runValidators: true }
+          ).populate('lastModifiedBy', 'name isAdmin');  // 添加这个 populate
+      
+          if (!updatedSeries) {
+            return res.status(400).json({ success: false, message: '赛事不存在' });
+          }
+      
+          res.status(200).json({
+            success: true,
+            message: '更新成功',
+            series: updatedSeries
+          });
+        } catch (error) {
+          console.error('更新赛事错误:', error);
+          res.status(500).json({ success: false, message: '更新失败，请重试' });
         }
-
-        res.status(200).json({
-          success: true,
-          message: '更新成功',
-          series: updatedSeries
-        });
-      } catch (error) {
-        console.error('更新赛事错误:', error);
-        res.status(500).json({ success: false, message: '更新失败，请重试' });
-      }
-      break;
+        break;
 
     default:
       res.status(405).json({ message: '不支持的请求方法' });

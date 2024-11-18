@@ -19,6 +19,15 @@ const SeriesSchema = new mongoose.Schema({
   website: {
     type: String,
     trim: true
+  },
+  addedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  lastModifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true

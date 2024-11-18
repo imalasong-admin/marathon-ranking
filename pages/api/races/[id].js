@@ -16,12 +16,12 @@ export default async function handler(req, res) {
 
   if (req.method === 'PUT') {
     try {
-      const { date } = req.body;
+        const { date, seriesId } = req.body; 
 
       if (!date) {
         return res.status(400).json({ 
           success: false, 
-          message: '日期不能为空' 
+          message: '日期不能为空'   
         });
       }
 
@@ -31,7 +31,11 @@ export default async function handler(req, res) {
 
       const updatedRace = await Race.findByIdAndUpdate(
         id,
-        { date: adjustedDate },
+        { 
+            date: adjustedDate,
+            seriesId: seriesId,
+            lastModifiedBy: session.user.id 
+          },
         { new: true }
       );
 

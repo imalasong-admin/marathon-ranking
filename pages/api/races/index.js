@@ -9,14 +9,13 @@ export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
 
   if (req.method === 'POST') {
-    // POST 方法保持不变
-    if (!session?.user?.isAdmin) {
-      return res.status(403).json({ success: false, message: '需要管理员权限' });
+    // 只检查登录状态
+    if (!session) {
+      return res.status(401).json({ success: false, message: '请先登录' });
     }
-
+  
     try {
       const { seriesId, date } = req.body;
-      console.log('收到的数据:', { seriesId, date });
   
       if (!seriesId || !date) {
         return res.status(400).json({ 
@@ -80,8 +79,10 @@ export default async function handler(req, res) {
 
       // 获取场次列表并关联查询赛事信息
       let races = await Race.find(query)
-        .populate('seriesId', 'name raceType location website')
-        .sort({ date: -1 });
+  .populate('seriesId', 'name raceType location website')
+  .populate('addedBy', 'name isAdmin')
+  .populate('lastModifiedBy', 'name isAdmin')
+  .sort({ date: -1 });
       
       // 如果提供了类型，在内存中过滤
       if (type) {
