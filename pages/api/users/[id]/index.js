@@ -7,7 +7,7 @@ import Series from '../../../../models/Series';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]';
 
-// 将辅助函数移到顶部
+// 辅助函数
 function calculateAge(birthDate) {
   if (!birthDate) return null;
   
@@ -33,9 +33,9 @@ export default async function handler(req, res) {
 
         const { id } = req.query;
         
-        // 查询用户信息
+        // 查询用户信息，添加 stravaUrl
         const user = await User.findById(id)
-          .select('name gender birthDate bio isLocked');
+          .select('name gender birthDate bio stravaUrl isLocked');
 
         if (!user) {
           return res.status(404).json({ success: false, message: '未找到用户' });
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
           }
         }
 
-        // 查询用户的所有成绩记录
+        // 查询用户的所有成绩记录，添加验证人和举报人的详细信息
         const records = await Record.find({ userId: id })
           .select('finishTime userId raceId totalSeconds proofUrl verificationStatus verifiedCount verifiedBy reportedBy createdAt updatedAt ultraDistance')
           .populate({
@@ -62,9 +62,15 @@ export default async function handler(req, res) {
               select: 'name raceType'
             }
           })
-          .sort({ date: -1 });
-
-          console.log('Raw Record:', JSON.stringify(records[0], null, 2));
+          .populate({
+            path: 'verifiedBy.userId',
+            select: 'name'
+          })
+          .populate({
+            path: 'reportedBy.userId',
+            select: 'name'
+          })
+          .sort({ createdAt: -1 });  // 按创建时间倒序排列
 
         // 计算年龄并格式化记录
         const recordsWithDetails = records.map(record => {
@@ -120,8 +126,43 @@ export default async function handler(req, res) {
       }
       break;
 
+    case 'PATCH':
+      try {
+        await connectDB();
+        
+        const { id } = req.query;
+        const { bio, stravaUrl } = req.body;
+
+        // 验证是否有权限修改
+        const session = await getServerSession(req, res, authOptions);
+        if (!session || (session.user.id !== id && !session.user.isAdmin)) {
+          return res.status(403).json({ success: false, message: '无权修改此用户信息' });
+        }
+
+        // 更新用户信息
+        const updatedUser = await User.findByIdAndUpdate(
+          id,
+          { bio, stravaUrl },
+          { new: true }
+        ).select('name gender birthDate bio stravaUrl');
+
+        if (!updatedUser) {
+          return res.status(404).json({ success: false, message: '未找到用户' });
+        }
+
+        res.status(200).json({
+          success: true,
+          user: updatedUser
+        });
+
+      } catch (error) {
+        console.error('更新用户数据错误:', error);
+        res.status(500).json({ success: false, message: '更新用户数据失败' });
+      }
+      break;
+
     default:
-      res.setHeader('Allow', ['GET']);
+      res.setHeader('Allow', ['GET', 'PATCH']);
       res.status(405).json({ success: false, message: `不支持 ${method} 请求方法` });
       break;
   }

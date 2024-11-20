@@ -27,7 +27,9 @@ export default async function handler(req, res) {
       path: 'seriesId',      // 进一步关联 Series
       select: 'name raceType'  // 从 Series 中获取名称和类型
     }
-  });
+  })
+  .populate('verifiedBy.userId', 'name')
+  .populate('reportedBy.userId', 'name'); 
 
   const formatDate = (dateString) => {
     if (!dateString) return null;

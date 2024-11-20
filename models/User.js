@@ -32,6 +32,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',  // 设置默认值为空字符串
   },
+  stravaUrl: {
+    type: String,
+    default: ''
+  },
   isAdmin: {
     type: Boolean,
     default: false,

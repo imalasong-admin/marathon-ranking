@@ -1,9 +1,18 @@
 // pages/ultra-rankings.js
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, CheckCircle } from 'lucide-react';  // 添加 CheckCircle
+import { useSession } from 'next-auth/react';  // 添加用户会话
+import { useRouter } from 'next/router';       // 添加路由
 
 export default function UltraRankings() {
+  const { data: session } = useSession();      // 添加用户会话
+  const router = useRouter();                  // 添加路由
+  // 添加验证相关状态
+  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
+  const [verifyingRecord, setVerifyingRecord] = useState(null);
+  const [reportReason, setReportReason] = useState('');
+
   const [records, setRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +40,7 @@ export default function UltraRankings() {
     return raceDate.getFullYear() === 2024 && 
            record.raceId?.seriesId?.raceType === '超马';  // 从 seriesId 获取类型
   })
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+  .sort((a, b) => new Date(b.raceId?.date) - new Date(a.raceId?.date));
 
         setRecords(filteredRecords);
         setFilteredRecords(filteredRecords);
@@ -77,6 +86,46 @@ export default function UltraRankings() {
       }).replace(/\//g, '-');
     } catch (error) {
       return '-';
+    }
+  };
+
+  const handleVerifyClick = (record) => {
+    setVerifyingRecord(record);
+    setReportReason('');
+    setShowVerifyDialog(true);
+  };
+  
+  const handleVerifySubmit = async (action) => {
+    try {
+      if (action === 'report' && !reportReason.trim()) {
+        setError('请填写举报理由');
+        return;
+      }
+  
+      const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action,
+          reason: reportReason
+        })
+      });
+  
+      const data = await res.json();
+      if (data.success) {
+        await fetchRecords();
+        setShowVerifyDialog(false);
+        setVerifyingRecord(null);
+        setReportReason('');
+        setError('');
+      } else {
+        setError(data.message || '操作失败');
+      }
+    } catch (err) {
+      console.error('验证操作错误:', err);
+      setError('操作失败，请重试');
     }
   };
 
@@ -174,17 +223,34 @@ export default function UltraRankings() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {formatTime(record.finishTime)}
-                    {record.proofUrl && (
-                      <a 
-                        href={record.proofUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block ml-2 text-gray-400 hover:text-blue-500"
-                        title="查看成绩证明"
-                      >
-                        <ExternalLink size={16} />
-                      </a>
-                    )}
+                
+                    {/* 添加验证按钮 */}
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        if (!session) {
+          router.push('/login');
+          return;
+        }
+        handleVerifyClick(record);
+      }}
+      className={`ml-2 ${
+        record.verificationStatus === 'verified'
+          ? 'text-green-500'
+          : record.reportedBy?.length > 0
+          ? 'text-red-500'
+          : 'text-gray-400'
+      } hover:text-green-600`}
+      title={
+        record.verificationStatus === 'verified'
+          ? `${record.verifiedCount}人验证`
+          : record.reportedBy?.length > 0
+          ? '被举报'
+          : '验证成绩'
+      }
+    >
+      <CheckCircle size={16} />
+    </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {record.gender === 'M' ? '男' : '女'}
@@ -193,7 +259,7 @@ export default function UltraRankings() {
                     {record.age || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {formatDate(record.date)}
+                  {formatDate(record.raceId?.date)}
                   </td>
                 </tr>
               ))}
@@ -206,6 +272,134 @@ export default function UltraRankings() {
           )}
         </div>
       )}
+
+{/* 添加验证对话框 */}
+{showVerifyDialog && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+          <h3 className="text-lg font-semibold mb-4">验证成绩记录</h3>
+          
+          {error && (
+            <div className="mb-4 bg-red-50 text-red-500 p-4 rounded-md">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {/* 成绩信息 */}
+            <div className="bg-gray-50 p-4 rounded-md">
+              <p className="text-sm text-gray-600">
+                比赛：{verifyingRecord?.raceId?.seriesId?.name} ({formatDate(verifyingRecord?.raceId?.date)})
+              </p>
+              <p className="text-sm text-gray-600">
+                项目：{verifyingRecord?.ultraDistance}
+              </p>
+              <p className="text-sm text-gray-600">
+                成绩：{formatTime(verifyingRecord?.finishTime)}
+              </p>
+              {verifyingRecord?.proofUrl ? (
+                <p className="text-sm text-gray-600">
+                  证明链接：
+                  <a 
+                    href={verifyingRecord.proofUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    查看证明
+                  </a>
+                </p>
+              ) : (
+                <p className="text-sm text-red-500">
+                  {verifyingRecord?.userName} 没有提供成绩证明链接
+                </p>
+              )}
+
+              {/* 已验证用户列表 */}
+              {verifyingRecord?.verifiedBy && verifyingRecord.verifiedBy.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 font-medium">已验证用户：</p>
+                  <p className="text-sm">
+                    {verifyingRecord.verifiedBy.map((verification, index) => (
+                      <span key={verification.userId._id}>
+                        <Link
+                          href={`/users/${verification.userId._id}`}
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {verification.userId.name}
+                        </Link>
+                        {index < verifyingRecord.verifiedBy.length - 1 && (
+                          <span className="mx-2">&nbsp;&nbsp;</span>
+                        )}
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              )}
+
+              {/* 举报信息 */}
+              {verifyingRecord?.reportedBy && verifyingRecord.reportedBy.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <p className="text-sm text-gray-600 font-medium">举报信息：</p>
+                  {verifyingRecord.reportedBy.map((report, index) => (
+                    <div key={report.userId._id} className="mt-1 bg-red-50 p-2 rounded">
+                      <p className="text-sm text-red-600">
+                        举报用户：{report.userId.name}
+                      </p>
+                      <p className="text-sm text-red-600">
+                        举报理由：{report.reason}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 举报理由输入框 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                举报理由（如选择举报，请填写）
+              </label>
+              <textarea
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm"
+                rows="3"
+                placeholder="请输入举报理由..."
+              />
+            </div>
+          </div>
+
+          {/* 操作按钮 */}
+          <div className="flex justify-end space-x-2 mt-6">
+            <button
+              onClick={() => {
+                setShowVerifyDialog(false);
+                setVerifyingRecord(null);
+                setReportReason('');
+                setError('');
+              }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
+            >
+              取消
+            </button>
+            <button
+              onClick={() => handleVerifySubmit('verify')}
+              className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              确认验证
+            </button>
+            <button
+              onClick={() => handleVerifySubmit('report')}
+              className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              举报
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     </div>
   );
 }

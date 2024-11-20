@@ -1,11 +1,27 @@
+# Marathon Ranking Project
+马拉松成绩排行榜系统 - 一个用于记录和展示马拉松赛事成绩的在线平台。
+
 # Marathon Ranking Project Status
 
 ## 当前版本信息
-- 最新稳定版本: [83d9656]
-- 最后更新: 2024-11-16
+- 最新稳定版本: [9df781e]
+- 最后更新: 2024-11-17
 - 部署地址: https://marathon-ranking.vercel.app
 
 ## 最近完成的功能
+✅ 成绩管理功能（2024-11-18）
+- 实现管理员专用的成绩管理功能
+- 按记录创建时间倒序显示所有成绩记录
+- 展示全面的记录信息（用户、成绩、比赛、验证状态）
+- 支持编辑功能（成绩时间、比赛场次、证明链接）
+- 支持删除功能（带二次确认）
+- 修改记录后自动重置验证状态
+- 完成的具体工作：
+  * 创建成绩管理页面和相关组件
+  * 添加成绩编辑和删除的API路由
+  * 实现完整的管理员权限控制
+  * 优化数据展示和用户交互
+
 ✅ 管理功能优化（2024-11-17）
 - 赛事管理和场次管理增加操作人显示
 - 区分创建者和最后修改者
@@ -15,7 +31,7 @@
   * 更新相关 API 以记录最后操作人
   * 优化管理界面显示操作人信息
   * 修复场次编辑时赛事更新问题
-  
+
 ✅ 数据结构适配和日期处理优化（2024-11-16）
 - 修正成绩模块以适配新的赛事-场次结构
 - 优化了日期的存储和显示机制
@@ -181,109 +197,6 @@
    - 注册后自动登录
    - 自动跳转到成绩提交页面
 
-
-
-## 数据模型
-```javascript
-// User Model
-{
-  name: String,
-  email: String,
-  password: String (hashed),
-  birthDate: Date,
-  gender: String (M/F),
-  bio: {
-    type: String,
-    default: ''
-  },
-  isAdmin: {
-    type: Boolean,
-    default: false
-  },
-  isLocked: {
-    type: Boolean,
-    default: false
-  },
-  lockReason: {
-    type: String,
-    default: ''
-  },
-  emailVerified: {
-    type: Boolean,
-    default: true  // 旧用户默认已验证
-  },
-  verificationCode: {
-    type: String,
-    length: 4
-  },
-  verificationExpires: {
-    type: Date
-  }
-}
-
-// Race Model
-{
-  name: String,
-  date: Date,
-  addedBy: ObjectId (ref: User)
-}
-
-// Record Model（更新）
-{
-  userId: ObjectId (ref: User),
-  raceId: ObjectId (ref: Race),
-  finishTime: {
-    hours: Number,
-    minutes: Number,
-    seconds: Number
-  },
-  totalSeconds: Number,
-  proofUrl: String,  // 选填
-  ultraDistance: {    // 更新了验证规则
-    type: String,
-    enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
-    required: function() {
-      return this.raceId?.raceType === '超马';
-    }
-  }
-}
-```
-
-// Race Model 更新
-{
-  name: String,
-  date: Date,
-  raceType: {
-    type: String,
-    required: true,
-    enum: [
-      '全程马拉松','超马']
-  },
-  location: String,
-  website: String,
-  addedBy: ObjectId (ref: User)
-}
-
-## API 路由
-- POST /api/auth/register - 用户注册
-- GET /api/races - 获取比赛列表
-- POST /api/races - 添加新比赛
-- GET /api/records - 获取成绩列表
-- POST /api/records/create - 提交新成绩
-- GET /api/users/[id] - 获取用户信息
-- PATCH /api/users/[id]/update - 更新用户信息
-- POST /api/admin/set-admin - 设置管理员权限
-- PATCH /api/admin/toggle-lock - 锁定/解锁用户
-- GET /api/admin/users - 获取用户列表
-- POST /api/records/create - 提交新成绩（更新字段）
-       新增 ultraDistance 字段，用于记录超马项目类
-- POST /api/auth/verify-email - 验证邮箱验证码
-用户相关API：
-  - /api/users/[id]/change-password：用户修改密码
-auth相关API：
-  - /api/auth/forgot-password：发送重置验证码
-  - /api/auth/verify-reset-code：验证重置验证码
-  - /api/auth/reset-password：重置密码
 
 ## 注意事项
 1. 管理员权限控制

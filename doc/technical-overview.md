@@ -1,4 +1,6 @@
-# Marathon Ranking 技术概览文档
+
+# Marathon Ranking Project
+马拉松成绩排行榜系统 - 一个用于记录和展示马拉松赛事成绩的在线平台。# Marathon Ranking 技术概览文档
 
 ## 项目开发规范和注意事项
 
@@ -84,9 +86,10 @@
 │   │   └── submit.js  # 分步骤提交页面
 │   │   └── ultra-submit.js # 超马成绩提交页面
 │   ├── admin/         # 管理员页面
-│   │   └── index.js   # 管理员控制台
-│   │   └── series.js  # 赛事管理页面
-│   │   └── races.js   # 场次管理页面
+│   │   ├── index.js        # 用户管理
+│   │   ├── series.js       # 赛事管理
+│   │   ├── races.js        # 场次管理
+│   │   └── records.js      # 成绩管理（新增）
 │   └── api/          # API 路由
 │       ├── admin/    # 管理员API
 │       ├── auth/     # 认证相关
@@ -310,6 +313,32 @@ GET /api/races - 获取场次列表
 PUT /api/races/[id] - 更新场次（更新：支持修改关联赛事）
 PATCH /api/races/[id]/toggle-lock - 切换锁定状态
 
+### 成绩管理 - 编辑成绩/删除成绩
+PUT /api/admin/records/[id]
+Request:
+{
+  raceId: string,
+  hours: number,
+  minutes: number,
+  seconds: number,
+  totalSeconds: number,
+  proofUrl: string
+}
+Response:
+{
+  success: boolean,
+  record: Record, // 包含关联的用户和比赛信息
+  message: string
+}
+
+// 删除成绩记录
+DELETE /api/admin/records/[id]
+Response:
+{
+  success: boolean,
+  message: string
+}
+
 ## 5. 权限控制机制
 ### 管理员等级
 1. 超级管理员(admin)
@@ -366,5 +395,5 @@ PATCH /api/races/[id]/toggle-lock - 切换锁定状态
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[83d9656]
-- 最后更新：2024-11-16
+- 最新稳定版本：[9df781e]
+- 最后更新：2024-11-17
