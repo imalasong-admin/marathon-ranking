@@ -1,129 +1,127 @@
-// pages/rankings.js
+// pages/age-adjusted-rankings.js
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, CheckCircle } from 'lucide-react';  // 添加 CheckCircle
-import { useSession } from 'next-auth/react';  // 添加用户会话
-import { useRouter } from 'next/router';       // 添加路由
+import { ExternalLink, CheckCircle } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
-export default function Rankings() {
-  const { data: session } = useSession();  // 添加用户会话
-  const router = useRouter();              // 添加路由
-  // 添加验证对话框状态
-  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
-  const [verifyingRecord, setVerifyingRecord] = useState(null);
-  const [reportReason, setReportReason] = useState('');
+export default function AgeAdjustedRankings() {
+ const { data: session } = useSession();
+ const router = useRouter();
+ 
+ const [showVerifyDialog, setShowVerifyDialog] = useState(false);
+ const [verifyingRecord, setVerifyingRecord] = useState(null);
+ const [reportReason, setReportReason] = useState('');
+ const [records, setRecords] = useState([]);
+ const [filteredRecords, setFilteredRecords] = useState([]);
+ const [loading, setLoading] = useState(true);
+ const [error, setError] = useState('');
+ const [filters, setFilters] = useState({
+   gender: 'all',
+   ageGroup: 'all',
+   userName: '',
+   selectedRace: null
+ });
 
-  const [records, setRecords] = useState([]);
-  const [filteredRecords, setFilteredRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    gender: 'all',
-    ageGroup: 'all',
-    userName: '',
-    selectedRace: null
-  });
+ const AGE_GROUPS = [
+   { label: '全部', value: 'all' },
+   { label: '18-34岁', value: '18-34', min: 18, max: 34 },
+   { label: '35-39岁', value: '35-39', min: 35, max: 39 },
+   { label: '40-44岁', value: '40-44', min: 40, max: 44 },
+   { label: '45-49岁', value: '45-49', min: 45, max: 49 },
+   { label: '50-54岁', value: '50-54', min: 50, max: 54 },
+   { label: '55-59岁', value: '55-59', min: 55, max: 59 },
+   { label: '60-64岁', value: '60-64', min: 60, max: 64 },
+   { label: '65-69岁', value: '65-69', min: 65, max: 69 },
+   { label: '70岁以上', value: '70+', min: 70, max: 999 },
+ ];
 
-  // 年龄组定义
-  const AGE_GROUPS = [
-    { label: '全部', value: 'all' },
-    { label: '18-34岁', value: '18-34', min: 18, max: 34 },
-    { label: '35-39岁', value: '35-39', min: 35, max: 39 },
-    { label: '40-44岁', value: '40-44', min: 40, max: 44 },
-    { label: '45-49岁', value: '45-49', min: 45, max: 49 },
-    { label: '50-54岁', value: '50-54', min: 50, max: 54 },
-    { label: '55-59岁', value: '55-59', min: 55, max: 59 },
-    { label: '60-64岁', value: '60-64', min: 60, max: 64 },
-    { label: '65-69岁', value: '65-69', min: 65, max: 69 },
-    { label: '70岁以上', value: '70+', min: 70, max: 999 },
-  ];
+ useEffect(() => {
+   fetchRecords();
+ }, []);
 
-  useEffect(() => {
-    fetchRecords();
-  }, []);
+ useEffect(() => {
+   applyFilters();
+ }, [filters, records]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [filters, records]);
+ const fetchRecords = async () => {
+   try {
+     const res = await fetch('/api/records');
+     const data = await res.json();
+     
+     if (data.success) {
+       const filteredRecords = data.records
+         .filter(record => {
+           const raceDate = new Date(record.raceId?.date);
+           return raceDate.getFullYear() === 2024 && 
+                  record.raceId?.seriesId?.raceType === '全程马拉松';
+         })
+         .filter(record => record.adjustedSeconds) 
+         .sort((a, b) => {
+           return a.adjustedSeconds - b.adjustedSeconds;
+         });
+       
+       setRecords(filteredRecords);
+       setFilteredRecords(filteredRecords);
+     } else {
+       setError(data.message);
+     }
+   } catch (err) {
+     setError('获取数据失败');
+   } finally {
+     setLoading(false);
+   }
+ };
 
-  const fetchRecords = async () => {
-    try {
-      const res = await fetch('/api/records');
-      const data = await res.json();
-      
-      if (data.success) {
-        const filteredRecords = data.records
-          .filter(record => {
-            const raceDate = new Date(record.raceId?.date);
-            // 从 seriesId 中获取比赛类型
-            return raceDate.getFullYear() === 2024 && 
-                   record.raceId?.seriesId?.raceType === '全程马拉松';
-          })
-          .sort((a, b) => {
-            // 修改排序逻辑：由快到慢 = 由小到大
-            return a.totalSeconds - b.totalSeconds;
-            // 或者用完赛时间计算：
-            // return (a.finishTime.hours * 3600 + a.finishTime.minutes * 60 + a.finishTime.seconds) 
-            //      - (b.finishTime.hours * 3600 + b.finishTime.minutes * 60 + b.finishTime.seconds);
-          });
-        
-        setRecords(filteredRecords);
-        setFilteredRecords(filteredRecords);
-      } else {
-        setError(data.message);
-      }
-    } catch (err) {
-      setError('获取数据失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+ // 验证相关函数和其他辅助函数保持不变...
+ const handleVerifyClick = (record) => {
+   setVerifyingRecord(record);
+   setReportReason('');
+   setShowVerifyDialog(true);
+ };
 
-// 处理验证按钮点击
-const handleVerifyClick = (record) => {
-  setVerifyingRecord(record);
-  setReportReason('');
-  setShowVerifyDialog(true);
-};
+ const handleVerifySubmit = async (action) => {
+   try {
+     if (action === 'report' && !reportReason.trim()) {
+       setError('请填写举报理由');
+       return;
+     }
 
-// 处理验证提交
-const handleVerifySubmit = async (action) => {
-  try {
-    // 如果是举报，但没有填写理由
-    if (action === 'report' && !reportReason.trim()) {
-      setError('请填写举报理由');
-      return;
-    }
+     const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json',
+       },
+       body: JSON.stringify({
+         action,
+         reason: reportReason
+       })
+     });
 
-    const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action,
-        reason: reportReason
-      })
-    });
+     const data = await res.json();
+     if (data.success) {
+       await fetchRecords();
+       setShowVerifyDialog(false);
+       setVerifyingRecord(null);
+       setReportReason('');
+       setError('');
+     } else {
+       setError(data.message || '操作失败');
+     }
+   } catch (err) {
+     console.error('验证操作错误:', err);
+     setError('操作失败，请重试');
+   }
+ };
 
-    const data = await res.json();
-    if (data.success) {
-      await fetchRecords(); // 刷新记录列表
-      setShowVerifyDialog(false);
-      setVerifyingRecord(null);
-      setReportReason('');
-      setError('');
-    } else {
-      setError(data.message || '操作失败');
-    }
-  } catch (err) {
-    console.error('验证操作错误:', err);
-    setError('操作失败，请重试');
-  }
-};
-
-  // 筛选逻辑
-  const applyFilters = () => {
+ const formatAdjustedTime = (seconds) => {
+   const hours = Math.floor(seconds / 3600);
+   const minutes = Math.floor((seconds % 3600) / 60);
+   const remainingSeconds = seconds % 60;
+   return formatTime({ hours, minutes, seconds: remainingSeconds });
+ };
+// 筛选逻辑
+const applyFilters = () => {
     let result = [...records];
 
     // 比赛筛选
@@ -168,8 +166,6 @@ const handleVerifySubmit = async (action) => {
     }));
   };
 
-  
-
   const formatTime = (time) => {
     return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
   };
@@ -190,44 +186,29 @@ const handleVerifySubmit = async (action) => {
     }
   };
 
-  
-
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">2024年马拉松排行榜</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">2024年马拉松跑力榜</h1>
         <div className="text-center">加载中...</div>
       </div>
     );
   }
-
+ 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      {/* 添加标题区域 */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">2024年马拉松排行榜</h1>
-        
-        <button
-          onClick={() => window.location.href = '/users/submit'}
-          className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
-        >
-          <svg 
-            className="w-5 h-5 mr-2" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+        <h1 className="text-3xl font-bold">2024年马拉松跑力榜</h1>
+        <div className="flex gap-4">
+          <Link
+            href="/rankings"
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 4v16m8-8H4" 
-            />
-          </svg>
-          提交成绩
-        </button>
+            返回原始排行
+          </Link>
+ 
+        </div>
       </div>
-    
       {/* 筛选区域 */}
       <div className="mb-6 space-y-4">
         {/* 搜索框 */}
@@ -239,7 +220,7 @@ const handleVerifySubmit = async (action) => {
                 type="text"
                 id="search"
                 value={filters.userName}
-                onChange={(e) => setFilters(prev => ({ ...prev, userName: e.target.value }))}
+                onChange={(e) => setFilters((prev) => ({ ...prev, userName: e.target.value }))}
                 placeholder="搜索用户名..."
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-10"
               />
@@ -251,14 +232,14 @@ const handleVerifySubmit = async (action) => {
             </div>
           </div>
         </div>
-
+  
         {/* 筛选条件 */}
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center space-x-2">
             <label className="text-sm font-medium text-gray-700">性别:</label>
             <select
               value={filters.gender}
-              onChange={(e) => setFilters(prev => ({ ...prev, gender: e.target.value }))}
+              onChange={(e) => setFilters((prev) => ({ ...prev, gender: e.target.value }))}
               className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               <option value="all">全部</option>
@@ -270,30 +251,22 @@ const handleVerifySubmit = async (action) => {
             <label className="text-sm font-medium text-gray-700">年龄组:</label>
             <select
               value={filters.ageGroup}
-              onChange={(e) => setFilters(prev => ({ ...prev, ageGroup: e.target.value }))}
+              onChange={(e) => setFilters((prev) => ({ ...prev, ageGroup: e.target.value }))}
               className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
-              {AGE_GROUPS.map(group => (
+              {AGE_GROUPS.map((group) => (
                 <option key={group.value} value={group.value}>
                   {group.label}
                 </option>
               ))}
             </select>
           </div>
-        
-          <div className="flex gap-4">
-    <Link
-      href="/age-adjusted-rankings"
-      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-    >
-      跑力排行榜
-    </Link>
-   </div>
+          
         </div>
-
-       
+  
+        
       </div>
-
+  
       {error ? (
         <div className="bg-red-50 text-red-500 p-4 rounded-md text-center">
           {error}
@@ -303,35 +276,22 @@ const handleVerifySubmit = async (action) => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  排名
+                  <div>原始成绩</div>
+                  <div className="text-gray-400">调整后成绩</div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  姓名
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  成绩
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  性别
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  年龄
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  比赛
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  日期
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">性别</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年龄</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">比赛</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredRecords.map((record, index) => (
                 <tr key={`${record._id}-${index}`}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {index + 1}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <Link
                       href={`/users/${record.userId?._id || record.userId}`}
@@ -341,69 +301,68 @@ const handleVerifySubmit = async (action) => {
                     </Link>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-  <div className="flex items-center">
-    {formatTime(record.finishTime)}
-    {/* 添加验证按钮 */}
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        if (!session) {
-          router.push('/login');
-          return;
-        }
-        handleVerifyClick(record);
-      }}
-      className={`ml-2 ${
-        record.verificationStatus === 'verified'
-          ? 'text-green-500'
-          : record.reportedBy?.length > 0
-          ? 'text-red-500'
-          : 'text-gray-400'
-      } hover:text-green-600`}
-      title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
-        ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
-        : record.verificationStatus === 'verified'
-        ? `${record.verifiedCount}人验证`
-        : record.reportedBy?.length > 0
-        ? '被举报'
-        : '待验证'}
-    >
-      <CheckCircle size={16} />
-    </button>
-  </div>
-</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.gender === 'M' ? '男' : '女'}
+                    <div className="flex items-center">
+                      <div className="flex flex-col">
+                        <div className="mb-1">
+                          {formatTime(record.finishTime)}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!session) {
+                                router.push('/login');
+                                return;
+                              }
+                              handleVerifyClick(record);
+                            }}
+                            className={`ml-2 ${
+                              record.verificationStatus === 'verified'
+                                ? 'text-green-500'
+                                : record.reportedBy?.length > 0
+                                ? 'text-red-500'
+                                : 'text-gray-400'
+                            } hover:text-green-600`}
+                            title={
+                              record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+                                ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
+                                : record.verificationStatus === 'verified'
+                                ? `${record.verifiedCount}人验证`
+                                : record.reportedBy?.length > 0
+                                ? '被举报'
+                                : '待验证'
+                            }
+                          >
+                            <CheckCircle size={16} />
+                          </button>
+                        </div>
+                        <div className="text-gray-500">{formatAdjustedTime(record.adjustedSeconds)}</div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.age || '-'}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.gender === 'M' ? '男' : '女'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.age || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-  onClick={() => handleRaceClick(record.raceId?._id)}
-  className={`hover:text-blue-800 hover:underline focus:outline-none ${
-    filters.selectedRace === record.raceId?._id
-      ? 'text-blue-600 font-medium'
-      : 'text-blue-500'
-  }`}
->
-  {record.raceId?.seriesId?.name || '未知比赛'}
-</button>
+                    <button
+                      onClick={() => handleRaceClick(record.raceId?._id)}
+                      className={`hover:text-blue-800 hover:underline focus:outline-none ${
+                        filters.selectedRace === record.raceId?._id ? 'text-blue-600 font-medium' : 'text-blue-500'
+                      }`}
+                    >
+                      {record.raceId?.seriesId?.name || '未知比赛'}
+                    </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(record.date)}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(record.date)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {filteredRecords.length === 0 && (
-            <div className="text-center py-4 text-gray-500">
-              没有找到符合条件的记录
-            </div>
+            <div className="text-center py-4 text-gray-500">没有找到符合条件的记录</div>
           )}
         </div>
       )}
+    </div>
+  );
+  
       {/* 添加验证对话框 */}
     {showVerifyDialog && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -527,7 +486,4 @@ const handleVerifySubmit = async (action) => {
         </div>
       </div>
     )}
-  </div>
-);
-   
-}
+   }

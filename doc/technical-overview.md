@@ -210,6 +210,12 @@ const seriesSchema = new mongoose.Schema({
   },
   totalSeconds: Number,
   proofUrl: String,
+
+  adjustedSeconds: {
+    type: Number,
+    required: true
+  }
+},
   ultraDistance: {
     type: String,
     enum: ['50K', '50M', '100K', '100M', '计时赛', '多日赛', '其他距离'],
@@ -331,6 +337,10 @@ Response:
   message: string
 }
 
+### 实力榜
+GET /api/records - 返回包含 adjustedSeconds 的成绩数据
+在创建和更新记录时自动计算 adjustedSeconds
+
 // 删除成绩记录
 DELETE /api/admin/records/[id]
 Response:
@@ -395,5 +405,5 @@ Response:
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[9df781e]
-- 最后更新：2024-11-17
+- 最新稳定版本：[fa5005f]
+- 最后更新：2024-11-19

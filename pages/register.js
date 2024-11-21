@@ -1,8 +1,9 @@
 // pages/register.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
+import { states, getCitiesByState } from '../lib/us-cities-data';
 
 export default function Register() {
   const router = useRouter();
@@ -11,9 +12,27 @@ export default function Register() {
     email: '',
     password: '',
     birthDate: '',
-    gender: ''
+    gender: '',
+    state: '',
+    city: ''
   });
   const [error, setError] = useState('');
+  const [availableCities, setAvailableCities] = useState([]);
+
+  // 当州选择改变时更新城市列表
+  useEffect(() => {
+    if (formData.state) {
+      const cities = getCitiesByState(formData.state);
+      setAvailableCities(cities);
+      // 如果当前选择的城市不在新的城市列表中，清空城市选择
+      if (!cities.includes(formData.city)) {
+        setFormData(prev => ({ ...prev, city: '' }));
+      }
+    } else {
+      setAvailableCities([]);
+      setFormData(prev => ({ ...prev, city: '' }));
+    }
+  }, [formData.state]);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,10 +43,9 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');  // 清除之前的错误信息
+    setError('');
     
     try {
-      // 1. 注册
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +55,6 @@ export default function Register() {
       const data = await res.json();
 
       if (data.success) {
-        // 2. 注册成功后直接登录
         const signInResult = await signIn('credentials', {
           redirect: false,
           email: formData.email,
@@ -45,8 +62,7 @@ export default function Register() {
         });
 
         if (signInResult?.ok) {
-          // 3. 登录成功后跳转到提交页面
-          router.push('/submit');
+          router.push('/users/submit');
         } else {
           setError('自动登录失败，请手动登录');
           router.push('/login');
@@ -75,6 +91,8 @@ export default function Register() {
               {error}
             </div>
           )}
+
+          <div className="rounded-md shadow-sm space-y-4"></div>
 
           <div className="rounded-md shadow-sm space-y-4">
             <div>
@@ -154,6 +172,49 @@ export default function Register() {
                 <option value="F">女</option>
               </select>
             </div>
+         {/* 添加州选择 */}
+         <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+                所在州
+              </label>
+              <select
+                id="state"
+                name="state"
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.state}
+                onChange={handleChange}
+              >
+                <option value="">请选择常住州</option>
+                {states.map((state) => (
+                  <option key={state.value} value={state.value}>
+                    {state.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 添加城市选择 */}
+            <div>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+                所在城市
+              </label>
+              <select
+                id="city"
+                name="city"
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                value={formData.city}
+                onChange={handleChange}
+                disabled={!formData.state}
+              >
+                <option value="">请选择常住城市</option>
+                {availableCities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </div>
+
           </div>
 
           <div>

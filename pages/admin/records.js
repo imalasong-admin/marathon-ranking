@@ -299,21 +299,21 @@ const handleDelete = async (recordId) => {
 
           <td className="px-6 py-4">
   <div className="flex items-center space-x-2">
-    <span className={`px-2 py-1 rounded-full text-xs ${
-      record.verificationStatus === 'verified' 
-        ? 'bg-green-100 text-green-800' 
-        : record.reportedBy?.length > 0  // 检查是否有举报
-        ? 'bg-red-100 text-red-800'
-        : record.verificationStatus === 'rejected'
+  <span className={`px-2 py-1 rounded-full text-xs ${
+      record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+        ? 'bg-yellow-100 text-yellow-800'
+        : record.verificationStatus === 'verified'
+        ? 'bg-green-100 text-green-800'
+        : record.reportedBy?.length > 0
         ? 'bg-red-100 text-red-800'
         : 'bg-yellow-100 text-yellow-800'
     }`}>
-      {record.verificationStatus === 'verified' 
+      {record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+        ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
+        : record.verificationStatus === 'verified'
         ? `${record.verifiedCount}人验证`
-        : record.reportedBy?.length > 0  // 优先显示举报状态
+        : record.reportedBy?.length > 0
         ? '被举报'
-        : record.verificationStatus === 'rejected'
-        ? '已拒绝'
         : '待验证'}
     </span>
     <button

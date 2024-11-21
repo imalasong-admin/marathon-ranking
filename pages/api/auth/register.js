@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import connectDB from '../../../lib/mongodb';  
 import User from '../../../models/User';
 import { generateVerificationCode, sendVerificationEmail } from '../../../lib/email';
+import { isValidState, isValidCityForState } from '../../../lib/us-cities-data';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,16 +13,25 @@ export default async function handler(req, res) {
   try {
     await connectDB();
 
-    const { name, email, password, birthDate, gender } = req.body;
+    const { name, email, password, birthDate, gender, state, city } = req.body;
 
     // 检查必填字段
-    if (!name || !email || !password || !birthDate || !gender) {
+    if (!name || !email || !password || !birthDate || !gender || !state || !city) {
       return res.status(400).json({ message: '所有字段都是必填的' });
     }
 
     // 性别验证
     if (gender !== 'M' && gender !== 'F') {
       return res.status(400).json({ message: '性别只能是 M 或 F' });
+    }
+
+    // 验证州和城市
+    if (!isValidState(state)) {
+      return res.status(400).json({ message: '请选择有效的州' });
+    }
+
+    if (!isValidCityForState(state, city)) {
+      return res.status(400).json({ message: '请选择该州的有效城市' });
     }
 
     // 开发环境下允许重复注册
@@ -52,6 +62,8 @@ export default async function handler(req, res) {
       password: hashedPassword,
       birthDate: new Date(birthDate),
       gender,
+      state,           // 添加州
+      city,            // 添加城市
       verificationCode,
       verificationExpires,
       emailVerified: false
@@ -60,7 +72,9 @@ export default async function handler(req, res) {
     console.log('用户创建成功, 验证码信息:', {  // 用于测试
       email: user.email,
       code: user.verificationCode,
-      expires: user.verificationExpires
+      expires: user.verificationExpires,
+      state: user.state,  // 记录州
+      city: user.city     // 记录城市
     });
 
     // 发送验证邮件
@@ -79,6 +93,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('注册错误:', error);
+    if (error.name === 'ValidationError') {
+      // 处理 mongoose 验证错误
+      const errorMessages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ message: errorMessages.join(', ') });
+    }
     res.status(500).json({ message: '注册失败，请重试' });
   }
 }

@@ -45,7 +45,7 @@ export default function UserSubmitRecord() {
 
   // 年份选项（最近10年）
   const currentYear = new Date().getFullYear();
-  const years = Array.from({length: 10}, (_, i) => (currentYear - i).toString());
+  const years = Array.from({length: 1}, (_, i) => (currentYear - i).toString());
 
 // 获取比赛列表
 useEffect(() => {
@@ -149,6 +149,11 @@ useEffect(() => {
           date: raceData.race.date,
           isLocked: false
         }]);
+        // 设置新创建的比赛为当前选中的比赛
+  setFormData({
+    ...formData,
+    raceId: raceData.race._id
+  });
         // 日期显示统一使用一个格式化函数
         const formatDate = (dateString) => {
           if (!dateString) return '-';
@@ -539,8 +544,8 @@ const submitData = {
             {/* 成绩证明 */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                官方成绩链接
-                <span className="text-gray-500 text-xs ml-2">(官方成绩查询链接或截图链接)</span>
+                成绩证明链接
+                <span className="text-gray-500 text-xs ml-2">(官方成绩查询链接/Strava活动链接/Athlinks成绩链接)</span>
               </label>
               <input
                 type="url"

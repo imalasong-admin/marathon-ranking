@@ -241,13 +241,13 @@ export default function UltraRankings() {
           ? 'text-red-500'
           : 'text-gray-400'
       } hover:text-green-600`}
-      title={
-        record.verificationStatus === 'verified'
-          ? `${record.verifiedCount}人验证`
-          : record.reportedBy?.length > 0
-          ? '被举报'
-          : '验证成绩'
-      }
+      title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+        ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
+        : record.verificationStatus === 'verified'
+        ? `${record.verifiedCount}人验证`
+        : record.reportedBy?.length > 0
+        ? '被举报'
+        : '待验证'}
     >
       <CheckCircle size={16} />
     </button>

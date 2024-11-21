@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { ExternalLink, CheckCircle } from 'lucide-react';
+import { states, getCitiesByState } from '/lib/us-cities-data';
 
 // 辅助函数
 const formatTime = (time) => {
@@ -73,6 +74,12 @@ export default function UserProfile() {
   const [verifyMessage, setVerifyMessage] = useState('');
   const [stravaUrl, setStravaUrl] = useState('');
   const [stravaEditMode, setStravaEditMode] = useState(false);  // 新增
+  const [locationEditMode, setLocationEditMode] = useState(false);
+  const [locationData, setLocationData] = useState({
+    state: '',
+    city: ''
+    });
+  const [availableCities, setAvailableCities] = useState([]);
 
 
   // 修改密码相关状态
@@ -115,7 +122,6 @@ export default function UserProfile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           bio: bio,
-          stravaUrl: userData.data.user.stravaUrl // 保持原有的 stravaUrl
         })
       });
   
@@ -142,7 +148,68 @@ export default function UserProfile() {
       setSaving(false);
     }
   };
+// 处理州市选择变化
+const handleLocationChange = (e) => {
+  const { name, value } = e.target;
+  
+  if (name === 'state') {
+    // 当州变化时，更新城市列表
+    const cities = getCitiesByState(value);
+    setAvailableCities(cities);
+    // 清空已选择的城市
+    setLocationData(prev => ({
+      ...prev,
+      state: value,
+      city: ''
+    }));
+  } else {
+    setLocationData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }
+};
 
+// 处理保存
+const handleLocationSubmit = async (e) => {
+  e.preventDefault();
+  setSaving(true);
+  setError('');
+
+  try {
+    const res = await fetch(`/api/users/${id}/update`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        state: locationData.state,
+        city: locationData.city
+      })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setUserData(prev => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          user: {
+            ...prev.data.user,
+            state: data.user.state,
+            city: data.user.city
+          }
+        }
+      }));
+      setLocationEditMode(false);
+    } else {
+      setError(data.message || '更新失败');
+    }
+  } catch (err) {
+    console.error('保存出错:', err);
+    setError('保存失败，请重试');
+  } finally {
+    setSaving(false);
+  }
+};
 // Strava链接保存
 const handleStravaSubmit = async (e) => {
   e.preventDefault();
@@ -154,7 +221,6 @@ const handleStravaSubmit = async (e) => {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        bio: userData.data.user.bio, // 保持原有的 bio
         stravaUrl: stravaUrl 
       })
     });
@@ -231,7 +297,17 @@ const handleStravaSubmit = async (e) => {
     if (userData?.data?.user) {
       setBio(userData.data.user.bio || '');
       setStravaUrl(userData.data.user.stravaUrl || '');
+    // 添加初始化州和城市数据
+    setLocationData({
+      state: userData.data.user.state || '',
+      city: userData.data.user.city || ''
+    });
+    
+    // 如果有州，则加载对应的城市列表
+    if (userData.data.user.state) {
+      setAvailableCities(getCitiesByState(userData.data.user.state));
     }
+  }
   }, [userData]);
 
   const fetchUserData = async () => {
@@ -502,7 +578,107 @@ const handleStravaSubmit = async (e) => {
           </p>
         )}
       </div>
+ {/* 常住地部分 */}
+ <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-xl font-semibold">常住地</h2>
+      {isOwnProfile && !locationEditMode && (
+        <button
+          onClick={() => {
+            setLocationEditMode(true);
+            // 初始化编辑状态的值
+            setLocationData({
+              state: userData.data.user.state || '',
+              city: userData.data.user.city || ''
+            });
+          }}
+          className="text-blue-600 hover:text-blue-800"
+        >
+          编辑
+        </button>
+      )}
+    </div>
 
+    {locationEditMode && isOwnProfile ? (
+      <form onSubmit={handleLocationSubmit} className="space-y-4">
+        {/* 州选择 */}
+        <div>
+          <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+            所在州
+          </label>
+          <select
+            id="state"
+            name="state"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            value={locationData.state}
+            onChange={handleLocationChange}
+          >
+            <option value="">请选择州</option>
+            {states.map((state) => (
+              <option key={state.value} value={state.value}>
+                {state.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 城市选择 */}
+        <div>
+          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+            所在城市
+          </label>
+          <select
+            id="city"
+            name="city"
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            value={locationData.city}
+            onChange={handleLocationChange}
+            disabled={!locationData.state}
+          >
+            <option value="">请选择城市</option>
+            {availableCities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={() => {
+              setLocationEditMode(false);
+              setLocationData({
+                state: userData.data.user.state || '',
+                city: userData.data.user.city || ''
+              });
+              setAvailableCities([]);
+            }}
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            disabled={saving}
+          >
+            取消
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+            disabled={saving || !locationData.state || !locationData.city}
+          >
+            {saving ? '保存中...' : '保存'}
+          </button>
+        </div>
+      </form>
+    ) : (
+      <div className="text-gray-600">
+        {user.state && user.city ? (
+          <p>{states.find(s => s.value === user.state)?.label} - {user.city}</p>
+        ) : (
+          <p>未设置常住地</p>
+        )}
+      </div>
+    )}
+  </div>
 
   {/* Strava链接 */}
 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -557,7 +733,7 @@ const handleStravaSubmit = async (e) => {
           rel="noopener noreferrer"
           className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
         >
-          <span>访问 Strava 主页</span>
+          <span>{user.stravaUrl}</span>
           <ExternalLink size={16} className="ml-1" />
         </a>
       ) : (
@@ -620,13 +796,13 @@ const handleStravaSubmit = async (e) => {
       ? 'text-red-500'
       : 'text-gray-400'
   } hover:text-green-600 cursor-pointer`}
-  title={
-    record.verificationStatus === 'verified'
-      ? `${record.verifiedCount}人验证`
-      : record.reportedBy?.length > 0
-      ? '被举报'
-      : '验证成绩'
-  }
+  title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+    ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
+    : record.verificationStatus === 'verified'
+    ? `${record.verifiedCount}人验证`
+    : record.reportedBy?.length > 0
+    ? '被举报'
+    : '待验证'}
 >
   <CheckCircle size={16} />
 </button>

@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         
         // 查询用户信息，添加 stravaUrl
         const user = await User.findById(id)
-          .select('name gender birthDate bio stravaUrl isLocked');
+        .select('name gender birthDate bio stravaUrl isLocked state city');
 
         if (!user) {
           return res.status(404).json({ success: false, message: '未找到用户' });
@@ -113,10 +113,17 @@ export default async function handler(req, res) {
           success: true,
           data: {
             user: {
-              ...user.toObject(),
-              age: calculateAge(user.birthDate)
+              id: user._id,
+              name: user.name,
+              gender: user.gender,
+              birthDate: user.birthDate,
+              bio: user.bio,
+              stravaUrl: user.stravaUrl,
+              state: user.state,         // 确保包含这些字段
+              city: user.city,
+              // ... 其他字段
             },
-            records: recordsWithDetails
+            records: records
           }
         });
 

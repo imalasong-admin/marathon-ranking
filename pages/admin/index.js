@@ -175,6 +175,13 @@ export default function AdminDashboard() {
   >
     场次管理
   </button>
+  <button
+    onClick={() => router.push('/admin/records')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    成绩管理
+  </button>
+
 </div>
         
         {/* 用户列表 */}

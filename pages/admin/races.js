@@ -177,14 +177,20 @@ const fetchRaces = async () => {
   >
     赛事管理
   </button>
-  
-  {/* 当前页面使用深色背景 */}
   <button 
     className="px-4 py-2 bg-gray-800 text-white rounded-md"
     disabled
   >
     场次管理
   </button>
+  <button
+    onClick={() => router.push('/admin/records')}
+    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+  >
+    成绩管理
+  </button>
+  {/* 当前页面使用深色背景 */}
+
 </div>
         <button
           onClick={() => setShowAddDialog(true)}

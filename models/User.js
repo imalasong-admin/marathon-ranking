@@ -28,6 +28,16 @@ const UserSchema = new mongoose.Schema({
     enum: ['M', 'F'],
     required: [true, '请选择性别']
   },
+  state: {
+    type: String,
+    trim: true,
+    required: [true, '请选择所在州'] 
+  },
+  city: {
+    type: String,
+    trim: true,
+    required: [true, '请选择所在城市']  
+  },
   bio: {
     type: String,
     default: '',  // 设置默认值为空字符串
