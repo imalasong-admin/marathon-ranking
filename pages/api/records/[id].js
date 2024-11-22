@@ -1,10 +1,10 @@
 // pages/api/admin/records/[id].js
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]';
-import connectDB from '../../../../lib/mongodb';   
-import Record from '../../../../models/Record'; 
-import User from '../../../../models/User';  
-import Race from '../../../../models/Race'; 
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../auth/[...nextauth]';
+import connectDB from '../../../lib/mongodb';   
+import Record from '../../../models/Record'; 
+import User from '../../../models/User';  
+import Race from '../../../models/Race';
 
 export default async function handler(req, res) {
   // 仅支持 PUT 和 DELETE 请求

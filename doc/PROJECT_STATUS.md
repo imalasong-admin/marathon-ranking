@@ -4,7 +4,7 @@
 # Marathon Ranking Project Status
 
 ## 当前版本信息
-- 最新稳定版本: [b9d12f4]
+- 最新稳定版本: [49680f7]
 - 最后更新: 2024-11-21
 - 部署地址: https://marathon-ranking.vercel.app
 
