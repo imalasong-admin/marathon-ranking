@@ -1,6 +1,6 @@
 // pages/api/records/[id]/verify.js
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]';
+import { authOptions } from '../../../../lib/auth';
 import connectDB from '../../../../lib/mongodb';
 import Record from '../../../../models/Record';
 import User from '../../../../models/User';
