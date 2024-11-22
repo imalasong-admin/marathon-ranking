@@ -101,7 +101,6 @@ export default async function handler(req, res) {
         message: '更新成功',
         record: updatedRecord
       });
-    }
 
     } else if (req.method === 'DELETE') {
       // 删除记录
