@@ -1,5 +1,5 @@
-// pages/api/admin/records/[id].js
-import { getServerSession } from "next-auth";
+// pages/api/records/[id].js
+import { authOptions } from '../auth/[...nextauth]'; 
 import { authOptions } from '../../auth/[...nextauth]';
 import connectDB from '../../../lib/mongodb';   
 import Record from '../../../models/Record'; 
