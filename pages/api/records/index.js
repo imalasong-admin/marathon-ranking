@@ -14,7 +14,7 @@ export default async function handler(req, res) {
    const records = await Record.find()
      .populate({
        path: 'userId',
-       select: 'name gender birthDate'
+       select: 'name gender birthDate state'
      })
      .populate({
        path: 'raceId',
@@ -23,6 +23,16 @@ export default async function handler(req, res) {
          select: 'name raceType'
        }
      })
+     // 添加这两个 populate
+  .populate({
+    path: 'verifiedBy.userId',
+    select: 'name'
+  })
+  .populate({
+    path: 'reportedBy.userId',
+    select: 'name'
+  })
+  
      .sort({ createdAt: -1 });
 
    const recordsWithDetails = records.map(record => {
@@ -55,6 +65,7 @@ export default async function handler(req, res) {
        ...recordObj,
        userName: recordObj.userId?.name,
        gender: recordObj.userId?.gender,
+       state: recordObj.userId?.state,
        age,
        date: recordObj.raceId?.date,
        raceName: recordObj.raceId?.seriesId?.name,

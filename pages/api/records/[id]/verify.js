@@ -4,6 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]';
 import connectDB from '../../../../lib/mongodb';
 import Record from '../../../../models/Record';
 import User from '../../../../models/User';
+import { calculateAdjustedSeconds } from '../../../../lib/ageFactors';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -34,7 +35,10 @@ export default async function handler(req, res) {
     const { action, reason } = req.body;  // action: 'verify' 或 'report'
 
     // 获取记录
-    const record = await Record.findById(id);
+    const record = await Record.findById(id)
+      .populate('userId', 'name gender birthDate')
+      .populate('raceId', 'date');
+
     if (!record) {
       return res.status(404).json({ 
         success: false, 
@@ -43,7 +47,7 @@ export default async function handler(req, res) {
     }
 
     // 不能验证自己的记录
-    if (record.userId.toString() === session.user.id) {
+    if (record.userId._id.toString() === session.user.id) {
       return res.status(403).json({
         success: false,
         message: '不能验证自己的记录'
@@ -94,8 +98,19 @@ export default async function handler(req, res) {
       });
     }
 
+    // 添加 adjustedSeconds 的计算和设置
+    if (!record.adjustedSeconds) {
+      record.adjustedSeconds = calculateAdjustedSeconds(
+        record.totalSeconds,
+        record.userId.gender,
+        record.userId.birthDate,
+        record.raceId.date
+      );
+    }
+
     await record.save();
 
+    // 返回处理结果
     return res.status(200).json({
       success: true,
       message: action === 'verify' ? '验证成功' : '举报已提交',

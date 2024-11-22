@@ -131,7 +131,7 @@ export default function UltraRankings() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto py-2 px-4">
         <h1 className="text-3xl font-bold text-center mb-8">2024年超马排行榜</h1>
         <div className="text-center">加载中...</div>
       </div>
@@ -139,28 +139,16 @@ export default function UltraRankings() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
+    <div className="max-w-6xl mx-auto py-1 px-4">
       {/* 标题区域 */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">2024年超马排行榜</h1>
+        <h1 className="text-3xl font-bold">2024年超马榜</h1>
         <button
           onClick={() => window.location.href = '/users/submit'}
-          className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+          className="inline-flex items-center px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
         >
-          <svg 
-            className="w-5 h-5 mr-2" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 4v16m8-8H4" 
-            />
-          </svg>
-          提交成绩
+          
+          提交比赛成绩
         </button>
       </div>
     
@@ -207,7 +195,7 @@ export default function UltraRankings() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredRecords.map((record) => (
                 <tr key={record._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     <Link
                       href={`/users/${record.userId?._id || record.userId}`}
                       className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -215,13 +203,13 @@ export default function UltraRankings() {
                       {record.userName}
                     </Link>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                       {record.raceId?.seriesId?.name || '未知比赛'}  
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     {record.ultraDistance}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     {formatTime(record.finishTime)}
                 
                     {/* 添加验证按钮 */}
@@ -252,13 +240,13 @@ export default function UltraRankings() {
       <CheckCircle size={16} />
     </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     {record.gender === 'M' ? '男' : '女'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                     {record.age || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm">
                   {formatDate(record.raceId?.date)}
                   </td>
                 </tr>

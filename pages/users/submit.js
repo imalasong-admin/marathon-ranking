@@ -283,7 +283,7 @@ const submitData = {
     <div className="max-w-2xl mx-auto py-8 px-4">
       {step === 1 ? (
         <>
-          <h1 className="text-3xl font-bold mb-8">提交比赛成绩 - 步骤 1</h1>
+          <h1 className="text-3xl font-bold mb-8">提交比赛成绩</h1>
           
           <form onSubmit={handleStepOneSubmit} className="space-y-8">
             {error && (
@@ -302,7 +302,7 @@ const submitData = {
                   <label 
                     key={type}
                     className={`
-                      flex items-center p-4 rounded-lg border cursor-pointer
+                      flex items-center p-2 rounded-lg border cursor-pointer
                       ${selectedType === type 
                         ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
                         : 'border-gray-200 hover:border-blue-200'}
@@ -332,7 +332,7 @@ const submitData = {
                   <label 
                     key={year}
                     className={`
-                      flex items-center justify-center p-3 rounded-lg border cursor-pointer
+                      flex items-center justify-center p-2 rounded-lg border cursor-pointer
                       ${selectedYear === year 
                         ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
                         : 'border-gray-200 hover:border-blue-200'}
