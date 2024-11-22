@@ -1,6 +1,6 @@
 // pages/api/records/[id].js
-import { authOptions } from '../auth/[...nextauth]'; 
-import { authOptions } from '../../auth/[...nextauth]';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../lib/auth';  // 使用统一的导入路径
 import connectDB from '../../../lib/mongodb';   
 import Record from '../../../models/Record'; 
 import User from '../../../models/User';  
