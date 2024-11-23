@@ -61,9 +61,11 @@
 ```
 /
 ├── .next/                  # Next.js 构建输出目录
+├── middleware.ts          # 权限控制中间件
 ├── components/            # React 组件
 │   └── Navbar.js         # 导航栏组件
 │   └── VerificationAlert.js # 验证码提醒
+│   └── UserProfileInfo.js   # 用户信息
 ├── lib/                  # 工具库
 │   └── mongodb.js        # MongoDB 连接配置
 │   └── email.js         # 邮件服务工具
@@ -84,7 +86,8 @@
 │   ├── users/
 │   │   ├── [id].js    # 用户个人中心页面
 │   │   └── submit.js  # 分步骤提交页面
-│   │   └── ultra-submit.js # 超马成绩提交页面
+│       └── [id]/
+│           └── edit.js     # 新增编辑页面
 │   ├── admin/         # 管理员页面
 │   │   ├── index.js        # 用户管理
 │   │   ├── series.js       # 赛事管理
@@ -100,6 +103,16 @@
 ├── public/           # 静态资源
 └── styles/          # 样式文件
 ```
+新增：
+/
+├── middleware.ts    # 权限控制中间件
+├── components/     
+│   └── UserProfileInfo.js   # 新增组件
+├── pages/          
+│   └── users/
+│       └── [id]/
+│           ├── index.js    # 个人中心页面
+│           └── edit.js     # 新增编辑页面
 
 ## 3. 数据模型
 ```javascript
@@ -341,6 +354,9 @@ Response:
 GET /api/records - 返回包含 adjustedSeconds 的成绩数据
 在创建和更新记录时自动计算 adjustedSeconds
 
+- middleware.ts 处理页面级权限
+- edit.js 包含组件级权限验证
+
 // 删除成绩记录
 DELETE /api/admin/records/[id]
 Response:
@@ -403,7 +419,34 @@ Response:
    - 举报功能需要管理员及时处理
    - 验证记录需要完整保存
 
+## 7. 待优化事项（Technical Debt）
+
+### 7.1 AuthOptions 导入路径统一化
+状态：待优化
+优先级：低（系统正常运行）
+触发时机：
+- 开发新功能涉及用户认证时
+- 修复认证相关 bug 时
+- 进行版本升级时
+
+优化方案：
+1. 统一使用 lib/auth.js
+2. 修改所有 API 路由和页面中的导入 
+  // TODO: 优化 - 在下次修改此文件时，将 authOptions 的导入统一为 lib/auth.js
+  import { authOptions } from '../auth/[...nextauth]'; //注意层级
+3. 涉及文件：
+   - pages/api/admin/*
+   - pages/api/users/*
+   - pages/api/records/*
+   - pages/api/races/*
+   - pages/admin/*
+
+ 注意事项：
+  - 修改时需逐个文件测试
+  - 确保 getServerSession 的正确导入
+  - 根据文件层级调整导入路径
+
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[49680f7]
+- 最新稳定版本：[8aa141f]
 - 最后更新：2024-11-21

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { ExternalLink, CheckCircle } from 'lucide-react';
-import { states, getCitiesByState } from '/lib/us-cities-data';
+import UserProfileInfo from '../../components/UserProfileInfo';  // 新增
 
-// 辅助函数
+// 辅助函数 - 保持不变
 const formatTime = (time) => {
   if (!time) return '-';
   return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
@@ -65,29 +65,11 @@ export default function UserProfile() {
   const router = useRouter();
   const { id } = router.query;
   const { data: session } = useSession();
+  
+  // 基础状态
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editMode, setEditMode] = useState(false);  // 改名为 bioEditMode
-  const [saving, setSaving] = useState(false);
-  const [bio, setBio] = useState('');
-  const [verifyMessage, setVerifyMessage] = useState('');
-  const [stravaUrl, setStravaUrl] = useState('');
-  const [stravaEditMode, setStravaEditMode] = useState(false);  // 新增
-  const [locationEditMode, setLocationEditMode] = useState(false);
-  const [locationData, setLocationData] = useState({
-    state: '',
-    city: ''
-    });
-  const [availableCities, setAvailableCities] = useState([]);
-
-
-  // 修改密码相关状态
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // 成绩证明相关状态
   const [editingRecordId, setEditingRecordId] = useState(null);
@@ -95,220 +77,19 @@ export default function UserProfile() {
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
 
   // 验证相关状态
-  const [verifyingRecordId, setVerifyingRecordId] = useState(null);
-  const [isSubmittingVerify, setIsSubmittingVerify] = useState(false);
-  const [verifyError, setVerifyError] = useState('');
-
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyingRecord, setVerifyingRecord] = useState(null);
   const [reportReason, setReportReason] = useState('');
-
-  // 添加验证处理函数
-  const handleVerifyClick = (record) => {
-    setVerifyingRecord(record);
-    setReportReason('');
-    setShowVerifyDialog(true);
-  };  
-
-  
-  const handleBioSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setError('');
-  
-    try {
-      const res = await fetch(`/api/users/${id}/update`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          bio: bio,
-        })
-      });
-  
-      const data = await res.json();
-      if (data.success) {
-        setUserData(prev => ({
-          ...prev,
-          data: {
-            ...prev.data,
-            user: {
-              ...prev.data.user,
-              bio: data.user.bio
-            }
-          }
-        }));
-        setEditMode(false);
-      } else {
-        setError(data.message || '更新失败');
-      }
-    } catch (err) {
-      console.error('保存出错:', err);
-      setError('保存失败，请重试');
-    } finally {
-      setSaving(false);
-    }
-  };
-// 处理州市选择变化
-const handleLocationChange = (e) => {
-  const { name, value } = e.target;
-  
-  if (name === 'state') {
-    // 当州变化时，更新城市列表
-    const cities = getCitiesByState(value);
-    setAvailableCities(cities);
-    // 清空已选择的城市
-    setLocationData(prev => ({
-      ...prev,
-      state: value,
-      city: ''
-    }));
-  } else {
-    setLocationData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }
-};
-
-// 处理保存
-const handleLocationSubmit = async (e) => {
-  e.preventDefault();
-  setSaving(true);
-  setError('');
-
-  try {
-    const res = await fetch(`/api/users/${id}/update`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        state: locationData.state,
-        city: locationData.city
-      })
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      setUserData(prev => ({
-        ...prev,
-        data: {
-          ...prev.data,
-          user: {
-            ...prev.data.user,
-            state: data.user.state,
-            city: data.user.city
-          }
-        }
-      }));
-      setLocationEditMode(false);
-    } else {
-      setError(data.message || '更新失败');
-    }
-  } catch (err) {
-    console.error('保存出错:', err);
-    setError('保存失败，请重试');
-  } finally {
-    setSaving(false);
-  }
-};
-// Strava链接保存
-const handleStravaSubmit = async (e) => {
-  e.preventDefault();
-  setSaving(true);
-  setError('');
-
-  try {
-    const res = await fetch(`/api/users/${id}/update`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        stravaUrl: stravaUrl 
-      })
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      setUserData(prev => ({
-        ...prev,
-        data: {
-          ...prev.data,
-          user: {
-            ...prev.data.user,
-            stravaUrl: data.user.stravaUrl
-          }
-        }
-      }));
-      setStravaEditMode(false);
-    } else {
-      setError(data.message || '更新失败');
-    }
-  } catch (err) {
-    console.error('保存出错:', err);
-    setError('保存失败，请重试');
-  } finally {
-    setSaving(false);
-  }
-};
-
-  const handleVerifySubmit = async (action) => {
-    try {
-      if (action === 'report' && !reportReason.trim()) {
-        setVerifyMessage('请填写举报理由');
-        return;
-      }
-  
-      const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action,
-          reason: reportReason
-        })
-      });
-  
-      const data = await res.json();
-      if (data.success) {
-        // 添加这里：验证成功后重新获取用户数据
-        await fetchUserData();  
-        
-        setShowVerifyDialog(false);
-        setVerifyingRecord(null);
-        setReportReason('');
-        setVerifyMessage('');
-      } else {
-        setVerifyMessage(data.message || '操作失败');
-      }
-    } catch (err) {
-      console.error('验证操作错误:', err);
-      setVerifyMessage('操作失败，请重试');
-    }
-  };
+  const [verifyMessage, setVerifyMessage] = useState('');
 
   const isOwnProfile = session?.user?.id === id;
 
+  // 数据获取函数
   useEffect(() => {
     if (id) {
       fetchUserData();
     }
   }, [id]);
-
-  useEffect(() => {
-    if (userData?.data?.user) {
-      setBio(userData.data.user.bio || '');
-      setStravaUrl(userData.data.user.stravaUrl || '');
-    // 添加初始化州和城市数据
-    setLocationData({
-      state: userData.data.user.state || '',
-      city: userData.data.user.city || ''
-    });
-    
-    // 如果有州，则加载对应的城市列表
-    if (userData.data.user.state) {
-      setAvailableCities(getCitiesByState(userData.data.user.state));
-    }
-  }
-  }, [userData]);
 
   const fetchUserData = async () => {
     try {
@@ -328,43 +109,49 @@ const handleStravaSubmit = async (e) => {
     }
   };
 
-  
+  // 验证处理函数
+  const handleVerifyClick = (record) => {
+    setVerifyingRecord(record);
+    setReportReason('');
+    setShowVerifyDialog(true);
+  };  
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    setPasswordError('');
-    setPasswordLoading(true);
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError('两次输入的密码不一致');
-      setPasswordLoading(false);
-      return;
-    }
-
+  const handleVerifySubmit = async (action) => {
     try {
-      const res = await fetch(`/api/users/${id}/change-password`, {
+      if (action === 'report' && !reportReason.trim()) {
+        setVerifyMessage('请填写举报理由');
+        return;
+      }
+
+      const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({
+          action,
+          reason: reportReason
+        })
       });
 
       const data = await res.json();
-
       if (data.success) {
-        alert('密码修改成功！请重新登录。');
-        signOut({ callbackUrl: '/login' });
+        await fetchUserData();  
+        
+        setShowVerifyDialog(false);
+        setVerifyingRecord(null);
+        setReportReason('');
+        setVerifyMessage('');
       } else {
-        setPasswordError(data.message || '修改失败，请重试');
+        setVerifyMessage(data.message || '操作失败');
       }
-    } catch (error) {
-      setPasswordError('修改失败，请重试');
-    } finally {
-      setPasswordLoading(false);
+    } catch (err) {
+      console.error('验证操作错误:', err);
+      setVerifyMessage('操作失败，请重试');
     }
   };
 
+  // 成绩证明处理函数
   const handleSubmitProof = async (recordId) => {
     if (!proofUrl.trim()) return;
 
@@ -378,7 +165,6 @@ const handleStravaSubmit = async (e) => {
 
       const data = await res.json();
       if (data.success) {
-        // 更新本地数据
         const updatedRecords = userData.data.records.map(r =>
           r._id === recordId ? { ...r, proofUrl: proofUrl.trim() } : r
         );
@@ -398,40 +184,7 @@ const handleStravaSubmit = async (e) => {
     }
   };
 
-  const handleVerify = async (recordId, action) => {
-    setIsSubmittingVerify(true);
-    setVerifyError('');
-    try {
-      const res = await fetch(`/api/records/${recordId}/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        // 更新本地数据
-        const updatedRecords = userData.data.records.map(r =>
-          r._id === recordId ? {
-            ...r,
-            verifiedCount: action === 'verify' ? (r.verifiedCount || 0) + 1 : r.verifiedCount
-          } : r
-        );
-        setUserData(prev => ({
-          ...prev,
-          data: { ...prev.data, records: updatedRecords }
-        }));
-        setVerifyingRecordId(null);
-      } else {
-        setVerifyError(data.message || '操作失败');
-      }
-    } catch (error) {
-      setVerifyError('操作失败，请重试');
-    } finally {
-      setIsSubmittingVerify(false);
-    }
-  };
-
+  // 继续 UserProfile 组件
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto py-8 px-4">
@@ -462,287 +215,14 @@ const handleStravaSubmit = async (e) => {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      {/* 用户基本信息 */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">{user.name}</h1>
-          <div className="text-gray-600 space-y-1">
-            <p>性别: {user.gender === 'M' ? '男' : '女'}</p>
-            <p>生日: {formatDate(user.birthDate)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 修改密码部分 */}
-      {isOwnProfile && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <button
-            onClick={() => setShowPasswordForm(!showPasswordForm)}
-            className="flex items-center text-gray-700 hover:text-gray-900"
-          >
-            <span className="font-medium">修改密码</span>
-            <span className="ml-2">{showPasswordForm ? '▼' : '▶'}</span>
-          </button>
-
-          {showPasswordForm && (
-            <form onSubmit={handleChangePassword} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  新密码
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  minLength={6}
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  确认新密码
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={6}
-                  required
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                />
-              </div>
-              {passwordError && (
-                <div className="text-red-600 text-sm">{passwordError}</div>
-              )}
-              <button
-                type="submit"
-                disabled={passwordLoading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {passwordLoading ? '修改中...' : '修改密码'}
-              </button>
-            </form>
-          )}
-        </div>
-      )}
-
-      {/* 用户简介 */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex justify-between items-center mb-4">
-    <h2 className="text-xl font-semibold">简介</h2>
-    {isOwnProfile && !editMode && (
-      <button
-        onClick={() => setEditMode(true)}
-        className="text-blue-600 hover:text-blue-800"
-      >
-        编辑
-      </button>
-    )}
-  </div>
-
-        {editMode && isOwnProfile ? (
-          <form onSubmit={handleBioSubmit} className="space-y-4">
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="写点什么来介绍自己..."
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              rows={4}
-              maxLength={500}
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditMode(false);
-                  setBio(userData.data.user.bio || '');
-                }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-                disabled={saving}
-              >
-                取消
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
-                disabled={saving}
-              >
-                {saving ? '保存中...' : '保存'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <p className="text-gray-600">
-            {user.bio || '这个用户很懒，还没有写简介'}
-          </p>
-        )}
-      </div>
- {/* 常住地部分 */}
- <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-    <div className="flex justify-between items-center mb-4">
-      <h2 className="text-xl font-semibold">常住地</h2>
-      {isOwnProfile && !locationEditMode && (
-        <button
-          onClick={() => {
-            setLocationEditMode(true);
-            // 初始化编辑状态的值
-            setLocationData({
-              state: userData.data.user.state || '',
-              city: userData.data.user.city || ''
-            });
-          }}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          编辑
-        </button>
-      )}
-    </div>
-
-    {locationEditMode && isOwnProfile ? (
-      <form onSubmit={handleLocationSubmit} className="space-y-4">
-        {/* 州选择 */}
-        <div>
-          <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-            所在州
-          </label>
-          <select
-            id="state"
-            name="state"
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            value={locationData.state}
-            onChange={handleLocationChange}
-          >
-            <option value="">请选择州</option>
-            {states.map((state) => (
-              <option key={state.value} value={state.value}>
-                {state.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* 城市选择 */}
-        <div>
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-            所在城市
-          </label>
-          <select
-            id="city"
-            name="city"
-            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            value={locationData.city}
-            onChange={handleLocationChange}
-            disabled={!locationData.state}
-          >
-            <option value="">请选择城市</option>
-            {availableCities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex justify-end space-x-2">
-          <button
-            type="button"
-            onClick={() => {
-              setLocationEditMode(false);
-              setLocationData({
-                state: userData.data.user.state || '',
-                city: userData.data.user.city || ''
-              });
-              setAvailableCities([]);
-            }}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-            disabled={saving}
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
-            disabled={saving || !locationData.state || !locationData.city}
-          >
-            {saving ? '保存中...' : '保存'}
-          </button>
-        </div>
-      </form>
-    ) : (
-      <div className="text-gray-600">
-        {user.state && user.city ? (
-          <p>{states.find(s => s.value === user.state)?.label} - {user.city}</p>
-        ) : (
-          <p>未设置常住地</p>
-        )}
-      </div>
-    )}
-  </div>
-
-  {/* Strava链接 */}
-<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-xl font-semibold">Strava链接</h2>
-    {isOwnProfile && !stravaEditMode && (
-      <button
-        onClick={() => setStravaEditMode(true)}
-        className="text-blue-600 hover:text-blue-800"
-      >
-        编辑
-      </button>
-    )}
-  </div>
-
-  {stravaEditMode && isOwnProfile ? (
-    <form onSubmit={handleStravaSubmit} className="space-y-4"> 
-      <input
-        type="url"  
-        value={stravaUrl}
-        onChange={(e) => setStravaUrl(e.target.value)}
-        placeholder="请输入您的Strava主页链接..."
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      {/* 新的个人信息展示组件 */}
+      <UserProfileInfo 
+        user={{
+         ...user,
+          _id: id  // 确保传递正确的ID
+        }} 
+         isOwnProfile={isOwnProfile} 
       />
-      <div className="flex justify-end space-x-2">
-        <button
-          type="button"
-          onClick={() => {
-            setStravaEditMode(false);
-            setStravaUrl(userData.data.user.stravaUrl || '');
-          }}
-          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-          disabled={saving}
-        >
-          取消
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
-          disabled={saving}
-        >
-          {saving ? '保存中...' : '保存'}
-        </button>
-      </div>
-    </form>
-  ) : (
-    <div className="text-gray-600">
-      {user.stravaUrl ? (
-        <a
-          href={user.stravaUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
-        >
-          <span>{user.stravaUrl}</span>
-          <ExternalLink size={16} className="ml-1" />
-        </a>
-      ) : (
-        <span>未提供链接</span>
-      )}
-    </div>
-  )}
-</div>
-      
 
       {/* 成绩列表 */}
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -785,29 +265,24 @@ const handleStravaSubmit = async (e) => {
                     <div className="flex items-center">
                       {formatTime(record.finishTime)}
                       <button
-  onClick={(e) => {
-    e.preventDefault();
-    handleVerifyClick(record);
-  }}
-  className={`ml-2 ${
-    record.verificationStatus === 'verified'
-      ? 'text-green-500'
-      : record.reportedBy?.length > 0
-      ? 'text-red-500'
-      : 'text-gray-400'
-  } hover:text-green-600 cursor-pointer`}
-  title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
-    ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
-    : record.verificationStatus === 'verified'
-    ? `${record.verifiedCount}人验证`
-    : record.reportedBy?.length > 0
-    ? '被举报'
-    : '待验证'}
->
-  <CheckCircle size={16} />
-</button>
-
-
+                        onClick={() => handleVerifyClick(record)}
+                        className={`ml-2 ${
+                          record.verificationStatus === 'verified'
+                            ? 'text-green-500'
+                            : record.reportedBy?.length > 0
+                            ? 'text-red-500'
+                            : 'text-gray-400'
+                        } hover:text-green-600 cursor-pointer`}
+                        title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+                          ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
+                          : record.verificationStatus === 'verified'
+                          ? `${record.verifiedCount}人验证`
+                          : record.reportedBy?.length > 0
+                          ? '被举报'
+                          : '待验证'}
+                      >
+                        <CheckCircle size={16} />
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
