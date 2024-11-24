@@ -42,7 +42,7 @@ export default function MobileNavMenu({ isOpen, onClose }) {
             className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
             onClick={onClose}
           >
-            提交成绩加入榜单
+            提交成绩
           </Link>
         </div>
       </div>

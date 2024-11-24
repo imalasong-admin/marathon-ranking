@@ -1,4 +1,8 @@
 # Marathon Ranking 移动端开发标准文档
+### 版本控制
+- GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
+- 最新稳定版本：[18a229e]
+- 最后更新：2024-11-23
 
 ## 一、设备检测与路由
 1. 设备检测实现
@@ -225,10 +229,12 @@ const handleExpand = (id) => {
     /MobileNavMenu.js       - 菜单内容组件
     /MobileRankings.js
     /MobileLayout.js
+    /DesktopRankings.js
   /desktop
     /DesktopNavbar.js
     /DesktopRankings.js
     /DesktopLayout.js
+    /DesktopAgeAdjustedRankings.js
 ```
 
 ### 2. 组件命名规范

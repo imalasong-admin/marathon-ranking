@@ -1,6 +1,7 @@
 // components/mobile/MobileAgeAdjustedRankings.js
 import React, { useState } from 'react';
 import { Search, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
 const MobileAgeAdjustedRankings = ({ records = [] }) => {
  const [searchTerm, setSearchTerm] = useState('');
@@ -46,7 +47,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
  return (
    <div className="flex flex-col min-h-screen bg-gray-50">
      {/* 头部区域 */}
-     <div className="sticky top-0 bg-white shadow-sm z-10 p-4">
+     <div className="sticky top-0 bg-white shadow-sm z-10 p-2">
        
        {/* 搜索框 */}
        <div className="relative">
@@ -60,13 +61,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
          <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
        </div>
 
-       {/* 提交成绩按钮 */}
-       <a 
-         href="/users/submit"
-         className="block w-full mt-4 p-2 text-center bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-       >
-         提交成绩
-       </a>
+       
      </div>
 
      {/* 列表区域 */}
@@ -155,16 +150,71 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
                    <span className="text-gray-500">日期:</span>
                    <span className="ml-2">{formatDate(record.raceId?.date)}</span>
                  </div>
-               </div>
+                {/* 成绩证明 - 修改这部分 */}
+  <div className="mt-1">
+    <span className="text-gray-500">成绩证明:</span>
+    {record.proofUrl ? (
+      <a 
+        href={record.proofUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ml-2 text-blue-600 hover:text-blue-800"
+      >
+        查看链接
+      </a>
+    ) : (
+      <span className="ml-2 text-red-500">
+        {record.userName} 未提供成绩链接🔗
+      </span>
+    )}
+  </div>
+</div>
 
-               {/* 验证信息 */}
-               <div className="py-2">
-                 {record.verifiedCount > 0 && (
-                   <div className="flex items-center text-green-600">
-                     <CheckCircle size={16} className="mr-2" />
-                     <span>{record.verifiedCount}人已验证</span>
-                   </div>
-                 )}
+{/* 验证信息 */}
+<div className="py-2">
+  {record.verifiedCount > 0 ? (
+    <>
+      <div className="flex items-center text-green-600 mb-2">
+        <CheckCircle size={16} className="mr-2" />
+        <span>{record.verifiedCount}人已验证</span>
+      </div>
+      {record.verifiedBy && record.verifiedBy.length > 0 && (
+        <div className="mt-1">
+          <span className="text-gray-500">验证人:</span>
+          <div className="ml-2 flex flex-wrap gap-2">
+            {record.verifiedBy.map((verification, index) => (
+              <Link
+                key={`verify-${record._id}-${verification.userId._id}-${index}`}
+                href={`/users/${verification.userId._id}`}
+                className="text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                {verification.userId.name}
+                {index < record.verifiedBy.length - 1 ? '、' : ''}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  ) : (
+    <div className="text-gray-500">暂无验证</div>
+  )}
+
+                  {/* 举报信息 */}
+{record.reportedBy && record.reportedBy.length > 0 && (
+  <div className="mt-2 pt-2 border-t">
+    <span className="text-red-500">被举报 {record.reportedBy.length} 次</span>
+    {record.reportedBy.map((report, index) => (
+      <div 
+        key={`report-${record._id}-${report.userId._id}-${index}`}  // 使用更复杂的组合键
+        className="mt-1 text-gray-600"
+      >
+        <span>{report.userId.name}: </span>
+        <span className="text-red-600">{report.reason}</span>
+      </div>
+    ))}
+  </div>
+)}
                </div>
              </div>
            )}
