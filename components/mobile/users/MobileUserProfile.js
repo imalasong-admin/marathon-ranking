@@ -106,18 +106,16 @@ const MobileUserProfile = ({
                 {/* 成绩和验证状态 */}
                 <div className="flex items-center space-x-1">
                   <span className="font-bold">{formatTime(record.finishTime)}</span>
-                  <button
-                    onClick={() => onVerifyClick(record)}
-                    className={`${
-                      record.verificationStatus === 'verified'
-                        ? 'text-green-500'
-                        : record.reportedBy?.length > 0
-                        ? 'text-red-500'
-                        : 'text-gray-400'
-                    }`}
-                  >
-                    <CheckCircle size={16} />
-                  </button>
+                  <CheckCircle 
+    size={16} 
+    className={`ml-1.5 shrink-0 ${
+      record.verificationStatus === 'verified'
+        ? 'text-green-500'
+        : record.reportedBy?.length > 0
+        ? 'text-red-500'
+        : 'text-gray-400'  // 待验证状态显示为灰色
+    }`}
+  />
                 </div>
 
                 {/* 展开按钮 */}

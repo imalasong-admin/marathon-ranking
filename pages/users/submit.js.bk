@@ -3,13 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { useDeviceDetection } from '../../lib/deviceDetection';
 
+// 比赛类型选项
 const raceTypes = [
   '全程马拉松',
   '超马'
 ];
 
+// 超马项目选项
 const ultraDistanceOptions = [
   '50K',
   '50M',
@@ -21,7 +22,6 @@ const ultraDistanceOptions = [
 ];
 
 export default function UserSubmitRecord() {
-  const isMobile = useDeviceDetection();
   const router = useRouter();
   const { data: session, status } = useSession();
   const [error, setError] = useState('');
@@ -34,7 +34,6 @@ export default function UserSubmitRecord() {
   const [newRaceDate, setNewRaceDate] = useState('');
   const [newRaceLocation, setNewRaceLocation] = useState('');
   const [newRaceWebsite, setNewRaceWebsite] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState({
     hours: '',
     minutes: '',
@@ -44,60 +43,41 @@ export default function UserSubmitRecord() {
     ultraDistance: ''
   });
 
+  // 年份选项（最近10年）
   const currentYear = new Date().getFullYear();
   const years = Array.from({length: 1}, (_, i) => (currentYear - i).toString());
 
-  // 样式类定义
-  const containerClass = isMobile
-    ? "min-h-screen bg-gray-50"
-    : "max-w-2xl mx-auto py-8 px-4";
-
-  const titleClass = isMobile
-    ? "text-xl font-bold mb-4"
-    : "text-3xl font-bold mb-8";
-
-  const inputClass = isMobile
-    ? "block w-full h-12 rounded-md border-gray-300"
-    : "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500";
-
-  const selectClass = isMobile
-    ? "block w-full h-12 rounded-md border-gray-300"
-    : "block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500";
-
-  const buttonClass = isMobile
-    ? "w-full h-12 flex justify-center items-center bg-blue-600 text-white rounded-md"
-    : "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700";
-
-  const secondaryButtonClass = isMobile
-    ? "block w-full h-12 flex items-center justify-center text-gray-600"
-    : "px-4 py-2 text-gray-600";
-
-
-  useEffect(() => {
-    if (step === 2) {
-      const fetchRaces = async () => {
-        try {
-          const res = await fetch(`/api/races?year=${selectedYear}&type=${selectedType}`);
-          const data = await res.json();
+// 获取比赛列表
+useEffect(() => {
+  if (step === 2) {
+    const fetchRaces = async () => {
+      try {
+        // 使用筛选参数获取场次
+        const res = await fetch(`/api/races?year=${selectedYear}&type=${selectedType}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          // 场次数据中，赛事信息现在在 seriesId 字段中
+          const formattedRaces = data.races.map(race => ({
+            _id: race._id,
+            name: race.seriesId.name,  // 赛事名称从 seriesId 中获取
+            date: race.date,
+            isLocked: race.isLocked
+          }));
           
-          if (data.success) {
-            const formattedRaces = data.races.map(race => ({
-              _id: race._id,
-              name: race.seriesId.name,
-              date: race.date,
-              isLocked: race.isLocked
-            }));
-            setRaces(formattedRaces);
-          }
-        } catch (error) {
-          console.error('获取比赛列表失败:', error);
-          setError('获取比赛列表失败');
+          setRaces(formattedRaces);
         }
-      };
-      fetchRaces();
-    }
-  }, [step, selectedYear, selectedType]);
+      } catch (error) {
+        console.error('获取比赛列表失败:', error);
+        setError('获取比赛列表失败');
+      }
+    };
 
+    fetchRaces();
+  }
+}, [step, selectedYear, selectedType]);
+
+  // 处理第一步提交
   const handleStepOneSubmit = (e) => {
     e.preventDefault();
     if (!selectedType) {
@@ -112,8 +92,10 @@ export default function UserSubmitRecord() {
     setStep(2);
   };
 
+  // 处理添加新比赛
   const handleAddNewRace = async () => {
     try {
+      // 基础验证保持不变
       if (!newRaceName.trim()) {
         setError('比赛名称不能为空');
         return;
@@ -128,12 +110,13 @@ export default function UserSubmitRecord() {
         return;
       }
   
+      // 1. 创建赛事 - 仅包含赛事相关信息
       const seriesRes = await fetch('/api/series', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newRaceName.trim(),
-          raceType: selectedType,
+          raceType: selectedType,  // 使用第一步选择的类型
           location: newRaceLocation.trim(),
           website: newRaceWebsite.trim()
         })
@@ -146,28 +129,47 @@ export default function UserSubmitRecord() {
         return;
       }
   
+      // 2. 创建场次 - 仅包含日期和关联赛事ID
       const raceRes = await fetch('/api/races', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           seriesId: seriesData.series._id,
-          date: newRaceDate + 'T12:00:00.000Z'
+          date: newRaceDate + 'T12:00:00.000Z'  // 添加 UTC 时间
         })
       });
   
       const raceData = await raceRes.json();
   
       if (raceData.success) {
+        // 更新列表保持不变
         setRaces([...races, {
           _id: raceData.race._id,
           name: seriesData.series.name,
           date: raceData.race.date,
           isLocked: false
         }]);
-        setFormData({
-          ...formData,
-          raceId: raceData.race._id
-        });
+        // 设置新创建的比赛为当前选中的比赛
+  setFormData({
+    ...formData,
+    raceId: raceData.race._id
+  });
+        // 日期显示统一使用一个格式化函数
+        const formatDate = (dateString) => {
+          if (!dateString) return '-';
+          try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'numeric',
+              day: 'numeric',
+              timeZone: 'UTC'
+            });
+          } catch (error) {
+            return '-';
+          }
+        };
+        
+        // 重置表单保持不变
         setNewRaceName('');
         setNewRaceDate('');
         setNewRaceLocation('');
@@ -183,6 +185,7 @@ export default function UserSubmitRecord() {
     }
   };
 
+  // 处理成绩提交
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -218,99 +221,91 @@ export default function UserSubmitRecord() {
         return;
       }
   
-      const submitData = {
-        raceId: formData.raceId,
-        hours: parseInt(formData.hours || 0),
-        minutes: parseInt(formData.minutes || 0),
-        seconds: parseInt(formData.seconds || 0),
-        totalSeconds,
-        proofUrl: formData.proofUrl || '',
-        ...(selectedType === '超马' ? { ultraDistance: formData.ultraDistance } : {})
-      };
-
-      const res = await fetch('/api/records/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setShowSuccessModal(true);
-        setTimeout(() => {
-          router.push('/users/' + session.user.id);
-        }, 1500);
-      } else {
-        setError(data.message || '提交失败，请重试');
-      }
-    } catch (err) {
-      console.error('提交错误:', err);
-      setError('提交失败，请重试');
-    }
+// 构建提交数据，将 proofUrl 设为可选
+const submitData = {
+    raceId: formData.raceId,
+    hours: parseInt(formData.hours || 0),
+    minutes: parseInt(formData.minutes || 0),
+    seconds: parseInt(formData.seconds || 0),
+    totalSeconds,
+    proofUrl: formData.proofUrl || '', // 如果为空则提交空字符串
+    ...(selectedType === '超马' ? { ultraDistance: formData.ultraDistance } : {})
   };
+
+  const res = await fetch('/api/records/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(submitData),
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    alert('成绩提交成功！');
+    router.push('/users/' + session.user.id);
+  } else {
+    setError(data.message || '提交失败，请重试');
+  }
+} catch (err) {
+  console.error('提交错误:', err);
+  setError('提交失败，请重试');
+}
+};
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {isMobile && (
-          <div className="sticky top-0 bg-white shadow-sm px-4 h-12 flex items-center">
-            <span className="text-lg">提交比赛成绩</span>
-          </div>
-        )}
-        <div className="px-4 py-4 text-center">加载中...</div>
+      <div className="max-w-2xl mx-auto py-8 px-4 text-center">
+        <div>加载中...</div>
       </div>
     );
   }
 
   if (!session) {
     return (
-      <div className={containerClass}>
-        {isMobile && (
-          <div className="sticky top-0 bg-white shadow-sm px-4 h-12 flex items-center">
-            <span className="text-lg">提交比赛成绩</span>
-          </div>
-        )}
-        <div className="px-4 py-4 text-center">
-          <h1 className={titleClass}>提交比赛成绩</h1>
-          <div className="bg-red-50 text-red-500 p-4 rounded-md mb-4">
-            请先登录
-          </div>
-          <Link href="/login" className={buttonClass}>
-            去登录
-          </Link>
+      <div className="max-w-2xl mx-auto py-8 px-4 text-center">
+        <h1 className="text-3xl font-bold mb-8">提交比赛成绩</h1>
+        <div className="bg-red-50 text-red-500 p-4 rounded-md mb-4">
+          请先登录
         </div>
+        <Link 
+          href="/login"
+          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+        >
+          去登录
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className={containerClass}>
-
+    <div className="max-w-2xl mx-auto py-8 px-4">
       {step === 1 ? (
-        <div className="px-4">
-          <h1 className={titleClass}>提交比赛成绩</h1>
+        <>
+          <h1 className="text-3xl font-bold mb-8">提交比赛成绩</h1>
           
-          <form onSubmit={handleStepOneSubmit} className="space-y-6">
+          <form onSubmit={handleStepOneSubmit} className="space-y-8">
             {error && (
               <div className="bg-red-50 text-red-500 p-4 rounded-md">
                 {error}
               </div>
             )}
 
+            {/* 比赛类型选择 */}
             <div className="space-y-4">
-              <label className="block text-base font-medium text-gray-700">
+              <label className="block text-lg font-medium text-gray-700">
                 比赛类型
               </label>
-              <div className={isMobile ? "space-y-2" : "grid grid-cols-2 gap-4"}>
+              <div className="grid grid-cols-2 gap-4">
                 {raceTypes.map(type => (
                   <label 
                     key={type}
                     className={`
-                      flex items-center p-3 rounded-lg border cursor-pointer
+                      flex items-center p-2 rounded-lg border cursor-pointer
                       ${selectedType === type 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200'}
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
+                        : 'border-gray-200 hover:border-blue-200'}
                     `}
                   >
                     <input
@@ -319,28 +314,28 @@ export default function UserSubmitRecord() {
                       value={type}
                       checked={selectedType === type}
                       onChange={(e) => setSelectedType(e.target.value)}
-                      className="h-5 w-5 text-blue-600"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-3 text-base">{type}</span>
+                    <span className="ml-3">{type}</span>
                   </label>
                 ))}
               </div>
             </div>
 
+            {/* 年份选择 */}
             <div className="space-y-4">
-              <label className="block text-base font-medium text-gray-700">
+              <label className="block text-lg font-medium text-gray-700">
                 比赛年份
               </label>
-              <div className={isMobile ? "flex overflow-x-auto space-x-2 pb-2" : "grid grid-cols-5 gap-4"}>
+              <div className="grid grid-cols-5 gap-4">
                 {years.map(year => (
                   <label 
                     key={year}
                     className={`
-                      flex items-center justify-center p-3 rounded-lg border
-                      ${isMobile ? 'min-w-[100px]' : ''}
+                      flex items-center justify-center p-2 rounded-lg border cursor-pointer
                       ${selectedYear === year 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200'}
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
+                        : 'border-gray-200 hover:border-blue-200'}
                     `}
                   >
                     <input
@@ -351,28 +346,32 @@ export default function UserSubmitRecord() {
                       onChange={(e) => setSelectedYear(e.target.value)}
                       className="hidden"
                     />
-                    <span className="text-base">{year}年</span>
+                    <span>{year}年</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className={isMobile ? "fixed bottom-0 left-0 right-0 p-4 bg-white border-t" : "flex justify-between pt-4"}>
+            <div className="flex justify-between pt-4">
               <Link
-                href={`/users/${session.user.id}`}
-                className={secondaryButtonClass}
+                href="/users/[id]"
+                as={`/users/${session.user.id}`}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
               >
                 返回个人中心
               </Link>
-              <button type="submit" className={buttonClass}>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
                 下一步
               </button>
             </div>
           </form>
-        </div>
+        </>
       ) : (
-        <div className="px-4 pb-20">
-          <h1 className={titleClass}>
+        <>
+          <h1 className="text-3xl font-bold mb-8">
             提交 {selectedYear}年{selectedType} 成绩
           </h1>
           
@@ -383,56 +382,57 @@ export default function UserSubmitRecord() {
               </div>
             )}
 
+            
+
+            {/* 比赛选择 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">比赛名称</label>
+              <label className="block text-sm font-medium text-gray-700">比赛名称</label>
               {!isAddingNewRace ? (
                 <div className="mt-1 flex space-x-2">
                   <select
-                    value={formData.raceId}
-                    onChange={(e) => setFormData({...formData, raceId: e.target.value})}
-                    className={selectClass}
-                    required
-                  >
-                    <option value="">请选择比赛</option>
-                    {races.map((race) => (
-                      <option key={race._id} value={race._id}>
-                        {race.name} ({new Date(race.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'numeric',
-                          day: 'numeric',
-                          timeZone: 'UTC'
-                        })})
-                      </option>
-                    ))}
-                  </select>
+  value={formData.raceId}
+  onChange={(e) => setFormData({...formData, raceId: e.target.value})}
+  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  required
+>
+  <option value="">请选择比赛</option>
+  {races.map((race) => (
+    <option key={race._id} value={race._id}>
+    {race.name} ({new Date(race.date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      timeZone: 'UTC'
+    })})
+  </option>
+  ))}
+</select>
                   <button
                     type="button"
                     onClick={() => setIsAddingNewRace(true)}
-                    className={secondaryButtonClass}
+                    className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700"
                   >
                     添加新比赛
                   </button>
                 </div>
               ) : (
-                <div className="mt-1 space-y-3">
+                <div className="mt-1 space-y-2">
                   <input
                     type="text"
                     value={newRaceName}
                     onChange={(e) => setNewRaceName(e.target.value)}
                     placeholder="请输入比赛名称"
-                    className={inputClass}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      比赛日期 ({selectedYear}年)
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">比赛日期 ({selectedYear}年)</label>
                     <input
                       type="date"
                       value={newRaceDate}
                       onChange={(e) => setNewRaceDate(e.target.value)}
                       min={`${selectedYear}-01-01`}
                       max={`${selectedYear}-12-31`}
-                      className={inputClass}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                   <input
@@ -440,20 +440,20 @@ export default function UserSubmitRecord() {
                     value={newRaceLocation}
                     onChange={(e) => setNewRaceLocation(e.target.value)}
                     placeholder="比赛地点（选填）"
-                    className={inputClass}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                   <input
                     type="url"
                     value={newRaceWebsite}
                     onChange={(e) => setNewRaceWebsite(e.target.value)}
                     placeholder="官方网站（选填）"
-                    className={inputClass}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
                   <div className="flex space-x-2">
                     <button
                       type="button"
                       onClick={handleAddNewRace}
-                      className={buttonClass}
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                       确认添加
                     </button>
@@ -467,7 +467,7 @@ export default function UserSubmitRecord() {
                         setNewRaceWebsite('');
                         setError('');
                       }}
-                      className={secondaryButtonClass}
+                      className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
                     >
                       取消
                     </button>
@@ -476,18 +476,17 @@ export default function UserSubmitRecord() {
               )}
             </div>
 
+            {/* 超马项目选择 */}
             {selectedType === '超马' && (
-              <div>
+              <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   参赛项目
-                  <span className="text-gray-500 text-xs ml-2">
-                    (请选择您参加的具体项目)
-                  </span>
+                  <span className="text-gray-500 text-xs ml-2">(请选择您参加的具体项目)</span>
                 </label>
                 <select
                   value={formData.ultraDistance}
                   onChange={(e) => setFormData({...formData, ultraDistance: e.target.value})}
-                  className={selectClass}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   required
                 >
                   <option value="">请选择参赛项目</option>
@@ -498,87 +497,84 @@ export default function UserSubmitRecord() {
               </div>
             )}
 
-            <div>
-              <h3 className="text-base font-medium mb-3">完赛时间</h3>
+{/* 完赛时间 */}
+<div>
+              <h3 className="text-lg font-medium mb-4">完赛时间</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">时</label>
+                  <label className="block text-sm font-medium text-gray-700">时</label>
                   <input
                     type="number"
                     min="0"
                     max="23"
                     value={formData.hours}
                     onChange={(e) => setFormData({...formData, hours: e.target.value})}
-                    className={inputClass}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">分</label>
+                  <label className="block text-sm font-medium text-gray-700">分</label>
                   <input
                     type="number"
                     min="0"
                     max="59"
                     value={formData.minutes}
                     onChange={(e) => setFormData({...formData, minutes: e.target.value})}
-                    className={inputClass}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">秒</label>
+                  <label className="block text-sm font-medium text-gray-700">秒</label>
                   <input
                     type="number"
                     min="0"
                     max="59"
                     value={formData.seconds}
                     onChange={(e) => setFormData({...formData, seconds: e.target.value})}
-                    className={inputClass}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     required
                   />
                 </div>
               </div>
             </div>
 
+
+            {/* 成绩证明 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700">
                 成绩证明链接
-                <span className="text-gray-500 text-xs ml-2">
-                  (官方成绩查询链接/Strava活动链接/Athlinks成绩链接)
-                </span>
+                <span className="text-gray-500 text-xs ml-2">(官方成绩查询链接/Strava活动链接/Athlinks成绩链接)</span>
               </label>
               <input
                 type="url"
                 value={formData.proofUrl}
                 onChange={(e) => setFormData({...formData, proofUrl: e.target.value})}
                 placeholder="请输入成绩证明链接"
-                className={inputClass}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                // required
               />
             </div>
 
-            <div className={isMobile ? "fixed bottom-0 left-0 right-0 p-4 bg-white border-t" : "flex justify-between"}>
+            <div className="flex justify-between">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className={secondaryButtonClass}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
               >
                 返回上一步
               </button>
-              <button type="submit" className={buttonClass}>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
                 提交成绩
               </button>
             </div>
           </form>
-        </div>
+        </>
       )}
-    
-    {/* 添加在最后 */}
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSuccessModal ? '' : 'hidden'}`}>
-      <div className="bg-white rounded-lg p-6 text-center">
-        <p className="text-lg mb-4">成绩提交成功！</p>
-        <div className="bg-blue-600 text-white py-2 px-4 rounded">确定</div>
-      </div>
     </div>
-  </div>
-);
+  );
 }

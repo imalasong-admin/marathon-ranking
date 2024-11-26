@@ -448,5 +448,5 @@ Response:
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[18a229e]
-- 最后更新：2024-11-23
+- 最新稳定版本：[b7857e3]
+- 最后更新：2024-11-24
