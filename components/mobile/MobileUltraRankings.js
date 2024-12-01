@@ -134,11 +134,18 @@ const handleVerifySubmit = async (action) => {
   };
 
   const filteredRecords = records.filter(record => {
-    if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    // 1. 确保 record 对象存在
+    if (!record || !record.userName) return false;
+    
+    // 2. 处理搜索词
+    if (searchTerm && !record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    
+    // 3. 处理其他过滤条件
     if (filters.state !== 'all' && record.state !== filters.state) return false;
     if (filters.selectedRace && record.raceId?._id !== filters.selectedRace) return false;
+    
     return true;
-  });
+});
 
   // 验证对话框组件
   const VerifyDialog = () => (

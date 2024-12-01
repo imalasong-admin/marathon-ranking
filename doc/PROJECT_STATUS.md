@@ -4,11 +4,17 @@
 # Marathon Ranking Project Status
 
 ## 当前版本信息
-- 最新稳定版本: [5a55ebb]
-- 最后更新: 2024-11-25
+- 最新稳定版本: [c74d489]
+- 最后更新: 2024-12-1
 - 部署地址: https://marathon-ranking.vercel.app
 
 ## 最近完成的功能
+✅ 移动端增加成绩验证功能（2024-12-1）
+- 成绩榜增加成绩验证
+- 跑力榜增加成绩验证
+- 越野榜增加成绩验证
+  个人中心尚未完成增加成绩验证
+
 ✅ Zoho Mail设置（2024-11-27）
 - 配置 imalasong.com 域名邮箱
 - https://mailadmin.zoho.com/
