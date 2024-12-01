@@ -213,6 +213,10 @@ export default function DesktopUserProfile() {
 
   const { user, records } = userData.data;
 
+  if (!records || records.length === 0) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       {/* 新的个人信息展示组件 */}
@@ -267,12 +271,14 @@ export default function DesktopUserProfile() {
                       <button
                         onClick={() => handleVerifyClick(record)}
                         className={`ml-2 ${
-                          record.verificationStatus === 'verified'
-                            ? 'text-green-500'
-                            : record.reportedBy?.length > 0
-                            ? 'text-red-500'
-                            : 'text-gray-400'
-                        } hover:text-green-600 cursor-pointer`}
+                            record.verificationStatus === 'verified' && record.reportedBy?.length > 0  // 明确检查长度大于0
+                              ? 'text-yellow-500'  // 既有验证又有举报
+                              : record.verificationStatus === 'verified'
+                                ? 'text-green-500'  // 只有验证
+                                : record.reportedBy?.length > 0  // 同样明确检查长度大于0
+                                  ? 'text-red-500'  // 只有举报
+                                  : 'text-gray-400'  // 待验证
+                          }`}
                         title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
                           ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
                           : record.verificationStatus === 'verified'

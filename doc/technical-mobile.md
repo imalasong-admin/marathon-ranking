@@ -1,8 +1,8 @@
 # Marathon Ranking 移动端开发标准文档
 ### 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[b7857e3]
-- 最后更新：2024-11-24
+- 最新稳定版本：[5a55ebb]
+- 最后更新：2024-11-245
 
 ### 移动端适配的开发，应该保持适配方案一致性，以rankings.js为例：
    - 第一步: 创建rankings.js的桌面端组件 components/desktop/DesktopRankings.js
@@ -241,14 +241,18 @@ const handleExpand = (id) => {
     /MobileAgeAdjustedRankings.js
     /MobileUltraRankings.js
    --users
-    /MobileUserProfile.js
+       /MobileUserProfile.js
+     --[id]
+         /MobileEditProfile.js   
   /desktop
     /DesktopNavbar.js
     /DesktopRankings.js
     /DesktopAgeAdjustedRankings.js
     /DesktopUltraRankings.js
    --users
-    /DesktopUserProfile.js
+       /DesktopUserProfile.js
+     --[id]
+         /MobileEditProfile.js  
 ```
 
 ### 2. 组件命名规范

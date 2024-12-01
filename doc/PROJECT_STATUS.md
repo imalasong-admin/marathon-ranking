@@ -4,11 +4,26 @@
 # Marathon Ranking Project Status
 
 ## 当前版本信息
-- 最新稳定版本: [b7857e3]
-- 最后更新: 2024-11-24
+- 最新稳定版本: [5a55ebb]
+- 最后更新: 2024-11-25
 - 部署地址: https://marathon-ranking.vercel.app
 
 ## 最近完成的功能
+✅ Zoho Mail设置（2024-11-27）
+- 配置 imalasong.com 域名邮箱
+- https://mailadmin.zoho.com/
+  管理员邮箱 Tian@iMaLaSong.com
+- https://mail.zoho.com/
+  收发邮件
+- MX 和 SPF DKIM记录验证完成
+
+✅ 域名迁移（2024-11-26）
+- 配置 imalasong.com 域名
+- 设置 Vercel 自定义域名
+- 配置 Resend 邮件服务域名
+- MX 和 SPF DKIM 记录验证完成
+- 
+
 ✅ 移动端适配（2024-11-25）
    - 个人信息编辑页
    - 注册/登录页

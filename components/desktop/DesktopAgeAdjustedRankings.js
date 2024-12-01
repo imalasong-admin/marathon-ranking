@@ -19,6 +19,7 @@ export default function DesktopAgeAdjustedRankings() {
  const [error, setError] = useState('');
  const [currentPage, setCurrentPage] = useState(1);
  const recordsPerPage = 100;
+ const [races, setRaces] = useState([]);
  
  const [filters, setFilters] = useState({
    gender: 'all',
@@ -42,8 +43,9 @@ export default function DesktopAgeAdjustedRankings() {
  ];
 
  useEffect(() => {
-   fetchRecords();
- }, []);
+    fetchRecords();
+    fetchRaces();  // 新增这一行
+  }, []);
 
  useEffect(() => {
    applyFilters();
@@ -77,6 +79,22 @@ export default function DesktopAgeAdjustedRankings() {
      setLoading(false);
    }
  };
+
+ const fetchRaces = async () => {
+    try {
+      const res = await fetch('/api/races');
+      const data = await res.json();
+      if (data.success) {
+        const marathonRaces = data.races.filter(race => 
+          new Date(race.date).getFullYear() === 2024 &&
+          race.seriesId?.raceType === '全程马拉松'
+        );
+        setRaces(marathonRaces);
+      }
+    } catch (err) {
+      console.error('获取赛事数据失败');
+    }
+  };
 
  // 验证相关函数和其他辅助函数保持不变...
  const handleVerifyClick = (record) => {
@@ -170,13 +188,7 @@ if (filters.state !== 'all') {
     setCurrentPage(1);
   };
 
-  // 点击比赛名称时的处理函数
-  const handleRaceClick = (raceId) => {
-    setFilters(prev => ({
-      ...prev,
-      selectedRace: prev.selectedRace === raceId ? null : raceId
-    }));
-  };
+  
 
 // 分页处理函数
 const indexOfLastRecord = currentPage * recordsPerPage;
@@ -235,6 +247,10 @@ const Pagination = () => (
     );
   }
  
+  if (!records || records.length === 0) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="max-w-6xl mx-auto py-1 px-4">
       <div className="flex justify-between items-center mb-6">
@@ -310,6 +326,24 @@ const Pagination = () => (
   </select>
   
 </div>
+<div className="flex items-center space-x-2">
+  <label className="text-sm font-medium text-gray-700">比赛:</label>
+  <select
+    value={filters.selectedRace || 'all'}
+    onChange={(e) => setFilters(prev => ({ 
+      ...prev, 
+      selectedRace: e.target.value === 'all' ? null : e.target.value 
+    }))}
+    className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    <option value="all">全部</option>
+    {races.map(race => (
+      <option key={race._id} value={race._id}>
+        {race.seriesId?.name} ({formatDate(race.date)})
+      </option>
+    ))}
+  </select>
+</div>
           </div>
           
         </div>
@@ -368,12 +402,14 @@ const Pagination = () => (
                               handleVerifyClick(record);
                             }}
                             className={`ml-2 ${
-                              record.verificationStatus === 'verified'
-                                ? 'text-green-500'
-                                : record.reportedBy?.length > 0
-                                ? 'text-red-500'
-                                : 'text-gray-400'
-                            } hover:text-green-600`}
+                                record.verificationStatus === 'verified' && record.reportedBy?.length > 0  // 明确检查长度大于0
+                                  ? 'text-yellow-500'  // 既有验证又有举报
+                                  : record.verificationStatus === 'verified'
+                                    ? 'text-green-500'  // 只有验证
+                                    : record.reportedBy?.length > 0  // 同样明确检查长度大于0
+                                      ? 'text-red-500'  // 只有举报
+                                      : 'text-gray-400'  // 待验证
+                              }`}
                             title={
                               record.verificationStatus === 'verified' && record.reportedBy?.length > 0
                                 ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
@@ -393,15 +429,10 @@ const Pagination = () => (
                   </td>
                   <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">{record.gender === 'M' ? '男' : '女'}</td>
                   <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">{record.age || '-'}</td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleRaceClick(record.raceId?._id)}
-                      className={`hover:text-blue-800 hover:underline focus:outline-none ${
-                        filters.selectedRace === record.raceId?._id ? 'text-blue-600 font-medium' : 'text-blue-500'
-                      }`}
-                    >
-                      {record.raceId?.seriesId?.name || '未知比赛'}
-                    </button>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
+                    
+                      {record.raceId?.seriesId?.name}
+                   
                   </td>
                   <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">{formatDate(record.date)}</td>
                 </tr>

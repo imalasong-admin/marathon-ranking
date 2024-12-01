@@ -44,6 +44,17 @@ export default function Register() {
     e.preventDefault();
     setError('');
     
+    // Validate birth date
+    const birthYear = new Date(formData.birthDate).getFullYear();
+    if (birthYear > 2010) {
+      setError('必须年满14周岁才能注册');
+      return;
+    }
+    if (birthYear < 1940) {
+      setError('出生年份不能早于1940年');
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -90,6 +101,12 @@ export default function Register() {
   const selectClass = isMobile
     ? "mt-1 block w-full h-12 px-3 border border-gray-300 bg-white rounded text-base"
     : "mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm";
+
+    // Add max and min date constraints to the date input
+  const maxDate = new Date();
+  maxDate.setFullYear(2010);
+  const minDate = new Date();
+  minDate.setFullYear(1940);
 
   return (
     <div className={containerClass}>
@@ -152,13 +169,15 @@ export default function Register() {
               出生日期
             </label>
             <input
-              name="birthDate"
-              type="date"
-              required
-              className={inputClass}
-              value={formData.birthDate}
-              onChange={handleChange}
-            />
+      name="birthDate"
+      type="date"
+      required
+      max={maxDate.toISOString().split('T')[0]}
+      min={minDate.toISOString().split('T')[0]}
+      className={inputClass}
+      value={formData.birthDate}
+      onChange={handleChange}
+    />
           </div>
 
           <div>

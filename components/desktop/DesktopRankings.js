@@ -22,6 +22,7 @@ const DesktopRankings = ({ initialRecords }) => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 100;
+  const [races, setRaces] = useState([]);
 
   const [filters, setFilters] = useState({
     gender: 'all',
@@ -47,6 +48,7 @@ const DesktopRankings = ({ initialRecords }) => {
 
   useEffect(() => {
     fetchRecords();
+    fetchRaces();  // 新增这一行
   }, []);
 
   useEffect(() => {
@@ -76,6 +78,22 @@ const DesktopRankings = ({ initialRecords }) => {
       setError('获取数据失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRaces = async () => {
+    try {
+      const res = await fetch('/api/races');
+      const data = await res.json();
+      if (data.success) {
+        const marathonRaces = data.races.filter(race => 
+          new Date(race.date).getFullYear() === 2024 &&
+          race.seriesId?.raceType === '全程马拉松'
+        );
+        setRaces(marathonRaces);
+      }
+    } catch (err) {
+      console.error('获取赛事数据失败');
     }
   };
   // 处理验证按钮点击
@@ -160,13 +178,7 @@ const handleVerifyClick = (record) => {
     setCurrentPage(1); // 筛选后重置到第一页
   };
   
-  // 点击比赛名称时的处理函数
-  const handleRaceClick = (raceId) => {
-    setFilters(prev => ({
-      ...prev,
-      selectedRace: prev.selectedRace === raceId ? null : raceId
-    }));
-  };
+  
   
   // 分页处理函数
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -223,7 +235,24 @@ const handleVerifyClick = (record) => {
       </div>
     );
   }
-  
+
+  if (!records || records.length === 0) {
+    return <div>Loading...</div>;
+  }
+  {currentRecords.map((record, index) => {
+    console.log('Record data:', {
+      id: record._id,
+      userName: record.userName,
+      verificationStatus: record.verificationStatus,
+      verifiedCount: record.verifiedCount,
+      verifiedBy: record.verifiedBy,
+      reportedBy: record.reportedBy
+    });
+    return (
+      <tr>...</tr>
+    );
+  })}
+
   return (
     <div className="max-w-6xl mx-auto py-1 px-4">
       {/* 标题区域 */}
@@ -310,6 +339,24 @@ const handleVerifyClick = (record) => {
               ))}
             </select>
           </div>
+          <div className="flex items-center space-x-2">
+  <label className="text-sm font-medium text-gray-700">比赛:</label>
+  <select
+    value={filters.selectedRace || 'all'}
+    onChange={(e) => setFilters(prev => ({ 
+      ...prev, 
+      selectedRace: e.target.value === 'all' ? null : e.target.value 
+    }))}
+    className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  >
+    <option value="all">全部</option>
+    {races.map(race => (
+      <option key={race._id} value={race._id}>
+        {race.seriesId?.name} ({formatDate(race.date)})
+      </option>
+    ))}
+  </select>
+</div>
         </div>
       </div>
   
@@ -346,31 +393,35 @@ const handleVerifyClick = (record) => {
                     <div className="flex items-center">
                       {formatTime(record.finishTime)}
                       <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (!session) {
-                            router.push('/login');
-                            return;
-                          }
-                          handleVerifyClick(record);
-                        }}
-                        className={`ml-2 ${
-                          record.verificationStatus === 'verified'
-                            ? 'text-green-500'
-                            : record.reportedBy?.length > 0
-                            ? 'text-red-500'
-                            : 'text-gray-400'
-                        } hover:text-green-600`}
-                        title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
-                          ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
-                          : record.verificationStatus === 'verified'
-                          ? `${record.verifiedCount}人验证`
-                          : record.reportedBy?.length > 0
-                          ? '被举报'
-                          : '待验证'}
-                      >
-                        <CheckCircle size={16} />
-                      </button>
+  onClick={(e) => {
+    e.preventDefault();
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    handleVerifyClick(record);
+  }}
+
+  
+  className={`ml-2 ${
+    record.verificationStatus === 'verified' && record.reportedBy?.length > 0  // 明确检查长度大于0
+      ? 'text-yellow-500'  // 既有验证又有举报
+      : record.verificationStatus === 'verified'
+        ? 'text-green-500'  // 只有验证
+        : record.reportedBy?.length > 0  // 同样明确检查长度大于0
+          ? 'text-red-500'  // 只有举报
+          : 'text-gray-400'  // 待验证
+  }`}
+  title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+    ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
+    : record.verificationStatus === 'verified'
+    ? `${record.verifiedCount}人验证`
+    : record.reportedBy?.length > 0
+    ? '被举报'
+    : '待验证'}
+>
+  <CheckCircle size={16} />
+</button>
                     </div>
                   </td>
                   <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
@@ -379,15 +430,10 @@ const handleVerifyClick = (record) => {
                   <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
                     {record.age || '-'}
                   </td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleRaceClick(record.raceId?._id)}
-                      className={`hover:text-blue-800 hover:underline focus:outline-none ${
-                        filters.selectedRace === record.raceId?._id ? 'text-blue-600 font-medium' : 'text-blue-500'
-                      }`}
-                    >
-                      {record.raceId?.seriesId?.name || '未知比赛'}
-                    </button>
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
+                    
+                      {record.raceId?.seriesId?.name}
+                    
                   </td>
                   <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(record.date)}
@@ -407,6 +453,8 @@ const handleVerifyClick = (record) => {
         </div>
       )}
   
+
+
       {/* 验证对话框保持不变 */}
       {showVerifyDialog && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -450,6 +498,7 @@ const handleVerifyClick = (record) => {
 {verifyingRecord?.verifiedBy && verifyingRecord.verifiedBy.length > 0 && (
   <div className="mt-2 pt-2 border-t border-gray-200">
     <p className="text-sm text-gray-600 font-medium">已验证用户：</p>
+    
     <p className="text-sm">
       {verifyingRecord.verifiedBy.map((verification, index) => (
         <span key={verification.userId._id}>

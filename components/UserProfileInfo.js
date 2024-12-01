@@ -10,7 +10,7 @@ const formatBirthDate = (dateString) => {
    if (isNaN(date.getTime())) return '';
    const year = date.getUTCFullYear();
    const month = date.getUTCMonth() + 1;
-   return `[${year}.${month}]`;
+   return `[${year}]`;
  } catch (error) {
    return '';
  }

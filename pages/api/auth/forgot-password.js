@@ -2,6 +2,7 @@
 import connectDB from '../../../lib/mongodb';
 import User from '../../../models/User';
 import { generateVerificationCode, sendVerificationEmail } from '../../../lib/email';
+import { ipLimiter, emailLimiter } from '../../../lib/rateLimiter';
 
 export default async function handler(req, res) {
  if (req.method !== 'POST') {
@@ -9,6 +10,8 @@ export default async function handler(req, res) {
  }
 
  try {
+    await ipLimiter(req, res);
+    await emailLimiter(req, res);
    await connectDB();
    const { email } = req.body;
 

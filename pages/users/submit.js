@@ -289,7 +289,7 @@ export default function UserSubmitRecord() {
 
       {step === 1 ? (
         <div className="px-4">
-          <h1 className={titleClass}>提交比赛成绩</h1>
+          
           
           <form onSubmit={handleStepOneSubmit} className="space-y-6">
             {error && (
@@ -505,8 +505,8 @@ export default function UserSubmitRecord() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">时</label>
                   <input
                     type="number"
-                    min="0"
-                    max="23"
+                    min="2"
+                    max="240"
                     value={formData.hours}
                     onChange={(e) => setFormData({...formData, hours: e.target.value})}
                     className={inputClass}

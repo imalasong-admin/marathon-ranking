@@ -4,13 +4,20 @@ import connectDB from '../../../lib/mongodb';
 import User from '../../../models/User';
 import { generateVerificationCode, sendVerificationEmail } from '../../../lib/email';
 import { isValidState, isValidCityForState } from '../../../lib/us-cities-data';
+import { ipLimiter, emailLimiter } from '../../../lib/rateLimiter';
 
 export default async function handler(req, res) {
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ message: '只支持 POST 请求' });
   }
 
   try {
+    // 使用 Promise.all 处理两个限制器
+    await Promise.all([
+      new Promise((resolve) => ipLimiter(req, res, resolve)),
+      new Promise((resolve) => emailLimiter(req, res, resolve))
+    ]);
     await connectDB();
 
     const { name, email, password, birthDate, gender, state, city } = req.body;

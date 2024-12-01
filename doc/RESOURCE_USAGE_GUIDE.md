@@ -72,6 +72,35 @@
 2. 生产环境谨慎使用
 3. 设置额度提醒
 
+# 域名配置状态
+- 域名：imalasong.com
+- MX 记录：已验证
+- SPF 记录：已验证
+- DKIM 记录：验证中
+- DMARC 记录：已配置（可选）
+
+# 发信设置
+- 开发环境：onboarding@resend.dev
+- 生产环境：等待域名验证后使用 noreply@imalasong.com
+
+### 5.  Zoho Mail @imalasong.com 域名的邮箱托管服务。
+- 免费提供 5 个域名邮箱
+- 每个邮箱 5GB 存储
+- 可以网页版、手机 App、邮件客户端访问
+- 支持收发邮件，提供 API 发送邮件
+
+### 域名设置
+#### GoDaddy
+- 域名：imalasong.com
+- DNS 记录配置：
+  * Vercel 解析记录
+  * Resend 邮件服务记录（MX, SPF, DKIM, DMARC）
+
+#### Vercel 域名
+- 主域名：imalasong.com
+- 自动 HTTPS/SSL：已启用
+- 原域名：marathon-ranking.vercel.app（保留）
+
 ## 月度检查清单
 每月初进行以下检查：
 
@@ -86,7 +115,6 @@
 - [ ] 检查性能指标
 
 3. Resend 使用量
-
 
 
 ## 预警机制

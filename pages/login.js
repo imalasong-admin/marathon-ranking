@@ -138,11 +138,7 @@ export default function Login() {
 
   return (
     <div className={containerClass}>
-      {isMobile && (
-        <div className="sticky top-0 bg-white shadow-sm px-4 h-12 flex items-center">
-          <span className="text-lg">2024年度马拉松成绩榜</span>
-        </div>
-      )}
+     
 
       <div className={formContainerClass}>
         <div className="text-center pt-4">

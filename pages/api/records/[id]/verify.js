@@ -48,18 +48,18 @@ export default async function handler(req, res) {
 
     // 不能验证自己的记录
     if (record.userId._id.toString() === session.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: '不能验证自己的记录'
-      });
-    }
+        return res.status(200).json({     // 改为 200 状态码
+          success: false,                  // 改为 true
+          message: '不能验证自己的记录'
+        });
+      }
 
     // 检查用户是否已经验证过
     const hasVerified = record.verifiedBy.some(v => 
       v.userId.toString() === session.user.id
     );
     if (hasVerified) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: '您已经验证过这条记录'
       });
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       r.userId.toString() === session.user.id
     );
     if (hasReported) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: '您已经举报过这条记录'
       });

@@ -1,7 +1,6 @@
-// components/mobile/MobileNavMenu.js
 import Link from 'next/link';
 
-export default function MobileNavMenu({ isOpen, onClose }) {
+export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
   if (!isOpen) return null;
 
   return (
@@ -11,14 +10,14 @@ export default function MobileNavMenu({ isOpen, onClose }) {
         onClick={onClose}
       />
       
-      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50">
+      <div className="fixed inset-y-0 right-0 w-64 bg-white shadow-lg z-50">
         <div className="py-6">
           <Link
             href="/rankings"
             className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
             onClick={onClose}
           >
-            马拉松成绩榜
+            2024马拉松成绩榜
           </Link>
           
           <Link
@@ -26,7 +25,7 @@ export default function MobileNavMenu({ isOpen, onClose }) {
             className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
             onClick={onClose}
           >
-            马拉松跑力榜
+            2024马拉松跑力榜
           </Link>
           
           <Link
@@ -34,16 +33,56 @@ export default function MobileNavMenu({ isOpen, onClose }) {
             className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
             onClick={onClose}
           >
-            超马越野榜
+            2024超马越野榜
           </Link>
 
-          <Link
-            href="/users/submit"
-            className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-            onClick={onClose}
-          >
-            提交成绩
-          </Link>
+          {session ? (
+            <>
+              <Link
+                href={`/users/${session.user.id}`}
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={onClose}
+              >
+                个人中心
+              </Link>
+              
+              <Link
+                href="/users/submit"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={onClose}
+              >
+                提交成绩
+              </Link>
+
+              <button
+                onClick={() => {
+                  onClose();
+                  onLogout();
+                }}
+                className="w-full text-left px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              >
+                退出登录
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={onClose}
+              >
+                登录
+              </Link>
+              
+              <Link
+                href="/register"
+                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                onClick={onClose}
+              >
+                注册
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </>
