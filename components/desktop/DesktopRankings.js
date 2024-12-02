@@ -15,7 +15,7 @@ const DesktopRankings = ({ initialRecords }) => {
   // 状态定义
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyingRecord, setVerifyingRecord] = useState(null);
-  const [reportReason, setReportReason] = useState('');
+  // const [reportReason, setReportReason] = useState('');
   const [records, setRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -99,17 +99,14 @@ const DesktopRankings = ({ initialRecords }) => {
   // 处理验证按钮点击
 const handleVerifyClick = (record) => {
     setVerifyingRecord(record);
-    setReportReason('');
+    // setReportReason('');
     setShowVerifyDialog(true);
   };
   
   // 处理验证提交
   const handleVerifySubmit = async (action) => {
     try {
-      if (action === 'report' && !reportReason.trim()) {
-        setError('请填写举报理由');
-        return;
-      }
+     
   
       const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
         method: 'POST',
@@ -118,7 +115,7 @@ const handleVerifyClick = (record) => {
         },
         body: JSON.stringify({
           action,
-          reason: reportReason
+          // reason: reportReason
         })
       });
   
@@ -127,7 +124,7 @@ const handleVerifyClick = (record) => {
         await fetchRecords();
         setShowVerifyDialog(false);
         setVerifyingRecord(null);
-        setReportReason('');
+        // setReportReason('');
         setError('');
       } else {
         setError(data.message || '操作失败');
@@ -239,19 +236,7 @@ const handleVerifyClick = (record) => {
   if (!records || records.length === 0) {
     return <div>Loading...</div>;
   }
-  {currentRecords.map((record, index) => {
-    console.log('Record data:', {
-      id: record._id,
-      userName: record.userName,
-      verificationStatus: record.verificationStatus,
-      verifiedCount: record.verifiedCount,
-      verifiedBy: record.verifiedBy,
-      reportedBy: record.reportedBy
-    });
-    return (
-      <tr>...</tr>
-    );
-  })}
+  
 
   return (
     <div className="max-w-6xl mx-auto py-1 px-4">
@@ -497,8 +482,10 @@ const handleVerifyClick = (record) => {
               {/* 已验证用户列表 */}
 {verifyingRecord?.verifiedBy && verifyingRecord.verifiedBy.length > 0 && (
   <div className="mt-2 pt-2 border-t border-gray-200">
-    <p className="text-sm text-gray-600 font-medium">已验证用户：</p>
-    
+    <div className="flex items-center text-green-600 mb-2">
+    <CheckCircle size={16} className="mr-2" />
+    {verifyingRecord.verifiedBy.length}人验证
+    </div>
     <p className="text-sm">
       {verifyingRecord.verifiedBy.map((verification, index) => (
         <span key={verification.userId._id}>
@@ -520,34 +507,14 @@ const handleVerifyClick = (record) => {
               {/* 举报信息 */}
               {verifyingRecord?.reportedBy && verifyingRecord.reportedBy.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 font-medium">举报信息：</p>
-                  {verifyingRecord.reportedBy.map((report, index) => (
-                    <div key={report.userId._id} className="mt-1 bg-red-50 p-2 rounded">
-                      <p className="text-sm text-red-600">
-                        举报用户：{report.userId.name}
-                      </p>
-                      <p className="text-sm text-red-600">
-                        举报理由：{report.reason}
-                      </p>
-                    </div>
-                  ))}
+                 
+                  <span className="text-red-500">⚠️ {verifyingRecord.reportedBy.length} 人存疑</span>
+                 
                 </div>
               )}
             </div>
 
-            {/* 举报理由输入框 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                举报理由（如选择举报，请填写）
-              </label>
-              <textarea
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm"
-                rows="3"
-                placeholder="请输入举报理由..."
-              />
-            </div>
+            
           </div>
 
           {/* 操作按钮 */}
@@ -556,24 +523,24 @@ const handleVerifyClick = (record) => {
               onClick={() => {
                 setShowVerifyDialog(false);
                 setVerifyingRecord(null);
-                setReportReason('');
+                // setReportReason('');
                 setError('');
               }}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
             >
-              取消
+              关闭
             </button>
             <button
               onClick={() => handleVerifySubmit('verify')}
               className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
             >
-              确认验证
+              跑的真好！我确认这个成绩真实有效👍
             </button>
             <button
               onClick={() => handleVerifySubmit('report')}
               className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
             >
-              举报
+              我对这个成绩的真实性有疑问🤔
               </button>
           </div>
         </div>
