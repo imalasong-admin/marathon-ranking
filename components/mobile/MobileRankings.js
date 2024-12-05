@@ -1,30 +1,30 @@
 // components/mobile/MobileRankings.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { Search, ChevronDown, ChevronUp, CheckCircle, ExternalLink } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react';
 import { states } from '../../lib/us-cities-data';
 
-const MobileRankings = ({ records: initialRecords = [] }) => {
+const MobileRankings = ({ records = [], initialGender = 'M' }) => {  
   const { data: session } = useSession();
   const router = useRouter();
   
   // 基础状态
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCard, setExpandedCard] = useState(null);
-  const [records, setRecords] = useState(initialRecords);
+  const [localRecords, setLocalRecords] = useState(records);
   const [filters, setFilters] = useState({
-    gender: 'M',
+    gender: initialGender,
     ageGroup: 'all',
     selectedRace: null,
     state: 'all'
   });
   const [races, setRaces] = useState([]);
+  const [stats, setStats] = useState({ male: {runners: 0, races: 0}, female: {runners: 0, races: 0} });
 
   // 验证相关状态
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyingRecord, setVerifyingRecord] = useState(null);
-  // const [reportReason, setReportReason] = useState('');
   const [verifyError, setVerifyError] = useState('');
 
   // 年龄组定义
@@ -48,8 +48,45 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
 
   // 更新初始数据
   useEffect(() => {
-    setRecords(initialRecords);
-  }, [initialRecords]);
+    setLocalRecords(records);
+  }, [records]);
+
+  // 计算统计数据
+  useEffect(() => {
+    const calculateStats = () => {
+      const uniqueRunners = new Map();
+      records.forEach(record => {
+        const raceDate = new Date(record.raceId?.date);
+        if (raceDate.getFullYear() === 2024 && record.raceId?.seriesId?.raceType === '全程马拉松') {
+          const runnerId = record.userId?._id || record.userId;
+          if (!uniqueRunners.has(runnerId)) {
+            uniqueRunners.set(runnerId, { gender: record.gender, races: 1 });
+          } else {
+            uniqueRunners.get(runnerId).races++;
+          }
+        }
+      });
+
+      const newStats = {
+        male: { runners: 0, races: 0 },
+        female: { runners: 0, races: 0 }
+      };
+
+      uniqueRunners.forEach(runner => {
+        if (runner.gender === 'M') {
+          newStats.male.runners++;
+          newStats.male.races += runner.races;
+        } else {
+          newStats.female.runners++;
+          newStats.female.races += runner.races;
+        }
+      });
+
+      setStats(newStats);
+    };
+
+    calculateStats();
+  }, [records]);
 
   // 辅助函数
   const formatTime = (time) => {
@@ -98,15 +135,12 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
       return;
     }
     setVerifyingRecord(record);
-    // setReportReason('');
     setVerifyError('');
     setShowVerifyDialog(true);
   };
 
   const handleVerifySubmit = async (action) => {
     try {
-     
-
       const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,12 +163,11 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
                      record.raceId?.seriesId?.raceType === '全程马拉松';
             })
             .sort((a, b) => a.totalSeconds - b.totalSeconds);
-          setRecords(filteredRecords);
+            setLocalRecords(filteredRecords);
         }
         
         setShowVerifyDialog(false);
         setVerifyingRecord(null);
-        setReportReason('');
         setVerifyError('');
       } else {
         setVerifyError(data.message || '操作失败');
@@ -145,9 +178,9 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
   };
 
   // 数据过滤函数
-  const filteredRecords = records.filter(record => {
+  const filteredRecords = localRecords.filter(record => {
     if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (filters.gender !== 'all' && record.gender !== filters.gender) return false;
+    if (record.gender !== initialGender) return false;  // 始终按 initialGender 筛选
     if (filters.ageGroup !== 'all') {
       const group = AGE_GROUPS.find(g => g.value === filters.ageGroup);
       if (group && (record.age < group.min || record.age > group.max)) return false;
@@ -157,47 +190,44 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
     return true;
   });
 
-    // 验证对话框组件
-    const VerifyDialog = () => (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg w-full max-w-md mx-auto p-4">
-          <h3 className="text-lg font-semibold mb-4">验证成绩记录</h3>
-  
-          {verifyError && (
-            <div className="mb-4 bg-red-50 text-red-500 p-3 rounded-md text-sm">
-              {verifyError}
-            </div>
-          )}
-  
-          <div className="space-y-4">
-            {/* 成绩信息 */}
-            <div className="bg-gray-50 p-3 rounded-md text-sm">
-              <p className="text-gray-600">
-                比赛：{verifyingRecord?.raceId?.seriesId?.name} ({formatDate(verifyingRecord?.raceId?.date)})
+  // 验证对话框组件
+  const VerifyDialog = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg w-full max-w-md mx-auto p-4">
+        <h3 className="text-lg font-semibold mb-4">验证成绩记录</h3>
+
+        {verifyError && (
+          <div className="mb-4 bg-red-50 text-red-500 p-3 rounded-md text-sm">
+            {verifyError}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-3 rounded-md text-sm">
+            <p className="text-gray-600">
+              比赛：{verifyingRecord?.raceId?.seriesId?.name} ({formatDate(verifyingRecord?.raceId?.date)})
+            </p>
+            <p className="text-gray-600">
+              成绩：{formatTime(verifyingRecord?.finishTime)}
+            </p>
+            {verifyingRecord?.proofUrl ? (
+              <p>
+                成绩证明：
+                <a
+                  href={verifyingRecord.proofUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600"
+                >
+                  查看证明
+                </a>
               </p>
-              <p className="text-gray-600">
-                成绩：{formatTime(verifyingRecord?.finishTime)}
-              </p>
-              {verifyingRecord?.proofUrl ? (
-                <p>
-                  成绩证明：
-                  <a
-                    href={verifyingRecord.proofUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600"
-                  >
-                    查看证明
-                  </a>
-                </p>
-              ) : (
-                <p className="text-red-500">未提供成绩证明</p>
-              )}
-              
-              
-            </div>
-  
-            <div className="flex flex-col space-y-3 mt-4">
+            ) : (
+              <p className="text-red-500">未提供成绩证明</p>
+            )}
+          </div>
+
+          <div className="flex flex-col space-y-3 mt-4">
             <button
               onClick={() => handleVerifySubmit('verify')}
               className="w-full py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
@@ -214,7 +244,7 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
               <span>🤔</span>
             </button>
           </div>
-  
+
           <div className="text-center">
             <button
               onClick={() => {
@@ -227,45 +257,48 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
               关闭
             </button>
           </div>
-           
-</div>
-  
-         
-        
         </div>
       </div>
-    );
-  
+    </div>
+  );
     // 主要渲染部分
 
     return (
       <>
         <div className="flex flex-col min-h-screen bg-gray-50">
-          <div className="sticky top-0 bg-white shadow-sm z-10 p-2">
-            <div className="relative">
+          <div className="sticky top-0 bg-white shadow-sm z-10">
+            {/* 性别对应的统计信息 */}
+            <div className="bg-blue-50 px-3 py-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Users size={16} className="text-blue-600" />
+                <span className="text-gray-700">
+                  {initialGender === 'M' ? '2024男子马拉松' : '2024女子马拉松'}：
+                  <span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
+                    {initialGender === 'M' ? stats.male.runners : stats.female.runners}
+                  </span>
+                  位跑者，共跑了 
+                  <span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
+                    {initialGender === 'M' ? stats.male.races : stats.female.races}
+                  </span>
+                  场
+                </span>
+              </div>
+            </div>
+    
+            {/* 搜索框 */}
+            <div className="relative px-2 py-2">
               <input
                 type="text"
                 placeholder="搜索跑者姓名..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 pl-10 pr-4 border rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full py-1 pl-8 pr-4 border rounded-lg focus:outline-none focus:border-blue-500 text-sm"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
             </div>
     
-            <div className="p-3 bg-gray-50 rounded-md mt-2 overflow-x-auto">
-              <div className="flex flex-row items-center gap-3 min-w-max">
-                <div>
-                  <select
-                    value={filters.gender}
-                    onChange={(e) => setFilters(prev => ({ ...prev, gender: e.target.value }))}
-                    className="rounded-md border-gray-300"
-                  >
-                    <option value="M">M</option>
-                    <option value="F">F</option>
-                  </select>
-                </div>
-                
+            <div className="mt-1 bg-gray-50 rounded-md overflow-x-auto">
+              <div className="flex flex-row items-center gap-2 min-w-max py-1 px-2">
                 <div>
                   <select
                     value={filters.ageGroup}
@@ -312,10 +345,11 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
             </div>
           </div>
     
+    
           <div className="flex-1 p-2 space-y-2">
             {filteredRecords.map((record, index) => (
               <div key={record._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="px-2 py-2">
+                <div className="px-1 py-1">
                   <div className="grid grid-cols-[2.5rem_1fr_6.5rem_4.5rem] items-center gap-1">
                     <span className="text-gray-600 text-left">#{index + 1}</span>
                     <a 
@@ -354,19 +388,22 @@ const MobileRankings = ({ records: initialRecords = [] }) => {
     
                 {expandedCard === record._id && (
                   <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
-                    <div className="py-2 grid grid-cols-3 gap-2">
-                      <div>
-                        <span className="text-gray-500">性别:</span>
-                        <span className="ml-2">{record.gender === 'M' ? '男' : '女'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">年龄:</span>
-                        <span className="ml-2">{record.age || '-'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">居住地:</span>
-                        <span className="ml-2">{record.state || '-'}</span>
-                      </div>
+                    <div className="py-2 gap-2">
+                      
+                        
+                        <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'}</span>]
+
+                        
+                        <span className="ml-4">[{record.age || '-'}]</span>
+                      
+                        
+                        <span className="ml-4">
+      [{record.state && record.city ? 
+        `${record.state} - ${record.city}` : 
+        (record.state || '-')
+      }]
+    </span>
+                      
                     </div>
     
                     <div className="py-2">

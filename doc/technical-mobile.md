@@ -1,8 +1,8 @@
 # Marathon Ranking 移动端开发标准文档
 ### 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[e10440a]
-- 最后更新：2024-12-1
+- 最新稳定版本：[ae6ced1]
+- 最后更新：2024-12-5
 
 ### 移动端适配的开发，应该保持适配方案一致性，以rankings.js为例：
    - 第一步: 创建rankings.js的桌面端组件 components/desktop/DesktopRankings.js
@@ -150,16 +150,18 @@ const Page = () => {
 ### 4. 状态显示
 ```javascript
 // 验证状态图标
-<CheckCircle 
+  <CheckCircle 
   size={16} 
   className={`ml-1.5 shrink-0 ${
-    record.verificationStatus === 'verified'
-      ? 'text-green-500'
-      : record.reportedBy?.length > 0
-      ? 'text-red-500'
-      : 'text-gray-400'
+  record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+  ? 'text-yellow-500'
+  : record.verificationStatus === 'verified'
+  ? 'text-green-500'
+  : record.reportedBy?.length > 0
+   ? 'text-red-500'
+  : 'text-gray-400'
   }`}
-/>
+   />
 ```
 
 ## 四、状态管理规范
@@ -240,6 +242,7 @@ const handleExpand = (id) => {
     /MobileRankings.js
     /MobileAgeAdjustedRankings.js
     /MobileUltraRankings.js
+    /MobileStats.js     # 移动端首页统计组件
    --users
        /MobileUserProfile.js
      --[id]
@@ -249,6 +252,7 @@ const handleExpand = (id) => {
     /DesktopRankings.js
     /DesktopAgeAdjustedRankings.js
     /DesktopUltraRankings.js
+    /DesktopStats.js    # 桌面端首页统计组件
    --users
        /DesktopUserProfile.js
      --[id]

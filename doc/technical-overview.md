@@ -114,6 +114,14 @@
 │           ├── index.js    # 个人中心页面
 │           └── edit.js     # 新增编辑页面
 
+新增组件：
+```
+/components
+  /desktop
+    /DesktopStats.js    # 桌面端首页统计组件
+  /mobile
+    /MobileStats.js     # 移动端首页统计组件
+
 ## 3. 数据模型
 ```javascript
 // User Model
@@ -262,6 +270,33 @@ const seriesSchema = new mongoose.Schema({
   }]
 }
 ```
+
+### 首页数据统计逻辑：
+```javascript
+// 1. 马拉松统计
+const marathonStats = {
+  male: { runners: number, races: number },
+  female: { runners: number, races: number }
+};
+
+// 2. 超马统计
+const ultraStats = {
+  runners: number,  // 总人数
+  races: number     // 总场次
+};
+
+// 3. Top 10 数据结构
+const topRecords = {
+  male: Array<Record>,    // 男子前10
+  female: Array<Record>   // 女子前10
+};
+```
+### 数据获取优化：
+- 复用 rankings 页面的 API 调用
+- 一次请求获取所有所需数据
+- Map 结构优化统计计算
+- 添加数据安全检查
+
 ## 日期处理规范
 1. 数据库存储
 - 所有日期统一使用 UTC 时间存储
@@ -448,5 +483,5 @@ Response:
 
 ## 7. 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[e10440a]
-- 最后更新：2024-12-1
+- 最新稳定版本：[ae6ced1]
+- 最后更新：2024-12-5

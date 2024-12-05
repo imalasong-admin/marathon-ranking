@@ -124,7 +124,7 @@ export default function Register() {
 
           <div>
             <label className="block text-base font-medium text-gray-700 mb-1">
-              姓名
+              Name [请填写报名比赛时的姓名]
             </label>
             <input
               name="name"
@@ -138,7 +138,7 @@ export default function Register() {
 
           <div>
             <label className="block text-base font-medium text-gray-700 mb-1">
-              邮箱
+              Email [请填写常用邮箱]
             </label>
             <input
               name="email"
@@ -166,7 +166,7 @@ export default function Register() {
 
           <div>
             <label className="block text-base font-medium text-gray-700 mb-1">
-              出生日期
+              生日 [请填写报名比赛时的生日]
             </label>
             <input
       name="birthDate"

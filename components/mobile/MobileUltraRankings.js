@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { Search, ChevronDown, ChevronUp, CheckCircle, ExternalLink } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, CheckCircle, ExternalLink, Users } from 'lucide-react';
 import { states } from '../../lib/us-cities-data';
 
 const MobileUltraRankings = ({ records: initialRecords = [] }) => {
@@ -51,6 +51,26 @@ const MobileUltraRankings = ({ records: initialRecords = [] }) => {
       console.error('获取赛事数据失败');
     }
   };
+
+    // 添加统计计算
+    const calculateStats = () => {
+        const uniqueRunners = new Map();
+        records.forEach(record => {
+          const runnerId = record.userId?._id || record.userId;
+          if (!uniqueRunners.has(runnerId)) {
+            uniqueRunners.set(runnerId, { races: 1 });
+          } else {
+            uniqueRunners.get(runnerId).races++;
+          }
+        });
+    
+        return {
+          runners: uniqueRunners.size,
+          races: Array.from(uniqueRunners.values()).reduce((sum, curr) => sum + curr.races, 0)
+        };
+      };
+    
+      const stats = calculateStats();
 
   // 验证功能函数
   const handleVerifyClick = (record, e) => {
@@ -243,19 +263,30 @@ const handleVerifySubmit = async (action) => {
   return (
     <>
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* 头部区域 */}
-      <div className="sticky top-0 bg-white shadow-sm z-10 p-2">
-        {/* 搜索框 */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="搜索跑者姓名..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-2 pl-10 pr-4 border rounded-lg focus:outline-none focus:border-blue-500"
-          />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-        </div>
+        <div className="sticky top-0 bg-white shadow-sm z-10">
+            {/* 添加统计信息 */}
+          <div className="bg-yellow-50 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-yellow-600" />
+              <span className="text-gray-700">
+                2024超马越野赛：共有
+                <span className="font-medium text-yellow-600">{stats.runners}</span> 
+                位跑者，完成
+                <span className="font-medium text-yellow-600">{stats.races}</span>
+                场比赛
+              </span>
+            </div>
+          </div>
+  <div className="relative">
+    <input
+      type="text"
+      placeholder="搜索跑者姓名..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full py-1 pl-8 pr-4 border rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+    />
+    <Search className="absolute left-2 top-1.5 h-4 w-4 text-gray-400" />
+  </div>
 
         
       </div>
@@ -329,26 +360,29 @@ const handleVerifySubmit = async (action) => {
             {/* 扩展信息 */}
             {expandedCard === record._id && (
               <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
-                <div className="py-2 grid grid-cols-3 gap-2">
-                  <div>
-                    <span className="text-gray-500">性别:</span>
-                    <span className="ml-2">{record.gender === 'M' ? '男' : '女'}</span>
+                <div className="py-2 gap-2">
+                      
+                        
+                      <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'}</span>]
+
+                      
+                      <span className="ml-4">[{record.age || '-'}]</span>
+                    
+                      
+                      <span className="ml-4">
+    [{record.state && record.city ? 
+      `${record.state} - ${record.city}` : 
+      (record.state || '-')
+    }]
+  </span>
+                    
                   </div>
-                  <div>
-                    <span className="text-gray-500">年龄:</span>
-                    <span className="ml-2">{record.age || '-'}</span>
-                  </div>
-                  <div>
-                        <span className="text-gray-500">居住地:</span>
-                        <span className="ml-2">{record.state || '-'}</span>
-                      </div>
-                </div>
 
                 <div className="py-2">
                   <div className="mb-1">
                   
                   
-                    <span className="text-gray-500">日期:</span>
+                    <span className="text-gray-500">比赛日期:</span>
                     <span className="ml-2">{formatDate(record.raceId?.date)}</span>
                   </div>
                   

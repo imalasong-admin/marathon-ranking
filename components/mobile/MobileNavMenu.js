@@ -12,21 +12,30 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
       
       <div className="fixed inset-y-0 right-0 w-64 bg-white shadow-lg z-50">
         <div className="py-6">
-          <Link
-            href="/rankings"
-            className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-            onClick={onClose}
-          >
-            2024马拉松成绩榜
-          </Link>
+        <Link
+  href="/"
+  className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+  onClick={onClose}
+>
+  2024年度风云榜
+</Link>
+        <Link
+  href="/rankings?gender=M"
+  className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+  onClick={onClose}
+>
+  2024马拉松男子榜
+</Link>
+
+<Link
+  href="/rankings?gender=F"
+  className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+  onClick={onClose}
+>
+  2024马拉松女子榜
+</Link>
           
-          <Link
-            href="/age-adjusted-rankings"
-            className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-            onClick={onClose}
-          >
-            2024马拉松跑力榜
-          </Link>
+
           
           <Link
             href="/ultra-rankings"

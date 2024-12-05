@@ -39,7 +39,7 @@ const VerificationAlert = () => {
 
   return (
     <div className="w-full bg-blue-50 border-b border-blue-200">
-      <div className="max-w-7xl mx-auto py-2 px-4 text-center text-sm">
+      <div className="max-w-7xl mx-auto py-1 px-4 text-center text-sm">
         {session.user.isLocked ? (
           <p className="text-red-600">
             您的账户因未验证邮箱已锁定。

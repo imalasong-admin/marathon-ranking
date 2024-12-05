@@ -1,6 +1,7 @@
 // pages/rankings.js
 import { useState, useEffect } from 'react';
 import { useDeviceDetection } from '../lib/deviceDetection';
+import { useRouter } from 'next/router';  // 添加这行导入
 import DesktopRankings from '../components/desktop/DesktopRankings';
 import MobileRankings from '../components/mobile/MobileRankings';
 
@@ -9,6 +10,7 @@ export default function Rankings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const isMobile = useDeviceDetection();
+  const router = useRouter();  // 使用 router
 
   // 获取数据
   useEffect(() => {
@@ -59,8 +61,11 @@ export default function Rankings() {
 
   // 根据设备类型返回不同的组件
   return isMobile ? (
-    <MobileRankings records={records} />
+    <MobileRankings 
+      records={records} 
+      initialGender={router.query.gender === 'F' ? 'F' : 'M'}
+    />
   ) : (
-    <DesktopRankings initialRecords={records} />
+    <DesktopRankings initialRecords={records} />  // 桌面端保持不变
   );
 }

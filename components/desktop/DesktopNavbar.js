@@ -2,7 +2,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
-import VerificationAlert from '../VerificationAlert'; 
+// import VerificationAlert from '../VerificationAlert'; 
 import { Settings } from 'lucide-react';
 
 export default function Navbar() {

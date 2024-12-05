@@ -12,16 +12,17 @@ export default function MobileNavbar() {
   const getPageTitle = () => {
     const path = router.pathname;
     const userId = session?.user?.id;
-
+    const gender = router.query.gender;  // 获取 URL 参数
+  
     if (path === '/users/[id]' || path === `/users/${userId}`) {
       return '个人中心';
     }
-
+  
     switch (path) {
+      case '/':
+        return '2024年度风云榜';
       case '/rankings':
-        return '2024马拉松成绩榜';
-      case '/age-adjusted-rankings':
-        return '2024马拉松跑力榜';
+        return gender === 'F' ? '2024马拉松女子榜' : '2024马拉松男子榜';
       case '/ultra-rankings':
         return '2024超马越野榜';
       case '/users/submit':
@@ -31,10 +32,9 @@ export default function MobileNavbar() {
       case '/register':
         return '注册';
       default:
-        return '';
+        return '2024年度风云榜';  // 默认标题
     }
   };
-
   const handleLogout = async () => {
     await signOut({ redirect: false });
     router.push('/login');
@@ -43,7 +43,7 @@ export default function MobileNavbar() {
   return (
     <nav className="bg-white shadow">
       <div className="px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-10">
           {/* Left: Text Logo */}
           <div className="flex items-center">
             <a href="/" className="text-lg font-bold text-gray-900">
