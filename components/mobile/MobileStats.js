@@ -1,5 +1,7 @@
 // components/mobile/MobileStats.js
 import { Users, Trophy } from 'lucide-react';
+import { useState } from 'react';  // 添加这行导入
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // 移动端 TopTen 展示组件
 const TopTenDisplay = ({ records, gender }) => {
@@ -23,18 +25,11 @@ const TopTenDisplay = ({ records, gender }) => {
   };
 
   return (
-    <div className={`bg-${gender === 'M' ? 'blue' : 'pink'}-50 rounded-lg p-4`}>
-      <div className="flex items-center gap-2 mb-3">
-        <Trophy size={20} className={`text-${gender === 'M' ? 'blue' : 'pink'}-600`} />
-        <h2 className="text-lg font-semibold">
-          {gender === 'M' ? '2024马拉松男子最速 Top 10' : '2024马拉松女子最速 Top 10'}
-        </h2>
-      </div>
-      <div className="space-y-2">
-        {records.map((record, index) => (
-          <div 
-            key={record._id}
-            className={`p-2 rounded ${
+    <div className="space-y-2">
+      {records.map((record, index) => (
+        <div 
+          key={record._id}
+          className={`p-2 rounded ${
               index < 3 ? `bg-${gender === 'M' ? 'blue' : 'pink'}-100 bg-opacity-50` : ''
             }`}
           >
@@ -60,13 +55,15 @@ const TopTenDisplay = ({ records, gender }) => {
           </div>
         ))}
       </div>
-    </div>
+
   );
 };
 
 // 主组件
 export const MobileStats = ({ stats, topRecords, ultraStats = { runners: 0, races: 0 } }) => {
-    // 添加默认值，避免 undefined 错误
+    const [isMaleTop10Expanded, setIsMaleTop10Expanded] = useState(false);
+    const [isFemaleTop10Expanded, setIsFemaleTop10Expanded] = useState(false);
+    
     const safeStats = {
       male: { runners: 0, races: 0 },
       female: { runners: 0, races: 0 },
@@ -79,47 +76,81 @@ export const MobileStats = ({ stats, topRecords, ultraStats = { runners: 0, race
     };
     
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold text-gray-800 mb-4">2024北美华人马拉松统计</h1>
+    <div className="p-2">
       
-      {/* 统计 */}
-      <div className="bg-blue-50 rounded-lg p-2 mb-2">
+      {/* 统计信息 */}
+      <div className="bg-blue-50 rounded-lg p-2 mb-4">
         <div className="flex items-center gap-2 mb-3">
           <Users size={20} className="text-blue-600" />
           <div className="space-y-1">
-         
-            有 <span className="text-blue-600 font-bold">{stats.male.runners}</span> 位男跑者完赛 <span className="text-blue-600 font-bold">{stats.male.races}</span> 场马拉松
-          
+            有 <span className="text-blue-600 font-bold">{safeStats.male.runners}</span> 位男跑者完赛 <span className="text-blue-600 font-bold">{safeStats.male.races}</span> 场马拉松
+          </div>
         </div>
         
-        </div>
         <div className="flex items-center gap-2 mb-3">
           <Users size={20} className="text-pink-600" />
           <div className="space-y-1">
-            有 <span className="text-pink-600 font-bold">{stats.female.runners}</span> 位女跑者完赛 <span className="text-pink-600 font-bold">{stats.female.races}</span> 场马拉松
-            </div>
+            有 <span className="text-pink-600 font-bold">{safeStats.female.runners}</span> 位女跑者完赛 <span className="text-pink-600 font-bold">{safeStats.female.races}</span> 场马拉松
+          </div>
         </div>
+        
         <div className="flex items-center gap-2 mb-1">
           <Users size={20} className="text-yellow-600" />
           <div className="space-y-1">
-          
-            有 <span className="text-yellow-600 font-bold">{ultraStats.runners}</span> 位跑者完赛 <span className="text-yellow-600 font-bold">{ultraStats.races}</span> 场超马越野赛
-         
+            有 <span className="text-yellow-600 font-bold">{safeUltraStats.runners}</span> 位跑者完赛 <span className="text-yellow-600 font-bold">{safeUltraStats.races}</span> 场超马越野赛
+          </div>
         </div>
-        </div>
-       
       </div>
 
       {/* 男子 Top 10 */}
-      <TopTenDisplay records={topRecords.male} gender="M" />
-
-      
+      <div className="mb-4">
+        <div className="flex items-center bg-blue-50 rounded-t-lg p-3">
+          <Trophy size={20} className="text-blue-600 mr-2" />
+          <span className="flex-grow font-medium">2024马拉松男子最速 Top 10</span>
+          <button
+            onClick={() => setIsMaleTop10Expanded(!isMaleTop10Expanded)}
+            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-blue-100 rounded-full"
+          >
+            {isMaleTop10Expanded ? (
+              <ChevronUp size={20} />
+            ) : (
+              <ChevronDown size={20} />
+            )}
+          </button>
+        </div>
+        <div 
+          className={`bg-blue-50 rounded-b-lg transition-all duration-300 ease-in-out overflow-hidden ${
+            isMaleTop10Expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          {isMaleTop10Expanded && <TopTenDisplay records={topRecords.male || []} gender="M" />}
+        </div>
+      </div>
 
       {/* 女子 Top 10 */}
-      <TopTenDisplay records={topRecords.female} gender="F" />
- 
+      <div className="mb-4">
+        <div className="flex items-center bg-pink-50 rounded-t-lg p-3">
+          <Trophy size={20} className="text-pink-600 mr-2" />
+          <span className="flex-grow font-medium">2024马拉松女子最速 Top 10</span>
+          <button
+            onClick={() => setIsFemaleTop10Expanded(!isFemaleTop10Expanded)}
+            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-pink-100 rounded-full"
+          >
+            {isFemaleTop10Expanded ? (
+              <ChevronUp size={20} />
+            ) : (
+              <ChevronDown size={20} />
+            )}
+          </button>
+        </div>
+        <div 
+          className={`bg-pink-50 rounded-b-lg transition-all duration-300 ease-in-out overflow-hidden ${
+            isFemaleTop10Expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          {isFemaleTop10Expanded && <TopTenDisplay records={topRecords.female || []} gender="F" />}
+        </div>
+      </div>
     </div>
-
-    
   );
 };

@@ -272,15 +272,15 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
               <div className="flex items-center gap-2">
                 <Users size={16} className="text-blue-600" />
                 <span className="text-gray-700">
-                  {initialGender === 'M' ? '2024男子马拉松' : '2024女子马拉松'}：
-                  <span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
+                 
+                  2024年度有<span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
                     {initialGender === 'M' ? stats.male.runners : stats.female.runners}
                   </span>
-                  位跑者，共跑了 
+                  位{initialGender === 'M' ? '男' : '女'}跑者，跑了 
                   <span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
                     {initialGender === 'M' ? stats.male.races : stats.female.races}
                   </span>
-                  场
+                  场马拉松比赛
                 </span>
               </div>
             </div>
