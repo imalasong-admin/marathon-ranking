@@ -1,8 +1,8 @@
 # Marathon Ranking 移动端开发标准文档
 ### 版本控制
 - GitHub 仓库：https://github.com/imalasong-admin/marathon-ranking
-- 最新稳定版本：[0bbeea9]
-- 最后更新：2024-12-5
+- 最新稳定版本：[ab64ed9]
+- 最后更新：2024-12-6
 
 ### 移动端适配的开发，应该保持适配方案一致性，以rankings.js为例：
    - 第一步: 创建rankings.js的桌面端组件 components/desktop/DesktopRankings.js

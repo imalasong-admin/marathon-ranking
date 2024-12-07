@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { DesktopStats } from '../components/desktop/DesktopStats';
 import { MobileStats } from '../components/mobile/MobileStats';
 import { useDeviceDetection } from '../lib/deviceDetection';
+import { checkBQ } from '../lib/bqUtils'; 
 
 export default function Home() {
   const [stats, setStats] = useState({ 
@@ -30,6 +31,7 @@ export default function Home() {
             return raceDate.getFullYear() === 2024 && 
                    record.raceId?.seriesId?.raceType === '全程马拉松';
           });
+         
 
           // 处理超马统计
           const ultraRecords = records.filter(record => {
@@ -125,17 +127,20 @@ export default function Home() {
 
           setHundredMilers(hundredMileFinishers);
 
-            // 获取2024年BQ跑者
-            const bqQualifiers = records
-            .filter(record => {
-              const raceDate = new Date(record.raceId?.date);
-              return raceDate.getFullYear() === 2024 && 
-                     record.raceId?.seriesId?.raceType === '全程马拉松' &&
-                     record.isBQ === true;
-            })
-            .sort((a, b) => a.totalSeconds - b.totalSeconds); // 按成绩排序
-
-          setBqRunners(bqQualifiers);
+          // 获取2024年BQ跑者
+          const bqQualifiers = marathonRecords
+          .filter(record => 
+            // 无论是新数据的 isBQ 标记，还是重新计算的 BQ 状态，都要考虑
+            record.isBQ === true || 
+            checkBQ(
+              record.totalSeconds,
+              record.gender,
+              record.userId?.birthDate
+            )
+          )
+          .sort((a, b) => a.totalSeconds - b.totalSeconds);
+        
+        setBqRunners(bqQualifiers);
         }
       } catch (error) {
         console.error('获取数据失败:', error);

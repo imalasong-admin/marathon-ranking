@@ -245,7 +245,7 @@ const AdjustedTopTenDisplay = ({ records }) => {
         <div className="bg-yellow-50 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
           <Trophy size={20} className="text-yellow-600" />
-          <h2 className="text-xl font-semibold">2024百英里完赛跑者</h2>
+          <h2 className="text-xl font-semibold">2024马拉松BQ跑者</h2>
         </div>
       <div className="space-y-2">
         {records.map((record) => (

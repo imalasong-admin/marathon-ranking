@@ -203,6 +203,7 @@ const AdjustedTopTenDisplay = ({ records }) => {
       };
 
       const BQRunnersDisplay = ({ records }) => {
+        console.log('BQ records:', records); // 添加调试日志
         const formatTime = (time) => {
           if (!time) return '-';
           return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
@@ -294,7 +295,7 @@ export const MobileStats = ({
   
     return (
       <MobilePageContainer>
-        <MobileTitle>2024北美华人马拉松统计</MobileTitle>
+        <MobileTitle>2024年度风云榜</MobileTitle>
         
         <MobileCard icon={Users} color="blue">
           有 <span className="text-blue-600 font-bold">{safeStats.male.runners}</span> 位男跑者完赛
