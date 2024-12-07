@@ -1,65 +1,50 @@
+// components/mobile/MobileNavMenu.js
 import Link from 'next/link';
+import { mobileStyles } from './common/styles';
 
 export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
   if (!isOpen) return null;
 
+  const navItem = mobileStyles.nav.menu.item;
+
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className={mobileStyles.nav.menu.overlay}
         onClick={onClose}
       />
       
-      <div className="fixed inset-y-0 right-0 w-64 bg-white shadow-lg z-50">
-        <div className="py-6">
-        <Link
-  href="/"
-  className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-  onClick={onClose}
->
-  2024年度风云榜
-</Link>
-        <Link
-  href="/rankings?gender=M"
-  className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-  onClick={onClose}
->
-  2024马拉松男子榜
-</Link>
+      <div className={mobileStyles.nav.menu.container}>
+        <div className={mobileStyles.nav.menu.wrapper}>
+          <Link href="/" className={navItem} onClick={onClose}>
+            2024年度风云榜
+          </Link>
 
-<Link
-  href="/rankings?gender=F"
-  className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-  onClick={onClose}
->
-  2024马拉松女子榜
-</Link>
-          
+          <Link href="/rankings?gender=M" className={navItem} onClick={onClose}>
+            2024马拉松男子榜
+          </Link>
 
-          
-          <Link
-            href="/ultra-rankings"
-            className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-            onClick={onClose}
-          >
+          <Link href="/rankings?gender=F" className={navItem} onClick={onClose}>
+            2024马拉松女子榜
+          </Link>
+          <Link href="/age-adjusted-rankings" className={navItem} onClick={onClose}>
+            2024马拉松跑力榜
+          </Link>
+          <Link href="/ultra-rankings" className={navItem} onClick={onClose}>
             2024超马越野榜
           </Link>
 
           {session ? (
             <>
-              <Link
-                href={`/users/${session.user.id}`}
-                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+              <Link 
+                href={`/users/${session.user.id}`} 
+                className={navItem} 
                 onClick={onClose}
               >
                 个人中心
               </Link>
               
-              <Link
-                href="/users/submit"
-                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-                onClick={onClose}
-              >
+              <Link href="/users/submit" className={navItem} onClick={onClose}>
                 提交成绩
               </Link>
 
@@ -68,26 +53,18 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
                   onClose();
                   onLogout();
                 }}
-                className="w-full text-left px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                className={mobileStyles.nav.menu.logoutButton}
               >
                 退出登录
               </button>
             </>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-                onClick={onClose}
-              >
+              <Link href="/login" className={navItem} onClick={onClose}>
                 登录
               </Link>
               
-              <Link
-                href="/register"
-                className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
-                onClick={onClose}
-              >
+              <Link href="/register" className={navItem} onClick={onClose}>
                 注册
               </Link>
             </>

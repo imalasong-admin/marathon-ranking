@@ -1,7 +1,7 @@
 // components/mobile/MobileAgeAdjustedRankings.js
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Search, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { states } from '../../lib/us-cities-data';
 
@@ -230,6 +230,22 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
     <>
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="sticky top-0 bg-white shadow-sm z-10 p-2">
+          {/* 添加统计信息 */}
+          <div className="bg-green-50 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-green-600" />
+              <p className="text-gray-700">
+              跑力成绩: 消除了性别和年龄差异后的马拉松成绩
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-green-50" />
+              <p className="text-gray-700">
+              跑力榜: 按跑力成绩排行，可视为马拉松综合实力单
+              </p>
+
+            </div>
+          </div>
         <div className="relative">
           <input
             type="text"

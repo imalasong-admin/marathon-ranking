@@ -236,6 +236,10 @@ const seriesSchema = new mongoose.Schema({
     type: Number,
     required: true
   }
+  isBQ: {
+    type: Boolean,
+    default: false
+  }
 },
   ultraDistance: {
     type: String,

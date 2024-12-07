@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { Menu } from 'lucide-react';
+import { mobileStyles } from './common/styles';
 import MobileNavMenu from './MobileNavMenu';
 
 export default function MobileNavbar() {
@@ -23,7 +24,9 @@ export default function MobileNavbar() {
         return '2024年度风云榜';
       case '/rankings':
         return gender === 'F' ? '2024马拉松女子榜' : '2024马拉松男子榜';
-      case '/ultra-rankings':
+    case '/age-adjusted-rankings':
+            return '2024马拉松跑力榜';
+        case '/ultra-rankings':
         return '2024超马越野榜';
       case '/users/submit':
         return '提交成绩';
@@ -41,27 +44,27 @@ export default function MobileNavbar() {
   };
 
   return (
-    <nav className="bg-white shadow">
-      <div className="px-4">
-        <div className="flex justify-between items-center h-10">
-          {/* Left: Text Logo */}
-          <div className="flex items-center">
-            <a href="/" className="text-lg font-bold text-gray-900">
+    <nav className={mobileStyles.nav.root}>
+      <div className={mobileStyles.nav.container}>
+        <div className={mobileStyles.nav.headerWrapper}>
+          {/* Logo区域 */}
+          <div className={mobileStyles.nav.logoWrapper}>
+            <a href="/" className={mobileStyles.nav.logo}>
               北美华人跑榜
             </a>
           </div>
 
-          {/* Right: Title and Menu Button */}
-          <div className="flex items-center space-x-2">
-            <span className="text-base font-medium text-gray-900">
+          {/* 标题和菜单按钮 */}
+          <div className={mobileStyles.nav.titleWrapper}>
+            <span className={mobileStyles.nav.pageTitle}>
               {getPageTitle()}
             </span>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2"
+              className={mobileStyles.nav.menuButton}
               aria-label="菜单"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className={mobileStyles.nav.menuIcon} />
             </button>
           </div>
         </div>

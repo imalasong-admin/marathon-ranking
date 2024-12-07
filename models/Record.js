@@ -53,9 +53,13 @@ const recordSchema = new mongoose.Schema({
    },
    reportedAt: Date,
    reason: String
- }]
+ }],
+ isBQ: {
+  type: Boolean,
+  default: false
+}
 }, {
- timestamps: true
+timestamps: true
 });
 
 const Record = mongoose.models.Record || mongoose.model('Record', recordSchema);

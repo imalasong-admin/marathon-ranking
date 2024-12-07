@@ -11,7 +11,10 @@ export default function Home() {
   });
   const [ultraStats, setUltraStats] = useState({ runners: 0, races: 0 });
   const [topRecords, setTopRecords] = useState({ male: [], female: [] });
+  const [topAdjustedRecords, setTopAdjustedRecords] = useState([]); // 新增跑力榜数据
+  const [hundredMilers, setHundredMilers] = useState([]); // 新增100英里完赛者状态
   const isMobile = useDeviceDetection();
+  const [bqRunners, setBqRunners] = useState([]); // 新增 BQ 跑者状态
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,7 +99,44 @@ export default function Home() {
               male: maleTop10,
               female: femaleTop10
             });
-          }
+
+          // 获取跑力榜前10
+          const adjustedTop10 = marathonRecords
+            .sort((a, b) => a.adjustedSeconds - b.adjustedSeconds)
+            .slice(0, 10);
+
+          setTopAdjustedRecords(adjustedTop10);
+          setStats(marathonStats);
+          setUltraStats(ultraStatsData);
+          setTopRecords({
+            male: maleTop10,
+            female: femaleTop10
+          });
+
+          // 获取2024年100英里完赛者
+          const hundredMileFinishers = records
+            .filter(record => {
+              const raceDate = new Date(record.raceId?.date);
+              return raceDate.getFullYear() === 2024 && 
+                     record.raceId?.seriesId?.raceType === '超马' &&
+                     record.ultraDistance === '100M';
+            })
+            .sort((a, b) => new Date(b.raceId?.date) - new Date(a.raceId?.date));
+
+          setHundredMilers(hundredMileFinishers);
+
+            // 获取2024年BQ跑者
+            const bqQualifiers = records
+            .filter(record => {
+              const raceDate = new Date(record.raceId?.date);
+              return raceDate.getFullYear() === 2024 && 
+                     record.raceId?.seriesId?.raceType === '全程马拉松' &&
+                     record.isBQ === true;
+            })
+            .sort((a, b) => a.totalSeconds - b.totalSeconds); // 按成绩排序
+
+          setBqRunners(bqQualifiers);
+        }
       } catch (error) {
         console.error('获取数据失败:', error);
       }
@@ -111,13 +151,19 @@ export default function Home() {
         <MobileStats 
           stats={stats} 
           topRecords={topRecords} 
-          ultraStats={ultraStats}  // 添加 ultraStats
+          ultraStats={ultraStats}
+          topAdjustedRecords={topAdjustedRecords} // 传入跑力榜数据
+          hundredMilers={hundredMilers} // 传入100英里完赛者数据
+          bqRunners={bqRunners} // 传入 BQ 跑者数据
         />
       ) : (
         <DesktopStats 
           stats={stats} 
           topRecords={topRecords} 
-          ultraStats={ultraStats}  // 添加 ultraStats
+          ultraStats={ultraStats}
+          topAdjustedRecords={topAdjustedRecords} // 传入跑力榜数据
+          hundredMilers={hundredMilers} // 传入100英里完赛者数据
+          bqRunners={bqRunners} // 传入 BQ 跑者数据
         />
       )}
     </div>

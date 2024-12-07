@@ -7,6 +7,7 @@ import Race from '../../../models/Race';
 import User from '../../../models/User';
 import Series from '../../../models/Series';
 import { calculateAdjustedSeconds } from '../../../lib/ageFactors';
+import { checkBQ } from '../../../lib/bqUtils';
 
 export default async function handler(req, res) {
  if (req.method !== 'POST') {
@@ -66,6 +67,11 @@ export default async function handler(req, res) {
      race.date
    );
 
+// 检查是否达到BQ标准
+const isBQ = race.seriesId?.raceType === '全程马拉松' ? 
+checkBQ(totalSeconds, user.gender, user.birthDate) : 
+false;
+
    const recordData = {
      userId: session.user.id,
      raceId,
@@ -77,7 +83,8 @@ export default async function handler(req, res) {
      totalSeconds,
      adjustedSeconds, // 添加调整后的成绩
      proofUrl: proofUrl || '',
-     verificationStatus: 'pending'
+     verificationStatus: 'pending',
+     isBQ
    };
 
    if (race.seriesId?.raceType === '超马') {

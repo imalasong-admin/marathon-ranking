@@ -29,7 +29,7 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
 
   // 年龄组定义
   const AGE_GROUPS = [
-    { label: 'All Age', value: 'all' },
+    { label: 'All Ages', value: 'all' },
     { label: '18-34岁', value: '18-34', min: 18, max: 34 },
     { label: '35-39岁', value: '35-39', min: 35, max: 39 },
     { label: '40-44岁', value: '40-44', min: 40, max: 44 },

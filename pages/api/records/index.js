@@ -2,6 +2,7 @@
 import connectDB from '../../../lib/mongodb';
 import Record from '../../../models/Record';
 import { calculateAdjustedSeconds } from '../../../lib/ageFactors';
+import { checkBQ, getBostonAge } from '../../../lib/bqUtils';
 
 export default async function handler(req, res) {
  if (req.method !== 'GET') {
@@ -38,20 +39,32 @@ export default async function handler(req, res) {
    const recordsWithDetails = records.map(record => {
      const recordObj = record.toObject();
 
-     // 计算比赛时的年龄
-     let age = null;
-     if (recordObj.userId?.birthDate && recordObj.raceId?.date) {
-       const raceDate = new Date(recordObj.raceId.date);
-       const birthDate = new Date(recordObj.userId.birthDate);
-       
-       if (raceDate >= birthDate) {
-         age = raceDate.getFullYear() - birthDate.getFullYear();
-         const m = raceDate.getMonth() - birthDate.getMonth();
-         if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
-           age--;
-         }
-       }
-     }
+     // 计算比赛时的年龄（用于显示）
+    let age = null;
+    if (recordObj.userId?.birthDate && recordObj.raceId?.date) {
+      const raceDate = new Date(recordObj.raceId.date);
+      const birthDate = new Date(recordObj.userId.birthDate);
+      
+      age = raceDate.getFullYear() - birthDate.getFullYear();
+      const m = raceDate.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
+        age--;
+      }
+    }
+    // 如果是马拉松且没有isBQ字段，重新计算（兼容旧数据）
+    if (
+      recordObj.raceId?.seriesId?.raceType === '全程马拉松' && 
+      !recordObj.hasOwnProperty('isBQ')
+    ) {
+      recordObj.isBQ = checkBQ(
+        recordObj.totalSeconds, 
+        recordObj.userId?.gender, 
+        recordObj.userId?.birthDate
+      );
+    }
+
+    // 添加波马比赛日的年龄
+    const bostonAge = getBostonAge(recordObj.userId?.birthDate);
 
      // 计算调整后成绩
      const adjustedSeconds = calculateAdjustedSeconds(
@@ -67,10 +80,12 @@ export default async function handler(req, res) {
        gender: recordObj.userId?.gender,
        state: recordObj.userId?.state,
        city: recordObj.userId?.city,
-       age,
+       age, // 比赛当天的年龄
+       bostonAge, // 波马比赛日的年龄
        date: recordObj.raceId?.date,
        raceName: recordObj.raceId?.seriesId?.name,
-       adjustedSeconds
+       adjustedSeconds,
+       isBQ: recordObj.isBQ
      };
    });
 
