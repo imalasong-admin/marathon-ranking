@@ -2,7 +2,8 @@
 import connectDB from '../../../lib/mongodb';
 import Record from '../../../models/Record';
 import { calculateAdjustedSeconds } from '../../../lib/ageFactors';
-import { checkBQ, getBostonAge } from '../../../lib/bqUtils';
+import { BQ_RACE_DATE, getStandard, checkBQ, getBQDiff } from '../../../lib/bqStandards';
+import { calculateAge } from '../../../lib/ageUtils';
 
 export default async function handler(req, res) {
  if (req.method !== 'GET') {
@@ -11,7 +12,6 @@ export default async function handler(req, res) {
 
  try {
    await connectDB();
-
    const records = await Record.find()
      .populate({
        path: 'userId',
@@ -24,47 +24,39 @@ export default async function handler(req, res) {
          select: 'name raceType'
        }
      })
-     // 添加这两个 populate
-  .populate({
-    path: 'verifiedBy.userId',
-    select: 'name'
-  })
-  .populate({
-    path: 'reportedBy.userId',
-    select: 'name'
-  })
-
+     .populate({
+       path: 'verifiedBy.userId',
+       select: 'name'
+     })
+     .populate({
+       path: 'reportedBy.userId',
+       select: 'name'
+     })
      .sort({ createdAt: -1 });
 
    const recordsWithDetails = records.map(record => {
      const recordObj = record.toObject();
 
      // 计算比赛时的年龄（用于显示）
-    let age = null;
-    if (recordObj.userId?.birthDate && recordObj.raceId?.date) {
-      const raceDate = new Date(recordObj.raceId.date);
-      const birthDate = new Date(recordObj.userId.birthDate);
-      
-      age = raceDate.getFullYear() - birthDate.getFullYear();
-      const m = raceDate.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
-        age--;
-      }
-    }
-    // 如果是马拉松且没有isBQ字段，重新计算（兼容旧数据）
-    if (
-      recordObj.raceId?.seriesId?.raceType === '全程马拉松' && 
-      !recordObj.hasOwnProperty('isBQ')
-    ) {
-      recordObj.isBQ = checkBQ(
-        recordObj.totalSeconds, 
-        recordObj.userId?.gender, 
-        recordObj.userId?.birthDate
-      );
-    }
+     let age = null;
+     if (recordObj.userId?.birthDate && recordObj.raceId?.date) {
+       const raceDate = new Date(recordObj.raceId.date);
+       const birthDate = new Date(recordObj.userId.birthDate);
+       
+       age = raceDate.getFullYear() - birthDate.getFullYear();
+       const m = raceDate.getMonth() - birthDate.getMonth();
+       if (m < 0 || (m === 0 && raceDate.getDate() < birthDate.getDate())) {
+         age--;
+       }
+     }
 
-    // 添加波马比赛日的年龄
-    const bostonAge = getBostonAge(recordObj.userId?.birthDate);
+     if (recordObj.raceId?.seriesId?.raceType === '全程马拉松') {
+       const bostonAge = calculateAge(recordObj.userId?.birthDate, BQ_RACE_DATE);
+       recordObj.bostonAge = bostonAge;
+       recordObj.bqStandard = getStandard(recordObj.userId?.gender, bostonAge);
+       recordObj.bqDiff = getBQDiff(recordObj.totalSeconds, recordObj.userId?.gender, bostonAge);
+       recordObj.isBQ = checkBQ(recordObj.totalSeconds, recordObj.userId?.gender, bostonAge);
+     }
 
      // 计算调整后成绩
      const adjustedSeconds = calculateAdjustedSeconds(
@@ -80,12 +72,10 @@ export default async function handler(req, res) {
        gender: recordObj.userId?.gender,
        state: recordObj.userId?.state,
        city: recordObj.userId?.city,
-       age, // 比赛当天的年龄
-       bostonAge, // 波马比赛日的年龄
+       age,
        date: recordObj.raceId?.date,
        raceName: recordObj.raceId?.seriesId?.name,
-       adjustedSeconds,
-       isBQ: recordObj.isBQ
+       adjustedSeconds
      };
    });
 

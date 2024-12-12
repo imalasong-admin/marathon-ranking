@@ -21,13 +21,18 @@ export default function MobileNavbar() {
   
     switch (path) {
       case '/':
-        return '2024年度风云榜';
-      case '/rankings':
-        return gender === 'F' ? '2024马拉松女子榜' : '2024马拉松男子榜';
+        return '首页';
+        case '/rankings':
+            if (router.query.sort === 'completion') {
+              return '2024马拉松完赛榜';
+            }
+            return gender === 'F' ? '2024马拉松女子最速100' : '2024马拉松男子最速100';
     case '/age-adjusted-rankings':
             return '2024马拉松跑力榜';
         case '/ultra-rankings':
         return '2024超马越野榜';
+        case '/bq-rankings':
+  return '2024马拉松BQ榜';
       case '/users/submit':
         return '提交成绩';
       case '/login':
@@ -35,7 +40,7 @@ export default function MobileNavbar() {
       case '/register':
         return '注册';
       default:
-        return '2024年度风云榜';  // 默认标题
+        return '首页';  // 默认标题
     }
   };
   const handleLogout = async () => {

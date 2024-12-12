@@ -1,7 +1,7 @@
 // pages/age-adjusted-rankings.js
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, CheckCircle } from 'lucide-react';
+import { ExternalLink, CheckCircle, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { states } from '../../lib/us-cities-data';
@@ -254,7 +254,12 @@ const Pagination = () => (
  <div className="flex items-center gap-4">
    <h1 className="text-3xl font-bold">2024年马拉松综合跑力榜</h1>
  </div>
- 
+ <div className="flex items-center gap-2">
+              <Users size={16} className="text-green-600" />
+              <span className="text-gray-700">
+              消除了性别和年龄差异后的马拉松成绩榜单，可视为马拉松综合实力排行
+              </span>
+            </div>
 </div>
       {/* 筛选区域 */}
       <div className="mb-6 space-y-4">
@@ -359,7 +364,7 @@ const Pagination = () => (
               <tr>
                 <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
                 <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
-                <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-1 text-left text-xs font-medium text-red-900 uppercase tracking-wider">
                   <div>跑力成绩</div>
                   <div className="text-gray-400">比赛成绩</div>
                 </th>
@@ -383,10 +388,10 @@ const Pagination = () => (
                       {record.userName}
                     </Link>
                   </td>
-                  <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center">
                       <div className="flex flex-col">
-                      <div className="text-gray-500">{formatAdjustedTime(record.adjustedSeconds)}</div>
+                      <div className="text-red-900">{formatAdjustedTime(record.adjustedSeconds)}</div>
                         <div className="mb-1">
                           {formatTime(record.finishTime)}
                           <button

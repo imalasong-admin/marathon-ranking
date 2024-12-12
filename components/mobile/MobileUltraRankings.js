@@ -269,11 +269,11 @@ const handleVerifySubmit = async (action) => {
             <div className="flex items-center gap-2">
               <Users size={16} className="text-yellow-600" />
               <span className="text-gray-700">
-                2024超马越野赛：共有
+                北美华人跑者2024年度共有
                 <span className="font-medium text-yellow-600">{stats.runners}</span> 
-                位跑者，完成
+                位完成
                 <span className="font-medium text-yellow-600">{stats.races}</span>
-                场比赛
+                场超马越野赛
               </span>
             </div>
           </div>

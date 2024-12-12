@@ -69,6 +69,8 @@
 ├── lib/                  # 工具库
 │   └── mongodb.js        # MongoDB 连接配置
 │   └── email.js         # 邮件服务工具
+│   ├── statsUtils.js          - 统计计算的核心实现
+ │  └── statsService.js        - 统计服务层
 ├── models/               # 数据模型
 │   ├── Race.js          # 场次模型
 │   ├── Record.js        # 记录模型
@@ -86,8 +88,8 @@
 │   ├── users/
 │   │   ├── [id].js    # 用户个人中心页面
 │   │   └── submit.js  # 分步骤提交页面
-│       └── [id]/
-│           └── edit.js     # 新增编辑页面
+│   │   └── [id]/
+│   │        └── edit.js     # 新增编辑页面
 │   ├── admin/         # 管理员页面
 │   │   ├── index.js        # 用户管理
 │   │   ├── series.js       # 赛事管理
@@ -100,6 +102,9 @@
 │       ├── records/  # 成绩记录
 │       └── users/    # 用户管理
 │       └── series/   # 赛事管理
+│       └── Stats/    # 统计数据模型
+│              ├── index.js              - 获取统计数据API
+│              └── update.js             - 更新统计数据API
 ├── public/           # 静态资源
 └── styles/          # 样式文件
 ```
@@ -275,21 +280,30 @@ const seriesSchema = new mongoose.Schema({
 }
 ```
 
-### 首页数据统计逻辑：
-```javascript
-// 1. 马拉松统计
-const marathonStats = {
-  male: { runners: number, races: number },
-  female: { runners: number, races: number }
-};
+#数据统计结构：
+前端(页面和组件)
+├── pages/
+│   └── stats.js                 - 统计页面入口(适配桌面/移动端)
+├── components/
+│   ├── desktop/
+│   │   └── DesktopStatsPage.js  - 桌面端统计展示
+│   └── mobile/
+│       └── MobileStatsPage.js    - 移动端统计展示
 
-// 2. 超马统计
-const ultraStats = {
-  runners: number,  // 总人数
-  races: number     // 总场次
-};
+后端(API和服务)
+├── pages/api/stats/
+│   ├── index.js                 - 获取统计数据API
+│   └── update.js                - 更新统计数据API
+├── lib/
+│   ├── statsService.js          - 统计服务核心逻辑
+│   └── statsUtils.js            - 统计工具函数
+└── models/
+    ├── Stats.js                 - 统计数据模型
+    ├── Record.js                - 成绩记录模型
+    └── User.js                  - 用户模型
 
-// 3. Top 10 数据结构
+
+ Top 10 数据结构
 const topRecords = {
   male: Array<Record>,    // 男子前10
   female: Array<Record>   // 女子前10

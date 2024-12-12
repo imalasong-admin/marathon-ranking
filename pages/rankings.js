@@ -20,14 +20,22 @@ export default function Rankings() {
         const data = await res.json();
         
         if (data.success) {
-          // 过滤和排序2024年的马拉松成绩
-          const filteredRecords = data.records
-            .filter(record => {
-              const raceDate = new Date(record.raceId?.date);
-              return raceDate.getFullYear() === 2024 && 
-                     record.raceId?.seriesId?.raceType === '全程马拉松';
-            })
-            .sort((a, b) => a.totalSeconds - b.totalSeconds);
+          let filteredRecords = data.records.filter(record => {
+            const raceDate = new Date(record.raceId?.date);
+            return raceDate.getFullYear() === 2024 && 
+                   record.raceId?.seriesId?.raceType === '全程马拉松';
+          });
+  
+          // 完赛榜：按创建时间倒序，不过滤性别
+          if (router.query.sort === 'completion') {
+            filteredRecords.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          } 
+          // 成绩榜：按成绩排序，需要过滤性别
+          else {
+            filteredRecords = filteredRecords
+              .filter(record => record.gender === (router.query.gender || 'M'))
+              .sort((a, b) => a.totalSeconds - b.totalSeconds);
+          }
           
           setRecords(filteredRecords);
         } else {
@@ -39,9 +47,9 @@ export default function Rankings() {
         setLoading(false);
       }
     };
-
+  
     fetchRecords();
-  }, []);
+  }, [router.query.sort, router.query.gender]);
 
   if (loading) {
     return (

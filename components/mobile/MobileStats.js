@@ -118,21 +118,19 @@ const AdjustedTopTenDisplay = ({ records }) => {
                       {record.userName}
                     </a>
                     <span className="ml-1 text-sm text-gray-600">
-                      ({record.gender === 'M' ? '男' : '女'} {record.age}岁)
+                      ({record.gender === 'M' ? 'M' : 'F'}{record.age})
                     </span>
                   </div>
                 </div>
                 <div>
-                <span className="text-sm text-gray-600">
-                  跑力成绩：
-                </span>
+               
                 <span className="font-mono text-purple-600">
                   {formatTime(getTimeFromSeconds(record.adjustedSeconds))}
                 </span>
                 </div>
               </div>
     
-              {/* 第二行：比赛信息和跑力成绩 */}
+              {/* 第二行：比赛信息和成绩 */}
               <div className="flex items-center justify-between mt-1 text-sm">
                 <span className="text-gray-600">
                   {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
@@ -180,7 +178,7 @@ const AdjustedTopTenDisplay = ({ records }) => {
                       {record.userName}
                     </a>
                     <span className="ml-1 text-sm text-gray-600">
-                      ({record.gender === 'M' ? '男' : '女'} {record.age}岁)
+                      ({record.gender === 'M' ? 'M' : 'F'}{record.age})
                     </span>
                   </div>
                   <span className="font-mono font-bold">
@@ -202,76 +200,7 @@ const AdjustedTopTenDisplay = ({ records }) => {
         );
       };
 
-      const BQRunnersDisplay = ({ records }) => {
-        console.log('BQ records:', records); // 添加调试日志
-        const formatTime = (time) => {
-          if (!time) return '-';
-          return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
-        };
-      
-        const formatDate = (dateString) => {
-          if (!dateString) return '-';
-          try {
-            return new Date(dateString).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'numeric',
-              day: 'numeric',
-              timeZone: 'UTC'
-            });
-          } catch (error) {
-            return '-';
-          }
-        };
-      
-        const getBostonAgeGroup = (age) => {
-          if (age <= 34) return '18-34';
-          if (age <= 39) return '35-39';
-          if (age <= 44) return '40-44';
-          if (age <= 49) return '45-49';
-          if (age <= 54) return '50-54';
-          if (age <= 59) return '55-59';
-          if (age <= 64) return '60-64';
-          if (age <= 69) return '65-69';
-          if (age <= 74) return '70-74';
-          if (age <= 79) return '75-79';
-          return '80+';
-        };
-      
-        return (
-          <div className="space-y-2">
-            {records.map((record) => (
-              <div key={record._id} className="p-2 rounded">
-                {/* 第一行：用户名和成绩 */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <a 
-                      href={`/users/${record.userId?._id || record.userId}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {record.userName}
-                    </a>
-                    <span className="ml-1 text-sm text-gray-600">
-                      ({record.gender === 'M' ? '男' : '女'} {record.bostonAge}岁 / {getBostonAgeGroup(record.bostonAge)})
-                    </span>
-                  </div>
-                  <span className="font-mono font-bold">
-                    {formatTime(record.finishTime)}
-                  </span>
-                </div>
-                {/* 第二行：比赛信息 */}
-                <div className="text-sm text-gray-600 mt-1">
-                  {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
-                </div>
-              </div>
-            ))}
-            {records.length === 0 && (
-              <div className="text-center py-2 text-gray-500">
-                暂无 BQ 成绩
-              </div>
-            )}
-          </div>
-        );
-      };
+
 
 // 主组件
 export const MobileStats = ({ 
@@ -279,53 +208,89 @@ export const MobileStats = ({
     topRecords, 
     ultraStats = { runners: 0, races: 0 },
     topAdjustedRecords = [],
-    hundredMilers = [],  // 添加100英里完赛者属性
-    bqRunners = []  // 添加 BQ 跑者属性
+    hundredMilers = []
   }) => {
     const safeStats = {
       male: { runners: 0, races: 0 },
       female: { runners: 0, races: 0 },
       ...stats
     };
-    const safeUltraStats = {
-      runners: 0,
-      races: 0,
-      ...ultraStats
-    };
+  
+    // 计算总数
+    const totalRunners = safeStats.male.runners + safeStats.female.runners;
+    const totalRaces = safeStats.male.races + safeStats.female.races;
   
     return (
       <MobilePageContainer>
-        <MobileTitle>2024年度风云榜</MobileTitle>
-        
-        <MobileCard icon={Users} color="blue">
-          有 <span className="text-blue-600 font-bold">{safeStats.male.runners}</span> 位男跑者完赛
-          <span className="text-blue-600 font-bold"> {safeStats.male.races}</span> 场马拉松
-        </MobileCard>
+        {/* 添加总体统计信息卡片 */}
+        <MobileCard className="bg-blue-50 p-2 mb-4"> {/* 增加内边距 */}
+            
+  {/* 统计信息 - 使用更好的行距和对齐方式 */}
+  <div className="flex gap-2"> {/* 增加图标和文字的间距 */}
+    <Trophy size={18} className="text-red-600 flex-shrink-0" /> {/* 略微增大图标并向下对齐 */}
+    <div className="text-gray-700 leading-relaxed"> {/* 增加行高 */}
+    <div className="text-sm sm:text-base font-medium text-gray-800">
+      2024马拉松完赛榜
+      </div>
+      2024年度共有<span className="font-medium text-blue-600">{totalRunners}</span>位跑者完成<span className="font-medium text-blue-600">{totalRaces}</span>场马拉松，
+      <br className="mt-1" /> {/* 使用换行增加可读性 */}
+      其中<span className="font-medium text-blue-600">{safeStats.male.runners}</span>位男跑者完成<span className="font-medium text-blue-600">{safeStats.male.races}</span>场，
+      <span className="font-medium text-blue-600">{safeStats.female.runners}</span>位女跑者完成<span className="font-medium text-blue-600">{safeStats.female.races}</span>场。
+    </div>
+  </div>
   
-        <MobileCard icon={Users} color="pink">
-          有 <span className="text-pink-600 font-bold">{safeStats.female.runners}</span> 位女跑者完赛
-          <span className="text-pink-600 font-bold"> {safeStats.female.races}</span> 场马拉松
-        </MobileCard>
+  {/* 邀请文字和按钮 - 调整间距和对齐 */}
+  <div className="mt-2 flex flex-col items-center"> {/* 增加上边距 */}
+    <p className="text-gray-600 leading-relaxed"> {/* 增加文字和按钮的间距 */}
+      请长期居住在北美的华人跑者加入完赛榜。
+      </p>
+      <a 
+      href="/users/submit" 
+      className="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 transition-colors"
+    > {/* 增加按钮的水平内边距 */}
+      提交成绩
+    </a>
+    
+    
+  </div>
   
-        <MobileCard icon={Users} color="yellow">
-          有 <span className="text-yellow-600 font-bold">{safeUltraStats.runners}</span> 位跑者完赛
-          <span className="text-yellow-600 font-bold"> {safeUltraStats.races}</span> 场超马越野赛
-        </MobileCard>
-  
+</MobileCard>
+
+
         <MobileCollapsible
           icon={Trophy}
           title="2024马拉松男子最速 Top 10"
           color="blue"
         >
           <TopTenDisplay records={topRecords.male || []} gender="M" />
+        
+          <br className="mt-1" />
+<div className="text-sm sm:text-base font-medium text-gray-800 text-right">
+  更多男子排名，请看
+  <a 
+    href="/rankings?gender=M" 
+    className="font-medium text-blue-600"
+  >
+    2024马拉松男子百强榜
+  </a>
+</div>
         </MobileCollapsible>
   
         <MobileCollapsible
           icon={Trophy}
           title="2024马拉松女子最速 Top 10"
-          color="pink"
+          color="green"
         >
           <TopTenDisplay records={topRecords.female || []} gender="F" />
+          <div className="text-sm sm:text-base font-medium text-gray-800 text-right">
+  更多女子排名，请看
+  <a 
+    href="/rankings?gender=F" 
+    className="font-medium text-blue-600"
+  >
+    2024马拉松女子百强榜
+  </a>
+</div>
         </MobileCollapsible>
   
         {/* 新增跑力榜展示 */}
@@ -335,6 +300,16 @@ export const MobileStats = ({
           color="purple"
         >
           <AdjustedTopTenDisplay records={topAdjustedRecords} />
+        
+          <div className="text-sm sm:text-base font-medium text-gray-800 text-right">
+  更多跑力排名，请看
+  <a 
+    href="/age-adjusted-rankings" 
+    className="font-medium text-blue-600"
+  >
+    2024马拉松跑力榜
+  </a>
+</div>
         </MobileCollapsible>
   
 
@@ -345,15 +320,22 @@ export const MobileStats = ({
         color="yellow"
       >
         <HundredMilersDisplay records={hundredMilers} />
+      
+        <div className="text-sm sm:text-base font-medium text-gray-800 text-right">
+  更多超马跑者，请看
+  <a 
+    href="/ultra-rankings" 
+    className="font-medium text-blue-600"
+  >
+    2024超马越野榜
+  </a>
+</div>
       </MobileCollapsible>
     
-      <MobileCollapsible
-        icon={Trophy}
-        title="2024马拉松BQ跑者"
-        color="green" // 使用绿色主题
-      >
-        <BQRunnersDisplay records={bqRunners} />
-      </MobileCollapsible>
+
+     
+
+      
     </MobilePageContainer>
   );
 };

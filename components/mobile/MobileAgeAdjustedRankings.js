@@ -234,17 +234,11 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
           <div className="bg-green-50 px-3 py-2 text-sm">
             <div className="flex items-center gap-2">
               <Users size={16} className="text-green-600" />
-              <p className="text-gray-700">
-              跑力成绩: 消除了性别和年龄差异后的马拉松成绩
-              </p>
+              <span className="text-gray-700">
+              消除了性别和年龄差异后的马拉松成绩(蓝色)榜单，可视为马拉松综合实力排行
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Users size={16} className="text-green-50" />
-              <p className="text-gray-700">
-              跑力榜: 按跑力成绩排行，可视为马拉松综合实力单
-              </p>
-
-            </div>
+            
           </div>
         <div className="relative">
           <input
@@ -321,7 +315,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
    {record.userName}
  </a>
  <div className="text-xs text-gray-500">
-   <span>{record.gender === 'M' ? 'M' : 'F'} {record.age || '-'} {record.state || '-'}</span>
+   <span>{record.gender === 'M' ? 'M' : 'F'}{record.age || '-'} {record.state || '-'}</span>
    
  </div>
 </div>
@@ -404,7 +398,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
                           </div>
                           <button
                             onClick={(e) => handleVerifyClick(record, e)}
-                            className="text-red-600 hover:text-blue-800"
+                            className="bg-blue-600 text-xs text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-colors"
                           >
                             验证/存疑
                           </button>

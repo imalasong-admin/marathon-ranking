@@ -24,8 +24,8 @@ export const mobileStyles = {
         root: "bg-white shadow",
         container: "px-3",
         headerWrapper: "flex justify-between items-center h-10",
-        logoWrapper: "w-30 min-w-[6rem] flex items-center", // 给Logo固定宽度
-        // logo: "text-sm font-bold text-gray-900 truncate", // 可能过长时截断
+        logoWrapper: "w-60 min-w-[10rem] flex items-center", // 给Logo固定宽度
+        logo: "text-medium font-bold text-gray-900 truncate", // 可能过长时截断
         titleWrapper: "flex-1 flex justify-end items-center gap-2 ml-2", // flex-1自动占用剩余空间
         pageTitle: "text-sm font-medium text-gray-900 truncate", // 可能过长时截断
         menuButton: "p-1 flex-shrink-0", // 防止按钮被压缩

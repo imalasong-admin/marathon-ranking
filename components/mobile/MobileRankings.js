@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react';
 import { states } from '../../lib/us-cities-data';
+import { formatTime, getTimeFromSeconds } from '../../lib/timeUtils';
 
 const MobileRankings = ({ records = [], initialGender = 'M' }) => {  
   const { data: session } = useSession();
@@ -55,44 +56,60 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
   useEffect(() => {
     const calculateStats = () => {
       const uniqueRunners = new Map();
+      let maleRaces = 0;
+      let femaleRaces = 0;
+      
       records.forEach(record => {
         const raceDate = new Date(record.raceId?.date);
-        if (raceDate.getFullYear() === 2024 && record.raceId?.seriesId?.raceType === '全程马拉松') {
+        if (raceDate.getFullYear() === 2024 && 
+            record.raceId?.seriesId?.raceType === '全程马拉松') {
           const runnerId = record.userId?._id || record.userId;
           if (!uniqueRunners.has(runnerId)) {
-            uniqueRunners.set(runnerId, { gender: record.gender, races: 1 });
+            uniqueRunners.set(runnerId, { 
+              gender: record.gender, 
+              races: 1 
+            });
           } else {
             uniqueRunners.get(runnerId).races++;
           }
+          
+          // 计算男女完赛场次
+          if (record.gender === 'M') {
+            maleRaces++;
+          } else {
+            femaleRaces++;
+          }
         }
       });
-
-      const newStats = {
-        male: { runners: 0, races: 0 },
-        female: { runners: 0, races: 0 }
-      };
-
+    
+      let maleRunners = 0;
+      let femaleRunners = 0;
+    
       uniqueRunners.forEach(runner => {
         if (runner.gender === 'M') {
-          newStats.male.runners++;
-          newStats.male.races += runner.races;
+          maleRunners++;
         } else {
-          newStats.female.runners++;
-          newStats.female.races += runner.races;
+          femaleRunners++;
         }
       });
-
-      setStats(newStats);
+    
+      setStats({
+        totalRunners: uniqueRunners.size,
+        male: { 
+          runners: maleRunners, 
+          races: maleRaces 
+        },
+        female: { 
+          runners: femaleRunners, 
+          races: femaleRaces 
+        }
+      });
     };
-
+  
     calculateStats();
-  }, [records]);
+  }, [records, router.query.sort]); // 添加 sort 到依赖数组
+  
 
-  // 辅助函数
-  const formatTime = (time) => {
-    if (!time) return '-';
-    return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -176,11 +193,15 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
       setVerifyError('操作失败，请重试');
     }
   };
+// 根据 URL 参数判断是否为完赛榜
+const isCompletionRanking = router.query.sort === 'completion';
 
-  // 数据过滤函数
-  const filteredRecords = localRecords.filter(record => {
+  // 数据过滤逻辑
+  const filteredRecords = localRecords
+  .filter(record => {
     if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (record.gender !== initialGender) return false;  // 始终按 initialGender 筛选
+    // 完赛榜不需要性别筛选，显示全部记录
+    if (!isCompletionRanking && record.gender !== initialGender) return false;
     if (filters.ageGroup !== 'all') {
       const group = AGE_GROUPS.find(g => g.value === filters.ageGroup);
       if (group && (record.age < group.min || record.age > group.max)) return false;
@@ -188,8 +209,10 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
     if (filters.state !== 'all' && record.state !== filters.state) return false;
     if (filters.selectedRace && record.raceId?._id !== filters.selectedRace) return false;
     return true;
-  });
-
+  })
+  // 如果不是完赛榜，只取前100名
+  .slice(0, isCompletionRanking ? undefined : 100);
+  
   // 验证对话框组件
   const VerifyDialog = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -265,26 +288,35 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
 
     return (
       <>
-        <div className="flex flex-col min-h-screen bg-gray-50">
-          <div className="sticky top-0 bg-white shadow-sm z-10">
-            {/* 性别对应的统计信息 */}
-            <div className="bg-blue-50 px-3 py-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Users size={16} className="text-blue-600" />
-                <span className="text-gray-700">
-                 
-                  2024年度有<span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
-                    {initialGender === 'M' ? stats.male.runners : stats.female.runners}
-                  </span>
-                  位{initialGender === 'M' ? '男' : '女'}跑者，跑了 
-                  <span className={`font-medium ${initialGender === 'M' ? 'text-blue-600' : 'text-pink-600'}`}>
-                    {initialGender === 'M' ? stats.male.races : stats.female.races}
-                  </span>
-                  场马拉松比赛
-                </span>
-              </div>
-            </div>
-    
+       <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="sticky top-0 bg-white shadow-sm z-10">
+      <div className="bg-blue-50 px-3 py-2 text-sm">
+      <div className="flex items-center gap-2">
+  <Users size={16} className="text-blue-600" />
+  { router.query.sort === 'completion' ? (
+      <span className="text-gray-700">
+        2024年度共有<span className="font-medium text-blue-600">{stats.totalRunners}</span>位跑者
+        完成<span className="font-medium text-blue-600">{records.length}</span>场马拉松，
+        其中<span className="font-medium text-blue-600">{stats.male.runners}</span>位男跑者
+        完成<span className="font-medium text-blue-600">{stats.male.races}</span>场，
+        <span className="font-medium text-blue-600">{stats.female.runners}</span>位女跑者
+        完成<span className="font-medium text-blue-600">{stats.female.races}</span>场。
+      </span>
+    ) : (
+      // 原有的性别相关显示逻辑保持不变
+      <span className="text-gray-700">
+        2024年度有<span className="font-medium text-blue-600">
+          {initialGender === 'M' ? stats.male.runners : stats.female.runners}
+        </span>
+        位{initialGender === 'M' ? '男' : '女'}跑者，跑了 
+        <span className="font-medium text-blue-600">
+          {initialGender === 'M' ? stats.male.races : stats.female.races}
+        </span>
+        场马拉松比赛。下面是最快的100场。
+      </span>
+    )}
+  </div>
+</div>
             {/* 搜索框 */}
             <div className="relative px-2 py-2">
               <input
@@ -387,25 +419,20 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
                 </div>
     
                 {expandedCard === record._id && (
-                  <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
-                    <div className="py-2 gap-2">
-                      
-                        
-                        <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'}</span>]
+  <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
+    <div className="py-2 gap-2">
+      <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'}</span>]
+      <span className="ml-4">[{record.age || '-'}]</span>
+      <span className="ml-4">
+        [{record.state && record.city ? 
+          `${record.state} - ${record.city}` : 
+          (record.state || '-')
+        }]
+      </span>
+     
+    </div>
+  
 
-                        
-                        <span className="ml-4">[{record.age || '-'}]</span>
-                      
-                        
-                        <span className="ml-4">
-      [{record.state && record.city ? 
-        `${record.state} - ${record.city}` : 
-        (record.state || '-')
-      }]
-    </span>
-                      
-                    </div>
-    
                     <div className="py-2">
                       <div className="mb-1">
                         <span className="text-gray-500">比赛:</span>
@@ -433,9 +460,9 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
                           </div>
                           <button
                             onClick={(e) => handleVerifyClick(record, e)}
-                            className="text-red-600 hover:text-blue-800"
+                            className="bg-blue-600 text-xs text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-colors"
                           >
-                            验证/存疑
+                            验证 | 存疑
                           </button>
                         </div>
                       </div>

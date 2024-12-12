@@ -6,3 +6,7 @@ export const MobileTitle = ({ children }) => {
       <h1 className={mobileStyles.title}>{children}</h1>
     );
   };
+
+  <MobileTitle 
+  title="2024马拉松完赛榜" 
+  ></MobileTitle>

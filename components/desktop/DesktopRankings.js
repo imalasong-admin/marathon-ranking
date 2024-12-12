@@ -155,6 +155,7 @@ const handleVerifyClick = (record) => {
       );
     }
   
+
     if (filters.ageGroup !== 'all') {
       const group = AGE_GROUPS.find(g => g.value === filters.ageGroup);
       if (group) {
@@ -293,7 +294,7 @@ const handleVerifyClick = (record) => {
               <option value="F">女</option>
             </select>
           </div>
-  
+
           <div className="flex items-center space-x-2">
             <label className="text-sm font-medium text-gray-700">年龄组:</label>
             <select

@@ -17,15 +17,17 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
       <div className={mobileStyles.nav.menu.container}>
         <div className={mobileStyles.nav.menu.wrapper}>
           <Link href="/" className={navItem} onClick={onClose}>
-            2024年度风云榜
+           首页@www.iMaLaSong.com
           </Link>
-
+          <Link href="/rankings?sort=completion" className={navItem} onClick={onClose}>
+             2024马拉松完赛榜
+          </Link>
           <Link href="/rankings?gender=M" className={navItem} onClick={onClose}>
-            2024马拉松男子榜
+            2024马拉松男子最速100
           </Link>
 
           <Link href="/rankings?gender=F" className={navItem} onClick={onClose}>
-            2024马拉松女子榜
+            2024马拉松女子最速100
           </Link>
           <Link href="/age-adjusted-rankings" className={navItem} onClick={onClose}>
             2024马拉松跑力榜
@@ -33,7 +35,9 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
           <Link href="/ultra-rankings" className={navItem} onClick={onClose}>
             2024超马越野榜
           </Link>
-
+          <Link href="/bq-rankings" className={navItem} onClick={onClose}>
+  2024马拉松BQ榜
+</Link>
           {session ? (
             <>
               <Link 

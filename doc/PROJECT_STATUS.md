@@ -9,6 +9,35 @@
 - 部署地址: https://marathon-ranking.vercel.app
 
 ## 最近完成的功能
+✅ 统计模块完善（2024-12-11）
+- 重构统计计算逻辑
+前端(页面和组件)
+├── pages/
+│   └── stats.js                 - 统计页面入口(适配桌面/移动端)
+├── components/
+│   ├── desktop/
+│   │   └── DesktopStatsPage.js  - 桌面端统计展示
+│   └── mobile/
+│       └── MobileStatsPage.js    - 移动端统计展示
+
+后端(API和服务)
+├── pages/api/stats/
+│             ├── index.js                 - 获取统计数据API
+│             └── update.js                - 更新统计数据API
+├── lib/
+│   ├── statsService.js          - 统计服务核心逻辑
+│   └── statsUtils.js            - 统计工具函数
+└── models/
+    ├── Stats.js                 - 统计数据模型
+    ├── Record.js                - 成绩记录模型
+    └── User.js                  - 用户模型
+  
+- 优化成绩统计功能
+  * 修复 BQ 计算问题
+  * 正确处理和显示 isBQ 字段
+  * 支持管理员编辑时重新计算 BQ 状态
+
+
 ✅ 首页统计展示增强（2024-12-06）
 - 新增"跑力最强 Top 10"展示
   * 移动端和桌面端实现

@@ -91,6 +91,29 @@ export default function RecordsManagement() {
     }
   };
 
+// 添加更新函数
+const handleUpdateStats = async () => {
+    try {
+      const res = await fetch('/api/stats/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ year: 2024 })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('统计数据更新成功');
+      } else {
+        setError(data.message || '统计更新失败');
+      }
+    } catch (err) {
+      console.error('更新统计错误:', err);
+      setError('更新失败，请重试');
+    }
+  };
+
 // 成绩验证
 const handleVerifyClick = (record) => {
     setVerifyingRecord(record);
@@ -240,6 +263,12 @@ const handleDelete = async (recordId) => {
           >
             成绩管理
           </button>
+          <button
+  onClick={handleUpdateStats}
+  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+>
+  更新统计数据
+</button>
         </div>
 
         {/* 记录列表表格 */}

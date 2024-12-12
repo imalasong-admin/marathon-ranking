@@ -142,7 +142,7 @@ export default function DesktopUltraRankings() {
     <div className="max-w-6xl mx-auto py-1 px-4">
       {/* 标题区域 */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">2024年超马榜</h1>
+        <h1 className="text-3xl font-bold">2024年超马越野榜</h1>
         <button
           onClick={() => window.location.href = '/users/submit'}
           className="inline-flex items-center px-4 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"

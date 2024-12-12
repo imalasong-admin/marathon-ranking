@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { DesktopStats } from '../components/desktop/DesktopStats';
 import { MobileStats } from '../components/mobile/MobileStats';
 import { useDeviceDetection } from '../lib/deviceDetection';
-import { checkBQ } from '../lib/bqUtils'; 
+
 
 export default function Home() {
   const [stats, setStats] = useState({ 
@@ -15,7 +15,7 @@ export default function Home() {
   const [topAdjustedRecords, setTopAdjustedRecords] = useState([]); // 新增跑力榜数据
   const [hundredMilers, setHundredMilers] = useState([]); // 新增100英里完赛者状态
   const isMobile = useDeviceDetection();
-  const [bqRunners, setBqRunners] = useState([]); // 新增 BQ 跑者状态
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,21 +126,9 @@ export default function Home() {
             .sort((a, b) => new Date(b.raceId?.date) - new Date(a.raceId?.date));
 
           setHundredMilers(hundredMileFinishers);
-
-          // 获取2024年BQ跑者
-          const bqQualifiers = marathonRecords
-          .filter(record => 
-            // 无论是新数据的 isBQ 标记，还是重新计算的 BQ 状态，都要考虑
-            record.isBQ === true || 
-            checkBQ(
-              record.totalSeconds,
-              record.gender,
-              record.userId?.birthDate
-            )
-          )
-          .sort((a, b) => a.totalSeconds - b.totalSeconds);
         
-        setBqRunners(bqQualifiers);
+        
+        
         }
       } catch (error) {
         console.error('获取数据失败:', error);
@@ -159,7 +147,7 @@ export default function Home() {
           ultraStats={ultraStats}
           topAdjustedRecords={topAdjustedRecords} // 传入跑力榜数据
           hundredMilers={hundredMilers} // 传入100英里完赛者数据
-          bqRunners={bqRunners} // 传入 BQ 跑者数据
+          
         />
       ) : (
         <DesktopStats 
@@ -168,7 +156,7 @@ export default function Home() {
           ultraStats={ultraStats}
           topAdjustedRecords={topAdjustedRecords} // 传入跑力榜数据
           hundredMilers={hundredMilers} // 传入100英里完赛者数据
-          bqRunners={bqRunners} // 传入 BQ 跑者数据
+          
         />
       )}
     </div>
