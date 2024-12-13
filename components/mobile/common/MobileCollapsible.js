@@ -17,6 +17,7 @@ export const MobileCollapsible = ({
   return (
     <div className={`mb-2 ${className}`}>
       <div className={`${mobileStyles.collapsible.header} bg-${color}-50`}>
+         
         <div className="flex items-center gap-2 flex-grow">
           {icon && (
             <Icon className={`${mobileStyles.icon.small} ${mobileStyles.icon[color]}`} />

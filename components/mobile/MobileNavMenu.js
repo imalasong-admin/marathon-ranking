@@ -19,6 +19,9 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
           <Link href="/" className={navItem} onClick={onClose}>
            首页@www.iMaLaSong.com
           </Link>
+          <Link href="/stats" className={navItem} onClick={onClose}>
+             2024马拉松风云榜
+          </Link>
           <Link href="/rankings?sort=completion" className={navItem} onClick={onClose}>
              2024马拉松完赛榜
           </Link>

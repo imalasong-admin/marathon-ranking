@@ -26,14 +26,20 @@ export default function Rankings() {
                    record.raceId?.seriesId?.raceType === '全程马拉松';
           });
   
-          // 完赛榜：按创建时间倒序，不过滤性别
-          if (router.query.sort === 'completion') {
-            filteredRecords.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          } 
-          // 成绩榜：按成绩排序，需要过滤性别
-          else {
+          if (isMobile) {
+            // 移动端: 3种排序模式
+            if (router.query.sort === 'completion') {
+              // 完赛榜：全部性别，按创建时间倒序
+              filteredRecords.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else {
+              // 成绩榜：按性别过滤，按成绩排序
+              filteredRecords = filteredRecords
+                .filter(record => record.gender === (router.query.gender || 'M'))
+                .sort((a, b) => a.totalSeconds - b.totalSeconds);
+            }
+          } else {
+            // 桌面端: 全部性别数据，按成绩排序
             filteredRecords = filteredRecords
-              .filter(record => record.gender === (router.query.gender || 'M'))
               .sort((a, b) => a.totalSeconds - b.totalSeconds);
           }
           
@@ -74,6 +80,6 @@ export default function Rankings() {
       initialGender={router.query.gender === 'F' ? 'F' : 'M'}
     />
   ) : (
-    <DesktopRankings initialRecords={records} />  // 桌面端保持不变
+    <DesktopRankings initialRecords={records} />  
   );
 }

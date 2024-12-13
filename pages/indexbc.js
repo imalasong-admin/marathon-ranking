@@ -1,4 +1,4 @@
-// pages/stats.js
+// pages/index.js
 import { useState, useEffect } from 'react';
 import { DesktopStats } from '../components/desktop/DesktopStats';
 import { MobileStats } from '../components/mobile/MobileStats';
@@ -15,7 +15,7 @@ export default function Home() {
   const [topAdjustedRecords, setTopAdjustedRecords] = useState([]); // 新增跑力榜数据
   const [hundredMilers, setHundredMilers] = useState([]); // 新增100英里完赛者状态
   const isMobile = useDeviceDetection();
-  const [bqTopRecords, setBqTopRecords] = useState([]); 
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -128,26 +128,15 @@ export default function Home() {
           setHundredMilers(hundredMileFinishers);
         
         
-       // 添加 BQ Top10 处理
-       const bqTop10 = records
-       .filter(record => {
-         const raceDate = new Date(record.raceId?.date);
-         return raceDate.getFullYear() === 2024 && 
-                record.raceId?.seriesId?.raceType === '全程马拉松' &&
-                record.isBQ === true;
-       })
-       .sort((a, b) => b.bqDiff - a.bqDiff)
-       .slice(0, 10);
+        
+        }
+      } catch (error) {
+        console.error('获取数据失败:', error);
+      }
+    };
 
-     setBqTopRecords(bqTop10);
-   }
- } catch (error) {
-   console.error('获取数据失败:', error);
- }
-};
-
-fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -158,7 +147,7 @@ fetchData();
           ultraStats={ultraStats}
           topAdjustedRecords={topAdjustedRecords} // 传入跑力榜数据
           hundredMilers={hundredMilers} // 传入100英里完赛者数据
-          bqTopRecords={bqTopRecords}
+          
         />
       ) : (
         <DesktopStats 
@@ -167,7 +156,7 @@ fetchData();
           ultraStats={ultraStats}
           topAdjustedRecords={topAdjustedRecords} // 传入跑力榜数据
           hundredMilers={hundredMilers} // 传入100英里完赛者数据
-          bqTopRecords={bqTopRecords}
+          
         />
       )}
     </div>

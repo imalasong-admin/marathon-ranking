@@ -18,7 +18,16 @@ const regionStatsSchema = new mongoose.Schema({
   femaleStats: statsItemSchema
 }, { _id: false });
 
-const statsSchema = new mongoose.Schema({
+const ultraStatsSchema = new mongoose.Schema({
+    runners: { type: Number, default: 0 },
+    races: { type: Number, default: 0 },
+    maleRunners: { type: Number, default: 0 },
+    femaleRunners: { type: Number, default: 0 },
+    maleRaces: { type: Number, default: 0 },
+    femaleRaces: { type: Number, default: 0 }
+  }, { _id: false });
+  
+  const statsSchema = new mongoose.Schema({
   year: {
     type: Number,
     required: true,
@@ -27,6 +36,10 @@ const statsSchema = new mongoose.Schema({
   lastUpdated: {
     type: Date,
     default: Date.now
+  },
+  ultraStats: {
+    type: ultraStatsSchema,
+    default: () => ({})
   },
   northAmerica: regionStatsSchema,
   stateStats: [regionStatsSchema]

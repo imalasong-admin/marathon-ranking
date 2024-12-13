@@ -22,6 +22,8 @@ export default function MobileNavbar() {
     switch (path) {
       case '/':
         return '首页';
+        case '/stats':
+            return '2024马拉松风云榜';
         case '/rankings':
             if (router.query.sort === 'completion') {
               return '2024马拉松完赛榜';
