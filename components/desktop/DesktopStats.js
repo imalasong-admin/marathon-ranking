@@ -309,8 +309,12 @@ export const DesktopStats = ({
       <div className="space-y-8">
         {/* 男子 Top 10 */}
         <div className="bg-blue-50 rounded-lg p-6 shadow-md">
+            
           <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('maleTop10')}>
+         
+          <Trophy size={24} className="text-blue-600" />
             <h2 className="text-xl font-semibold">2024男子最速 Top 10</h2>
+         
             <span>{expandedSections.maleTop10 ? '收起 ▲' : '展开 ▼'}</span>
           </div>
           {expandedSections.maleTop10 && <TopTenDisplay records={topRecords.male} gender="M" />}
@@ -319,6 +323,7 @@ export const DesktopStats = ({
         {/* 女子 Top 10 */}
         <div className="bg-pink-50 rounded-lg p-6 shadow-md">
           <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('femaleTop10')}>
+          <Trophy size={24} className="text-pink-600" />
             <h2 className="text-xl font-semibold">2024女子最速 Top 10</h2>
             <span>{expandedSections.femaleTop10 ? '收起 ▲' : '展开 ▼'}</span>
           </div>
@@ -328,6 +333,7 @@ export const DesktopStats = ({
         {/* 跑力榜单独占一行 */}
         <div className="bg-purple-50 rounded-lg p-6 shadow-md">
           <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('adjustedTop10')}>
+          <Zap size={24} className="text-purple-600" />
             <h2 className="text-xl font-semibold">2024马拉松跑力最强 Top 10</h2>
             <span>{expandedSections.adjustedTop10 ? '收起 ▲' : '展开 ▼'}</span>
           </div>
@@ -377,12 +383,7 @@ export const DesktopStats = ({
                   </div>
                   <div className="mt-1 text-sm text-gray-600">
                     {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
-                    <a
-                      href="/bq-rankings"
-                      className="float-right text-blue-600 hover:underline"
-                    >
-                      查看完整BQ榜 →
-                    </a>
+              
                   </div>
                 </div>
               ))}
@@ -393,6 +394,7 @@ export const DesktopStats = ({
         {/* 新增100英里完赛者展示 */}
         <div className="bg-yellow-50 rounded-lg p-6 shadow-md">
           <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('hundredMilers')}>
+          <Trophy size={24} className="text-yellow-600" />
             <h2 className="text-xl font-semibold">2024百英里完赛跑者</h2>
             <span>{expandedSections.hundredMilers ? '收起 ▲' : '展开 ▼'}</span>
           </div>
