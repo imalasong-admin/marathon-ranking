@@ -114,20 +114,6 @@ const handleUpdateStats = async () => {
     }
   };
 
-// 临时添加一个isBQ更新操作
-const handleFixBQ = async () => {
-    try {
-      const res = await fetch('/api/admin/fix-bq', {
-        method: 'POST'
-      });
-      const data = await res.json();
-      console.log('Fix BQ result:', data);
-      alert(JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error: ' + error.message);
-    }
-  };
 
 // 成绩验证
 const handleVerifyClick = (record) => {
@@ -283,14 +269,6 @@ const handleDelete = async (recordId) => {
   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
 >
   更新统计数据
-</button>
-
-// 临时的isBQ更新操作
-<button
-  onClick={handleFixBQ}
-  className="px-4 py-2 bg-yellow-500 text-white rounded"
->
-  Fix BQ Status (Test)
 </button>
 
         </div>
