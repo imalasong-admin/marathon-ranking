@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useDeviceDetection } from '../lib/deviceDetection';
 import MobileBQRankings from '../components/mobile/MobileBQRankings';
-import DesktopBQRankings from '../components/desktop/DesktopBQRankings';  // 新的桌面端组件
-// import DesktopRankings from '../components/desktop/DesktopRankings'; // 暂时保留原组件
+import DesktopBQRankings from '../components/desktop/DesktopBQRankings';
 
 export default function BQRankings() {
   const [records, setRecords] = useState([]);
@@ -53,12 +52,6 @@ export default function BQRankings() {
   return isMobile ? (
     <MobileBQRankings records={records} />
   ) : (
-    <DesktopBQRankings records={records} />  // 使用新组件
+    <DesktopBQRankings records={records} />
   );
-  
-    // <DesktopRankings 
-    //  initialRecords={records}
-    //  mode="bq"  // 暂时保留原组件的模式
-    //  />
- 
 }

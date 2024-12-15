@@ -18,7 +18,10 @@ export default function MobileNavbar() {
     if (path === '/users/[id]' || path === `/users/${userId}`) {
       return '个人中心';
     }
-  
+    if (path === '/users/[id]/edit') {  // 编辑页面的路径
+        return '个人中心';
+      }
+      
     switch (path) {
       case '/':
         return '首页';

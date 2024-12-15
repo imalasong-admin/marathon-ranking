@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trophy, Map } from 'lucide-react';
+import { Trophy, Map, Users } from 'lucide-react';
 
 const StatItem = ({ label, value, unit = '' }) => (
   <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
@@ -32,7 +32,7 @@ const StatsPanel = ({ title, stats }) => (
       <StatItem label="平均成绩" value={formatTime(stats.avgFinishTime)} />
       <StatItem label="BQ达标" value={stats.bqCount} unit="人" />
       <StatItem label="3小时内" value={stats.sub3Count} unit="人" />
-      <StatItem label="3:30内" value={stats.sub330Count} unit="人" />
+      <StatItem label="330内" value={stats.sub330Count} unit="人" />
     </div>
   </div>
 );
@@ -68,13 +68,9 @@ export const DesktopStatsPage = ({ stats }) => {
     return <div>暂无统计数据</div>;
   }
 
-  // 先处理北美整体数据和各州数据
-  const allRegions = [
-    { region: 'North America', ...stats.northAmerica },
-    ...stats.stateStats
-      .filter(state => state.totalStats.runners > 0)
-      .sort((a, b) => b.totalStats.runners - a.totalStats.runners)
-  ];
+  const allRegions = stats.stateStats
+  .filter(state => state.totalStats.runners > 0)
+  .sort((a, b) => b.totalStats.runners - a.totalStats.runners);
 
   const toggleTable = (tableName) => {
     setExpandedTables(prev => ({
@@ -107,21 +103,16 @@ export const DesktopStatsPage = ({ stats }) => {
   };
 
   const sortedRegions = (regions, key, direction) => {
-    const naRegion = regions.find(region => region.region === 'North America');
-    const otherRegions = regions.filter(region => region.region !== 'North America');
-
-    const sortedOtherRegions = otherRegions.sort((a, b) => {
+    return regions.sort((a, b) => {
       const aValue = key.includes('avgFinishTime') ? a[key.split('.')[0]][key.split('.')[1]] : a[key.split('.')[0]][key.split('.')[1]];
       const bValue = key.includes('avgFinishTime') ? b[key.split('.')[0]][key.split('.')[1]] : b[key.split('.')[0]][key.split('.')[1]];
-
+  
       if (direction === 'ascending') {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
       }
     });
-
-    return [naRegion, ...sortedOtherRegions];
   };
 
   const getSortIcon = (tableName, key) => {
@@ -133,22 +124,112 @@ export const DesktopStatsPage = ({ stats }) => {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
-      {/* 标题和更新时间 */}
-      <div className="bg-blue-50 rounded-lg p-6 mb-8">
-        <div className="flex items-start gap-3">
-          <Trophy size={24} className="text-blue-600 flex-shrink-0" />
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">2024年北美华人马拉松统计</h1>
-            <p className="text-gray-600 mt-2">
-              统计数据更新时间：
-              {new Date(stats.lastUpdated).toLocaleString('zh-CN', {
-                year: 'numeric', month: 'numeric', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-              })}
-            </p>
+{/* 标题和统计信息卡片 */}
+<div className="mb-4">
+  <h1 className="text-2xl font-semibold text-gray-900 mb-6">2024北美华人马拉松统计</h1>
+  <div className="text-gray-700">
+            
           </div>
-        </div>
+          <div className="mt-6">
+    <div className="text-gray-600 mb-4">
+      居住在北美地区的华人跑者是一个充满活力、积极向上的群体，活跃在全世界的马拉松和超马赛场。
+      请大家把完赛成绩加入统计，看看我们2024年度跑的怎么样！
+    
+    <div className="text-center">
+      
+      <button 
+        onClick={() => window.location.href='/users/submit'}
+        className="bg-blue-600 text-white px-10 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        提交成绩
+      </button>
+    </div>
+    </div>
+  </div>
+  {/* 统计卡片区域 */}
+  <div className="grid grid-cols-4 gap-4">
+     {/* 马拉松统计 */}
+     <div className="bg-blue-50 rounded-lg p-6">
+      <div className="flex items-center gap-2 text-blue-600 mb-4">
+        <Users size={20} />
+        <h2 className="text-lg font-medium">马拉松</h2>
       </div>
+      <div className="text-gray-600">
+      共计<span className="font-medium mx-1">{stats.northAmerica.totalStats.runners}</span>人完赛
+      <span className="font-medium mx-1">{stats.northAmerica.totalStats.races}</span>场全马
+      </div>
+      <div className="font-medium text-gray-600 mt-2">
+        <div>平均完赛成绩 : {formatTime(stats.northAmerica.totalStats.avgFinishTime)} </div>
+        <div>BQ : {stats.northAmerica.totalStats.bqCount}场</div>
+        <div>Sub 300 : {stats.northAmerica.totalStats.sub3Count}场</div>
+        <div>Sub 330 : {stats.northAmerica.totalStats.sub330Count}场</div>
+      </div>
+    </div>
+
+    {/* 男子马拉松统计 */}
+    <div className="bg-pink-50 rounded-lg p-6">
+      <div className="flex items-center gap-2 text-blue-900 mb-4">
+        <Users size={20} />
+        <h2 className="text-lg font-medium">马拉松男子</h2>
+      </div>
+      <div className="text-gray-600">
+        共计<span className="font-medium mx-1">{stats.northAmerica.maleStats.runners}</span>人完赛
+        <span className="font-medium mx-1">{stats.northAmerica.maleStats.races}</span>场马拉松
+      </div>
+      <div className="font-medium text-gray-600 mt-2">
+        <div>平均完赛成绩 : {formatTime(stats.northAmerica.maleStats.avgFinishTime)}</div>
+        <div>BQ : {stats.northAmerica.maleStats.bqCount}场</div>
+        <div>Sub 3 : {stats.northAmerica.maleStats.sub3Count}场</div>
+        <div>Sub 330 : {stats.northAmerica.maleStats.sub330Count}场</div>
+      </div>
+    </div>
+
+    {/* 女子马拉松统计 */}
+    <div className="bg-yellow-50 rounded-lg p-6">
+      <div className="flex items-center gap-2 text-pink-600 mb-4">
+        <Users size={20} />
+        <h2 className="text-lg font-medium">马拉松女子</h2>
+      </div>
+      <div className="text-gray-600">
+        共计<span className="font-medium mx-1">{stats.northAmerica.femaleStats.runners}</span>人完赛
+        <span className="font-medium mx-1">{stats.northAmerica.femaleStats.races}</span>场马拉松。
+      </div>
+      <div className="font-medium text-gray-600 mt-2">
+        <div>平均完赛成绩 : {formatTime(stats.northAmerica.femaleStats.avgFinishTime)}</div>
+        <div>BQ : {stats.northAmerica.femaleStats.bqCount}场</div>
+        <div>Sub 3 : {stats.northAmerica.femaleStats.sub3Count}场</div>
+        <div>Sub 330 : {stats.northAmerica.femaleStats.sub330Count}场</div>
+      </div>
+    </div>
+
+    {/* 超马统计 */}
+    <div className="bg-red-50 rounded-lg p-6">
+      <div className="flex items-center gap-2 text-yellow-600 mb-4">
+        <Users size={20} />
+        <h2 className="text-lg font-medium">超马越野</h2>
+      </div>
+      <div className="text-gray-600">
+        共计{stats.ultraStats.runners}人完赛{stats.ultraStats.races}场超马越野赛
+      </div>
+      <div className="font-medium text-gray-600 mt-2">
+        <div>男子{stats.ultraStats.maleRunners}人完赛{stats.ultraStats.maleRaces}场</div>
+        <div>女子{stats.ultraStats.femaleRunners}人完赛{stats.ultraStats.femaleRaces}场</div>
+      </div>
+    </div>
+  </div>
+      <div className="mt-2 text-sm text-right text-gray-500">
+        统计数据最近更新时间：
+        {new Date(stats.lastUpdated).toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}
+      </div>
+ 
+  
+</div>
 
       {/* 统计表格 - 重新设计 */}
       <div className="space-y-6">
@@ -171,7 +252,7 @@ export const DesktopStatsPage = ({ stats }) => {
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('total', 'totalStats.avgFinishTime')}>平均成绩 {getSortIcon('total', 'totalStats.avgFinishTime')}</th>
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('total', 'totalStats.bqCount')}>BQ达标 {getSortIcon('total', 'totalStats.bqCount')}</th>
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('total', 'totalStats.sub3Count')}>Sub 3 {getSortIcon('total', 'totalStats.sub3Count')}</th>
-                  <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('total', 'totalStats.sub330Count')}>Sub 3:30 {getSortIcon('total', 'totalStats.sub330Count')}</th>
+                  <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('total', 'totalStats.sub330Count')}>Sub 330 {getSortIcon('total', 'totalStats.sub330Count')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -212,7 +293,7 @@ export const DesktopStatsPage = ({ stats }) => {
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('male', 'maleStats.avgFinishTime')}>平均成绩 {getSortIcon('male', 'maleStats.avgFinishTime')}</th>
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('male', 'maleStats.bqCount')}>BQ达标 {getSortIcon('male', 'maleStats.bqCount')}</th>
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('male', 'maleStats.sub3Count')}>Sub 3 {getSortIcon('male', 'maleStats.sub3Count')}</th>
-                  <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('male', 'maleStats.sub330Count')}>Sub 3:30 {getSortIcon('male', 'maleStats.sub330Count')}</th>
+                  <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('male', 'maleStats.sub330Count')}>Sub 330 {getSortIcon('male', 'maleStats.sub330Count')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -253,7 +334,7 @@ export const DesktopStatsPage = ({ stats }) => {
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('female', 'femaleStats.avgFinishTime')}>平均成绩 {getSortIcon('female', 'femaleStats.avgFinishTime')}</th>
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('female', 'femaleStats.bqCount')}>BQ达标 {getSortIcon('female', 'femaleStats.bqCount')}</th>
                   <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('female', 'femaleStats.sub3Count')}>Sub 3 {getSortIcon('female', 'femaleStats.sub3Count')}</th>
-                  <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('female', 'femaleStats.sub330Count')}>Sub 3:30 {getSortIcon('female', 'femaleStats.sub330Count')}</th>
+                  <th className="px-6 py-3 text-center cursor-pointer" onClick={() => requestSort('female', 'femaleStats.sub330Count')}>Sub 330 {getSortIcon('female', 'femaleStats.sub330Count')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

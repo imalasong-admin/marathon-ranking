@@ -1,9 +1,11 @@
+// components/desktop/DesktopUserProfile.js
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { ExternalLink, CheckCircle } from 'lucide-react';
 import UserProfileInfo from '../../../components/UserProfileInfo';
+import VerificationDialog from '../../../components/VerificationDialog'; // 导入 VerificationDialog 组件
 
 // 辅助函数 - 保持不变
 const formatTime = (time) => {
@@ -27,28 +29,6 @@ const formatDate = (dateString) => {
   }
 };
 
-const getVerificationStatusText = (status) => {
-  switch (status) {
-    case 'verified':
-      return '已验证';
-    case 'rejected':
-      return '已拒绝';
-    default:
-      return '待验证';
-  }
-};
-
-const getVerificationStatusClass = (status) => {
-  switch (status) {
-    case 'verified':
-      return 'bg-green-100 text-green-800';
-    case 'rejected':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-yellow-100 text-yellow-800';
-  }
-};
-
 const getDistanceDisplay = (record) => {
   const raceType = record.raceId?.seriesId?.raceType;
   if (!raceType) return '-';
@@ -65,7 +45,7 @@ export default function DesktopUserProfile() {
   const router = useRouter();
   const { id } = router.query;
   const { data: session } = useSession();
-  
+
   // 基础状态
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +59,6 @@ export default function DesktopUserProfile() {
   // 验证相关状态
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyingRecord, setVerifyingRecord] = useState(null);
-  // const [reportReason, setReportReason] = useState('');
   const [verifyMessage, setVerifyMessage] = useState('');
 
   const isOwnProfile = session?.user?.id === id;
@@ -112,14 +91,12 @@ export default function DesktopUserProfile() {
   // 验证处理函数
   const handleVerifyClick = (record) => {
     setVerifyingRecord(record);
-    // setReportReason('');
+    setVerifyMessage('');
     setShowVerifyDialog(true);
-  };  
+  };
 
   const handleVerifySubmit = async (action) => {
     try {
-      
-
       const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
         method: 'POST',
         headers: {
@@ -127,17 +104,15 @@ export default function DesktopUserProfile() {
         },
         body: JSON.stringify({
           action,
-          // reason: reportReason
         })
       });
 
       const data = await res.json();
       if (data.success) {
-        await fetchUserData();  
-        
+        await fetchUserData();
+
         setShowVerifyDialog(false);
         setVerifyingRecord(null);
-        // setReportReason('');
         setVerifyMessage('');
       } else {
         setVerifyMessage(data.message || '操作失败');
@@ -217,12 +192,12 @@ export default function DesktopUserProfile() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       {/* 新的个人信息展示组件 */}
-      <UserProfileInfo 
+      <UserProfileInfo
         user={{
-         ...user,
+          ...user,
           _id: id  // 确保传递正确的ID
-        }} 
-         isOwnProfile={isOwnProfile} 
+        }}
+        isOwnProfile={isOwnProfile}
       />
 
       {/* 成绩列表 */}
@@ -268,21 +243,21 @@ export default function DesktopUserProfile() {
                       <button
                         onClick={() => handleVerifyClick(record)}
                         className={`ml-2 ${
-                            record.verificationStatus === 'verified' && record.reportedBy?.length > 0  // 明确检查长度大于0
-                              ? 'text-yellow-500'  // 既有验证又有举报
-                              : record.verificationStatus === 'verified'
-                                ? 'text-green-500'  // 只有验证
-                                : record.reportedBy?.length > 0  // 同样明确检查长度大于0
-                                  ? 'text-red-500'  // 只有举报
-                                  : 'text-gray-400'  // 待验证
-                          }`}
+                          record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+                            ? 'text-yellow-500'
+                            : record.verificationStatus === 'verified'
+                              ? 'text-green-500'
+                              : record.reportedBy?.length > 0
+                                ? 'text-red-500'
+                                : 'text-gray-400'
+                        }`}
                         title={record.verificationStatus === 'verified' && record.reportedBy?.length > 0
                           ? `${record.verifiedCount}人验证/${record.reportedBy.length}人举报`
                           : record.verificationStatus === 'verified'
-                          ? `${record.verifiedCount}人验证`
-                          : record.reportedBy?.length > 0
-                          ? '被举报'
-                          : '待验证'}
+                            ? `${record.verifiedCount}人验证`
+                            : record.reportedBy?.length > 0
+                              ? '被举报'
+                              : '待验证'}
                       >
                         <CheckCircle size={16} />
                       </button>
@@ -355,121 +330,19 @@ export default function DesktopUserProfile() {
         </div>
       </div>
 
-      {/* 验证对话框 */}
-  {showVerifyDialog && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-      <h3 className="text-lg font-semibold mb-4">验证成绩记录</h3>
-
-      {verifyMessage && (
-        <div className="mb-4 bg-red-50 text-red-500 p-4 rounded-md">
-          {verifyMessage}
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 bg-red-50 text-red-500 p-4 rounded-md">
-          {error}
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {/* 成绩信息 */}
-        <div className="bg-gray-50 p-4 rounded-md">
-          <p className="text-sm text-gray-600">
-            比赛：{verifyingRecord?.raceId?.seriesId?.name} ({formatDate(verifyingRecord?.raceId?.date)})
-          </p>
-          <p className="text-sm text-gray-600">
-            项目：{getDistanceDisplay(verifyingRecord)}
-          </p>
-          <p className="text-sm text-gray-600">
-            成绩：{formatTime(verifyingRecord?.finishTime)}
-          </p>
-          {verifyingRecord?.proofUrl ? (
-            <p className="text-sm text-gray-600">
-              证明链接：
-              <a
-                href={verifyingRecord.proofUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                查看证明
-              </a>
-            </p>
-          ) : (
-            <p className="text-sm text-red-500">
-              {user.name} 没有提供成绩证明链接
-            </p>
-          )}
-
-          {/* 已验证用户列表 */}
-{verifyingRecord?.verifiedBy && verifyingRecord.verifiedBy.length > 0 && (
-  <div className="mt-2 pt-2 border-t border-gray-200">
-    <div className="flex items-center text-green-600 mb-2">
-    <CheckCircle size={16} className="mr-2" />
-    {verifyingRecord.verifiedBy.length}人验证
-    </div>
-    <p className="text-sm">
-      {verifyingRecord.verifiedBy.map((verification, index) => (
-        <span key={verification.userId._id}>
-          <Link
-            href={`/users/${verification.userId._id}`}
-            className="text-blue-600 hover:text-blue-800 hover:underline"
-          >
-            {verification.userId.name}
-          </Link>
-          {index < verifyingRecord.verifiedBy.length - 1 && (
-            <span className="mx-2">&nbsp;&nbsp;</span>
-          )}
-        </span>
-      ))}
-    </p>
-  </div>
-)}
-
-              {/* 举报信息 */}
-              {verifyingRecord?.reportedBy && verifyingRecord.reportedBy.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-200">
-                 
-                  <span className="text-red-500">⚠️ {verifyingRecord.reportedBy.length} 人存疑</span>
-                 
-                </div>
-              )}
-            </div>
-
-            
-          </div>
-
-          {/* 操作按钮 */}
-          <div className="flex justify-end space-x-2 mt-6">
-            <button
-              onClick={() => {
-                setShowVerifyDialog(false);
-                setVerifyingRecord(null);
-                // setReportReason('');
-                setError('');
-              }}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700"
-            >
-              关闭
-            </button>
-            <button
-              onClick={() => handleVerifySubmit('verify')}
-              className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
-            >
-              跑的真好！我确认这个成绩真实有效👍
-            </button>
-            <button
-              onClick={() => handleVerifySubmit('report')}
-              className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              我对这个成绩的真实性有疑问🤔
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 使用 VerificationDialog 组件替代验证对话框 */}
+      <VerificationDialog
+        isOpen={showVerifyDialog}
+        onClose={() => {
+          setShowVerifyDialog(false);
+          setVerifyingRecord(null);
+          setVerifyMessage('');
+        }}
+        record={verifyingRecord}
+        error={verifyMessage}
+        onVerify={() => handleVerifySubmit('verify')}
+        onReport={() => handleVerifySubmit('report')}
+      />
     </div>
   );
 }

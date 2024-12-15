@@ -32,6 +32,7 @@ const TopTenDisplay = ({ records, gender }) => {
   };
 
   return (
+    
     <div className="space-y-2">
       {records.map((record, index) => (
         <div 
@@ -40,23 +41,35 @@ const TopTenDisplay = ({ records, gender }) => {
               index < 3 ? `bg-${gender === 'M' ? 'blue' : 'pink'}-100 bg-opacity-50` : ''
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2">
               <span className={`font-bold ${
                 index < 3 ? `text-${gender === 'M' ? 'blue' : 'pink'}-600` : 'text-gray-600'
               }`}>
                 #{index + 1}
               </span>
-              <a 
+             <div>              
+             <a 
                 href={`/users/${record.userId?._id || record.userId}`}
                 className="text-blue-600 hover:underline flex-1"
               >
                 {record.userName}
               </a>
+                <span className="ml-2 text-sm text-gray-600">
+                 ({record.gender === 'M' ? 'M' : 'F'} {record.age}
+                        {record.state && record.city && (
+                <span className="ml-2">
+                  {record.state}
+                </span>
+              )})
+                </span>
+                </div> 
+                </div>            
               <span className="font-mono font-bold">
                 {formatTime(record.finishTime)}
               </span>
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-gray-600 ">
               {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
             </div>
           </div>
@@ -106,24 +119,29 @@ const AdjustedTopTenDisplay = ({ records }) => {
             >
               {/* 第一行：排名、用户名年龄性别、原始成绩 */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`font-bold ${
-                    index < 3 ? 'text-purple-600' : 'text-gray-600'
-                  }`}>
-                    #{index + 1}
-                  </span>
-                  <div>
-                    <a 
-                      href={`/users/${record.userId?._id || record.userId}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {record.userName}
-                    </a>
-                    <span className="ml-1 text-sm text-gray-600">
-                      ({record.gender === 'M' ? 'M' : 'F'}{record.age})
+                    <div className="flex items-center gap-2">
+                    <span className={`font-bold ${
+                        index < 3 ? 'text-purple-600' : 'text-gray-600'
+                    }`}>
+                        #{index + 1}
                     </span>
-                  </div>
-                </div>
+                    <div>
+                        <a 
+                        href={`/users/${record.userId?._id || record.userId}`}
+                        className="text-blue-600 hover:underline"
+                        >
+                        {record.userName}
+                        </a>
+                        <span className="ml-2 text-sm text-gray-600">
+                        ({record.gender === 'M' ? 'M' : 'F'} {record.age}
+                        {record.state && record.city && (
+                <span className="ml-2">
+                  {record.state}
+                </span>
+              )})
+                        </span>
+                    </div>
+                    </div>
                 <div>
                
                 <span className="font-mono text-purple-600">
@@ -133,7 +151,7 @@ const AdjustedTopTenDisplay = ({ records }) => {
               </div>
     
               {/* 第二行：比赛信息和成绩 */}
-              <div className="flex items-center justify-between mt-1 text-sm">
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">
                   {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
                 </span>
@@ -146,6 +164,8 @@ const AdjustedTopTenDisplay = ({ records }) => {
         </div>
       );
     };
+
+
     const HundredMilersDisplay = ({ records }) => {
         const formatDate = (dateString) => {
           if (!dateString) return '-';
@@ -169,7 +189,7 @@ const AdjustedTopTenDisplay = ({ records }) => {
         return (
           <div className="space-y-2">
             {records.map((record) => (
-              <div key={record._id} className="p-2 rounded">
+              <div key={record._id} className="p-1rounded">
                 {/* 第一行：用户名和成绩 */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -179,8 +199,13 @@ const AdjustedTopTenDisplay = ({ records }) => {
                     >
                       {record.userName}
                     </a>
-                    <span className="ml-1 text-sm text-gray-600">
-                      ({record.gender === 'M' ? 'M' : 'F'}{record.age})
+                    <span className="ml-2 text-sm text-gray-600">
+                    ({record.gender === 'M' ? 'M' : 'F'} {record.age}
+                        {record.state && record.city && (
+                <span className="ml-2">
+                  {record.state}
+                </span>
+              )})
                     </span>
                   </div>
                   <span className="font-mono font-bold">
@@ -188,9 +213,15 @@ const AdjustedTopTenDisplay = ({ records }) => {
                   </span>
                 </div>
                 {/* 第二行：比赛信息 */}
-                <div className="text-sm text-gray-600 mt-1">
+                
+                <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">
                   {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
-                </div>
+                </span>
+                <span className="text-gray-600">
+                {record.ultraDistance}
+                </span>
+              </div>
               </div>
             ))}
             {records.length === 0 && (
@@ -218,48 +249,60 @@ const AdjustedTopTenDisplay = ({ records }) => {
         };
       
         return (
-          <div className="space-y-2">
-            {records.map((record, index) => (
-              <div 
-                key={record._id}
-                className={`p-2 rounded ${
-                  index < 3 ? 'bg-green-100 bg-opacity-50' : ''
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+             <div className="space-y-2">
+          {records.map((record, index) => (
+            <div 
+              key={record._id}
+              className={`p-2 rounded ${
+                index < 3 ? 'bg-purple-100 bg-opacity-50' : ''
+              }`}
+            >
+              {/* 第一行：排名、用户名年龄性别、原始成绩 */}
+              <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                     <span className={`font-bold ${
-                      index < 3 ? 'text-green-600' : 'text-gray-600'
+                        index < 3 ? 'text-green-600' : 'text-gray-600'
                     }`}>
-                      #{index + 1}
+                        #{index + 1}
                     </span>
                     <div>
-                      <a 
+                        <a 
                         href={`/users/${record.userId?._id || record.userId}`}
                         className="text-blue-600 hover:underline"
-                      >
+                        >
                         {record.userName}
-                      </a>
-                      <span className="ml-1 text-sm text-gray-600">
-                        ({record.gender === 'M' ? 'M' : 'F'}{record.bostonAge})
-                      </span>
+                        </a>
+                        <span className="ml-2 text-sm text-gray-600">
+                        ({record.gender === 'M' ? 'M' : 'F'} {record.age}
+                        {record.state && record.city && (
+                <span className="ml-2">
+                  {record.state}
+                </span>
+              )})
+                        </span>
                     </div>
-                  </div>
-                  <div className="text-right">
-            <div className="font-mono font-bold">
-              {formatTime(record.finishTime)}
-            </div>
-            <div className="text-xs text-green-600">
-              {formatBQTimeDiff(record.bqDiff)}
-            </div>
-          </div>
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
+                    </div>
+                <div>
+               
+                <span className="font-mono text-gray-600">
+                {formatTime(record.finishTime)}
+                </span>
                 </div>
               </div>
-            ))}
-          </div>
+    
+              {/* 第二行：比赛信息和成绩 */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">
+                  {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
+                </span>
+                <span className="text-sm text-green-600">
+                {formatBQTimeDiff(record.bqDiff)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+  
         );
       };
       

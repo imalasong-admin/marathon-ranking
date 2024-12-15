@@ -1,7 +1,7 @@
 // components/mobile/MobileStatsPage.js
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Trophy, Map, Timer, Award, Flag } from 'lucide-react';
+import { Trophy, Map, Timer, Award, Flag, ChevronDown } from 'lucide-react';
 import {
   MobilePageContainer,
   MobileTitle,
@@ -245,7 +245,7 @@ export const MobileStatsPage = ({ stats }) => {
             <span className="font-medium mx-1">{stats.northAmerica.totalStats.races}</span>场全马，
             <span className="font-medium mx-1">{stats.northAmerica.totalStats.bqCount}</span>场BQ
           </div>
-          <div className="flex flex-col px-4 gap-1 text-gray-600">
+          <div className="flex flex-col px-6 gap-1 text-gray-600">
             <div>
               男子<span className="font-medium mx-1">{stats.northAmerica.maleStats.runners}</span>人完赛
               <span className="font-medium mx-1">{stats.northAmerica.maleStats.races}</span>场，
@@ -256,17 +256,35 @@ export const MobileStatsPage = ({ stats }) => {
               <span className="font-medium mx-1">{stats.northAmerica.femaleStats.races}</span>场，
               <span className="font-medium mx-1">{stats.northAmerica.femaleStats.bqCount}</span>场BQ
             </div>
-            
+
           </div>
+          <div className="text-sm sm:text-base font-medium text-gray-800 text-right">
+  数据来自
+  <a 
+    href="/rankings?sort=completion" 
+    className="font-medium text-blue-600"
+  >
+    2024年马拉松完赛榜
+  </a>
+</div>
           <div className="text-gray-700">
           <p className="text-sm text-gray-600 mt-2 border-t border-blue-100 pt-2">
   共计{stats.ultraStats.runners}人完赛{stats.ultraStats.races}场超马越野赛，其中：
 </p>
-<p className="text-sm px-4 text-gray-600 mt-1">
+<p className="text-sm px-6 text-gray-600 mt-1">
   男子{stats.ultraStats.maleRunners}人完赛{stats.ultraStats.maleRaces}场，
 </p>
-<p className="text-sm px-4 text-gray-600 mt-1">
+<p className="text-sm px-6 text-gray-600 mt-1">
   女子{stats.ultraStats.femaleRunners}人完赛{stats.ultraStats.femaleRaces}场。
+</p>
+<p className="text-sm sm:text-base font-medium text-gray-800 text-right">
+  数据来自
+  <a 
+    href="/ultra-rankings" 
+    className="font-medium text-blue-600"
+  >
+    2024年超马越野榜
+  </a>
 </p>
           </div>
         </div>
@@ -336,7 +354,19 @@ export const MobileStatsPage = ({ stats }) => {
         <BQStatsChart stateStats={stats.stateStats} />
       </MobileCollapsible>
 
-
+       {/* 马拉松风云榜链接 */}
+<div 
+  onClick={() => window.location.href = '/stats'} 
+  className="mb-2 cursor-pointer"
+>
+  <div className="flex items-center justify-between bg-blue-50 px-3 py-3 rounded-lg">
+    <div className="flex items-center gap-2">
+      <Trophy size={14} className="text-blue-600" />
+      <span className="text-sm font-medium text-gray-900">2024马拉松风云榜</span>
+    </div>
+    <ChevronDown size={16} className="text-gray-900" />
+  </div>
+</div>
     </MobilePageContainer>
   );
 };

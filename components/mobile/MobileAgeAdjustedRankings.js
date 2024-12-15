@@ -235,7 +235,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
             <div className="flex items-center gap-2">
               <Users size={16} className="text-green-600" />
               <span className="text-gray-700">
-              消除了性别和年龄差异后的马拉松成绩(蓝色)榜单，可视为马拉松综合实力排行
+              消除性别和年龄差异后的马拉松成绩(蓝色)榜单，可视为马拉松综合实力排行
               </span>
             </div>
             
@@ -315,7 +315,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
    {record.userName}
  </a>
  <div className="text-xs text-gray-500">
-   <span>{record.gender === 'M' ? 'M' : 'F'}{record.age || '-'} {record.state || '-'}</span>
+   <span>{record.gender === 'M' ? 'M' : 'F'}{record.age || '-'} {record.state || '-'}-{record.city}</span>
    
  </div>
 </div>
@@ -370,12 +370,9 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
                <div className="py-2">
                  <div className="mb-1">
                    <span className="text-gray-500">比赛:</span>
-                   <span className="ml-2 font-medium">{record.raceId?.seriesId?.name || '-'}</span>
+                   <span className="ml-2 font-medium">{record.raceId?.seriesId?.name || '-'} ({formatDate(record.raceId?.date)})</span>
                  </div>
-                 <div>
-                   <span className="text-gray-500">日期:</span>
-                   <span className="ml-2">{formatDate(record.raceId?.date)}</span>
-                 </div>
+
                 {/* 成绩证明 - 修改这部分 */}
                 <div className="mt-1">
                         <div className="flex items-center justify-between">

@@ -6,11 +6,12 @@ import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react
 import { states } from '../../lib/us-cities-data';
 import { formatTime, getTimeFromSeconds } from '../../lib/timeUtils';
 import { getBQDiff, formatBQTimeDiff } from '../../lib/bqStandards';
+import MobileVerificationDialog from '../../components/MobileVerificationDialog'; // 导入 MobileVerificationDialog 组件
 
 const MobileBQRankings = ({ records = [] }) => {
   const { data: session } = useSession();
   const router = useRouter();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCard, setExpandedCard] = useState(null);
   const [localRecords, setLocalRecords] = useState(records);
@@ -21,13 +22,13 @@ const MobileBQRankings = ({ records = [] }) => {
   });
   const [races, setRaces] = useState([]);
 
-// 验证相关函数
-const [showVerifyDialog, setShowVerifyDialog] = useState(false);
-const [verifyingRecord, setVerifyingRecord] = useState(null);
-const [verifyError, setVerifyError] = useState('');
+  // 验证相关函数
+  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
+  const [verifyingRecord, setVerifyingRecord] = useState(null);
+  const [verifyError, setVerifyError] = useState('');
 
-// 年龄组定义
-const AGE_GROUPS = [
+  // 年龄组定义
+  const AGE_GROUPS = [
     { label: 'All Ages', value: 'all' },
     { label: '18-34岁', value: '18-34', min: 18, max: 34 },
     { label: '35-39岁', value: '35-39', min: 35, max: 39 },
@@ -39,16 +40,16 @@ const AGE_GROUPS = [
     { label: '65-69岁', value: '65-69', min: 65, max: 69 },
     { label: '70岁以上', value: '70+', min: 70, max: 999 }
   ];
- 
+
   // 获取赛事数据
   useEffect(() => {
     fetchRaces();
   }, []);
- 
+
   useEffect(() => {
     setLocalRecords(records);
   }, [records]);
- 
+
   // 辅助函数
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -65,14 +66,14 @@ const AGE_GROUPS = [
       return '-';
     }
   };
- 
+
   // API调用函数
   const fetchRaces = async () => {
     try {
       const res = await fetch('/api/races');
       const data = await res.json();
       if (data.success) {
-        const marathonRaces = data.races.filter(race => 
+        const marathonRaces = data.races.filter(race =>
           new Date(race.date).getFullYear() === 2024 &&
           race.seriesId?.raceType === '全程马拉松'
         );
@@ -83,8 +84,8 @@ const AGE_GROUPS = [
     }
   };
 
-   // 验证功能函数
-   const handleVerifyClick = (record, e) => {
+  // 验证功能函数
+  const handleVerifyClick = (record, e) => {
     e.stopPropagation(); // 阻止事件冒泡
     if (!session) {
       router.push('/login');
@@ -112,17 +113,17 @@ const AGE_GROUPS = [
         const updatedRes = await fetch('/api/records');
         const updatedData = await updatedRes.json();
         if (updatedData.success) {
-            const filteredRecords = updatedData.records
+          const filteredRecords = updatedData.records
             .filter(record => {
               const raceDate = new Date(record.raceId?.date);
-              return raceDate.getFullYear() === 2024 && 
+              return raceDate.getFullYear() === 2024 &&
                      record.raceId?.seriesId?.raceType === '全程马拉松' &&
                      record.isBQ === true;  // 添加 BQ 条件
             })
             .sort((a, b) => b.bqDiff - a.bqDiff);  // 按 BQ 差值排序
-            setLocalRecords(filteredRecords);
+          setLocalRecords(filteredRecords);
         }
-        
+
         setShowVerifyDialog(false);
         setVerifyingRecord(null);
         setVerifyError('');
@@ -135,326 +136,254 @@ const AGE_GROUPS = [
   };
 
   // 数据过滤逻辑
- const filteredRecords = localRecords
- .filter(record => {
-   if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-   if (filters.ageGroup !== 'all') {
-     const group = AGE_GROUPS.find(g => g.value === filters.ageGroup);
-     if (group && (record.bostonAge < group.min || record.bostonAge > group.max)) return false;
-   }
-   if (filters.state !== 'all' && record.state !== filters.state) return false;
-   if (filters.selectedRace && record.raceId?._id !== filters.selectedRace) return false;
-   return true;
- });
+  const filteredRecords = localRecords
+    .filter(record => {
+      if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (filters.ageGroup !== 'all') {
+        const group = AGE_GROUPS.find(g => g.value === filters.ageGroup);
+        if (group && (record.bostonAge < group.min || record.bostonAge > group.max)) return false;
+      }
+      if (filters.state !== 'all' && record.state !== filters.state) return false;
+      if (filters.selectedRace && record.raceId?._id !== filters.selectedRace) return false;
+      return true;
+    });
 
- // 验证对话框组件
- const VerifyDialog = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-md mx-auto p-4">
-        <h3 className="text-lg font-semibold mb-4">验证成绩记录</h3>
-
-        {verifyError && (
-          <div className="mb-4 bg-red-50 text-red-500 p-3 rounded-md text-sm">
-            {verifyError}
+  return (
+    <>
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="sticky top-0 bg-white shadow-sm z-10">
+          {/* 统计信息 */}
+          <div className="bg-blue-50 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-blue-600" />
+              <span className="text-gray-700">
+                北美华人跑者2024年度在<span className="font-medium text-blue-600">{records.length}</span>
+                场比赛里达到最新的BQ standard
+              </span>
+            </div>
           </div>
-        )}
 
-        <div className="space-y-4">
-          <div className="bg-gray-50 p-3 rounded-md text-sm">
-            <p className="text-gray-600">
-              比赛：{verifyingRecord?.raceId?.seriesId?.name} ({formatDate(verifyingRecord?.raceId?.date)})
-            </p>
-            <p className="text-gray-600">
-              成绩：{formatTime(verifyingRecord?.finishTime)}
-            </p>
-            {verifyingRecord?.proofUrl ? (
-              <p>
-                成绩证明：
-                <a
-                  href={verifyingRecord.proofUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600"
+          {/* 搜索框 */}
+          <div className="relative px-2 py-2">
+            <input
+              type="text"
+              placeholder="搜索跑者姓名..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full py-1 pl-8 pr-4 border rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+            />
+            <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
+          </div>
+
+          {/* 筛选器 */}
+          <div className="mt-1 bg-gray-50 rounded-md overflow-x-auto">
+            <div className="flex flex-row items-center gap-2 min-w-max py-1 px-2">
+              <div>
+                <select
+                  value={filters.ageGroup}
+                  onChange={(e) => setFilters(prev => ({ ...prev, ageGroup: e.target.value }))}
+                  className="rounded-md border-gray-300"
                 >
-                  查看证明
-                </a>
-              </p>
-            ) : (
-              <p className="text-red-500">未提供成绩证明</p>
-            )}
-          </div>
+                  {AGE_GROUPS.map(group => (
+                    <option key={group.value} value={group.value}>{group.label}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="flex flex-col space-y-3 mt-4">
-            <button
-              onClick={() => handleVerifySubmit('verify')}
-              className="w-full py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-            >
-              <span>跑的真好！我确信这个成绩真实有效</span>
-              <span>👍</span>
-            </button>
-            
-            <button
-              onClick={() => handleVerifySubmit('report')}
-              className="w-full py-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
-            >
-              <span>我对这个成绩的真实性有疑问</span>
-              <span>🤔</span>
-            </button>
-          </div>
+              <div>
+                <select
+                  value={filters.state}
+                  onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
+                  className="rounded-md border-gray-300"
+                >
+                  <option value="all">North America</option>
+                  {states.map(state => (
+                    <option key={state.value} value={state.value}>{state.label}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="text-center">
-            <button
-              onClick={() => {
-                setShowVerifyDialog(false);
-                setVerifyingRecord(null);
-                setVerifyError('');
-              }}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              关闭
-            </button>
+              <div>
+                <select
+                  value={filters.selectedRace || 'all'}
+                  onChange={(e) => setFilters(prev => ({
+                    ...prev,
+                    selectedRace: e.target.value === 'all' ? null : e.target.value
+                  }))}
+                  className="rounded-md border-gray-300"
+                >
+                  <option value="all">All Races</option>
+                  {races.map(race => (
+                    <option key={race._id} value={race._id}>
+                      {race.seriesId?.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
 
-return (
-    <>
- <div className="flex flex-col min-h-screen bg-gray-50">
-   <div className="sticky top-0 bg-white shadow-sm z-10">
-     {/* 统计信息 */}
-     <div className="bg-blue-50 px-3 py-2 text-sm">
-       <div className="flex items-center gap-2">
-         <Users size={16} className="text-blue-600" />
-         <span className="text-gray-700">
-           北美华人跑者2024年度在<span className="font-medium text-blue-600">{records.length}</span>
-           场比赛里达到最新的BQ standard
-         </span>
-       </div>
-     </div>
+        {/* 记录列表 */}
+        <div className="flex-1 p-2 space-y-2">
+          {filteredRecords.map((record, index) => (
+            <div key={record._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-1 py-1">
+                <div className="grid grid-cols-[2.5rem_1fr_6.5rem_4.5rem] items-center gap-1">
+                  <span className="text-gray-600 text-left">#{index + 1}</span>
+                  <div>
+                    <a
+                      href={`/users/${record.userId?._id || record.userId}`}
+                      className="font-semibold text-blue-600 truncate"
+                    >
+                      {record.userName}
+                    </a>
+                    <div className="text-sm text-gray-500">
+                      {record.gender === 'M' ? 'M' : 'F'}{record.bostonAge} {record.state}-{record.city}
+                    </div>
+                  </div>
+                  <div className="flex justify-center w-10">
+                    <button
+                      onClick={() => setExpandedCard(expandedCard === record._id ? null : record._id)}
+                      className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                    >
+                      {expandedCard === record._id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                  </div>
+                  <div className="flex flex-col items-end mr-1">
+                    <div className="flex items-center">
+                      <span className="inline-block w-[72px] text-right">
+                        {formatTime(record.finishTime)}
+                      </span>
+                      <CheckCircle
+                        size={16}
+                        className={`ml-1.5 shrink-0 ${
+                          record.verificationStatus === 'verified' && record.reportedBy?.length > 0
+                            ? 'text-yellow-500'
+                            : record.verificationStatus === 'verified'
+                            ? 'text-green-500'
+                            : record.reportedBy?.length > 0
+                            ? 'text-red-500'
+                            : 'text-gray-400'
+                        }`}
+                      />
+                    </div>
+                    <div className="text-sm text-green-600 -mt-1">
+                      <span className="inline-block w-[72px] text-right mr-6">
+                        {formatBQTimeDiff(record.bqDiff)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-     {/* 搜索框 */}
-     <div className="relative px-2 py-2">
-       <input
-         type="text"
-         placeholder="搜索跑者姓名..."
-         value={searchTerm}
-         onChange={(e) => setSearchTerm(e.target.value)}
-         className="w-full py-1 pl-8 pr-4 border rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-       />
-       <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
-     </div>
+              {/* 展开内容 */}
+              {expandedCard === record._id && (
+                <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
+                  {/* 基本信息 */}
+              
 
-    {/* 筛选器 */}
-    <div className="mt-1 bg-gray-50 rounded-md overflow-x-auto">
-         <div className="flex flex-row items-center gap-2 min-w-max py-1 px-2">
-           <div>
-             <select
-               value={filters.ageGroup}
-               onChange={(e) => setFilters(prev => ({ ...prev, ageGroup: e.target.value }))}
-               className="rounded-md border-gray-300"
-             >
-               {AGE_GROUPS.map(group => (
-                 <option key={group.value} value={group.value}>{group.label}</option>
-               ))}
-             </select>
-           </div>
+                  {/* 比赛信息 */}
+                  <div className="py-2">
+                    <div className="mb-1">
+                      <span className="text-gray-500">比赛:</span>
+                      <span className="ml-2 font-medium">
+                        {record.raceId?.seriesId?.name || '-'}[{formatDate(record.raceId?.date)}]
+                      </span>
+                    </div>
 
-           <div>
-             <select
-               value={filters.state}
-               onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
-               className="rounded-md border-gray-300"
-             >
-               <option value="all">North America</option>
-               {states.map(state => (
-                 <option key={state.value} value={state.value}>{state.label}</option>
-               ))}
-             </select>
-           </div>
-
-           <div>
-             <select
-               value={filters.selectedRace || 'all'}
-               onChange={(e) => setFilters(prev => ({
-                 ...prev,
-                 selectedRace: e.target.value === 'all' ? null : e.target.value
-               }))}
-               className="rounded-md border-gray-300"
-             >
-               <option value="all">All Races</option>
-               {races.map(race => (
-                 <option key={race._id} value={race._id}>
-                   {race.seriesId?.name}
-                 </option>
-               ))}
-             </select>
-           </div>
-         </div>
-       </div>
-     </div>
-
-     {/* 记录列表 */}
-     <div className="flex-1 p-2 space-y-2">
-       {filteredRecords.map((record, index) => (
-         <div key={record._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-           <div className="px-1 py-1">
-           <div className="grid grid-cols-[2.5rem_1fr_6.5rem_4.5rem] items-center gap-1">
-  <span className="text-gray-600 text-left">#{index + 1}</span>
-  <div>
-    <a 
-      href={`/users/${record.userId?._id || record.userId}`} 
-      className="font-semibold text-blue-600 truncate"
-    >
-      {record.userName}
-    </a>
-    <div className="text-sm text-gray-500">
-      {/* 添加性别年龄地区的简要显示 */}
-      {record.gender === 'M' ? 'M' : 'F'}{record.bostonAge} {record.state}
-    </div>
-  </div>
-  <div className="flex justify-center w-10">
-    <button
-      onClick={() => setExpandedCard(expandedCard === record._id ? null : record._id)}
-      className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
-    >
-      {expandedCard === record._id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-    </button>
-  </div>
-  <div className="flex flex-col items-end mr-1">
-  <div className="flex items-center">
-    <span className="inline-block w-[72px] text-right font-bold">
-      {formatTime(record.finishTime)}
-    </span>
-    <CheckCircle 
-      size={16} 
-      className={`ml-1.5 shrink-0 ${
-        record.verificationStatus === 'verified' && record.reportedBy?.length > 0
-          ? 'text-yellow-500'
-          : record.verificationStatus === 'verified'
-            ? 'text-green-500'
-            : record.reportedBy?.length > 0
-              ? 'text-red-500'
-              : 'text-gray-400'
-      }`}
-    />
-  </div>
-  <div className="text-xs text-gray-600 -mt-1">
-    <span className="inline-block w-[72px] text-right mr-6">
-      {formatBQTimeDiff(record.bqDiff)}
-    </span>
-  </div>
-</div>
-</div>
-           </div>
-
-           {/* 展开内容 */}
-           {expandedCard === record._id && (
-             <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
-               {/* 基本信息 */}
-               <div className="py-2 gap-2">
-                 <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'}]</span>
-                 <span className="ml-4">[2026波马{record.bostonAge}岁]</span>
-                 <span className="ml-4">
-                   [{record.state && record.city ? 
-                     `${record.state} - ${record.city}` : 
-                     (record.state || '-')
-                   }]
-                 </span>
-               </div>
-
-                   {/* 比赛信息 */}
-               <div className="py-2">
-                 <div className="mb-1">
-                   <span className="text-gray-500">比赛:</span>
-                   <span className="ml-2 font-medium">
-                     {record.raceId?.seriesId?.name || '-'}[{formatDate(record.raceId?.date)}]
-                   </span>
-                 </div>
-                 
-                 <div className="mt-1">
-                   <div className="flex items-center justify-between">
-                    <div>
-                     <span className="text-gray-500">成绩证明:</span>
-                     {record.proofUrl ? (
-                       <a 
-                         href={record.proofUrl}
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="ml-2 text-blue-600 hover:text-blue-800"
-                       >
-                         查看链接
-                       </a>
-                     ) : (
-                       <span className="ml-2 text-red-500">
-                         未提供成绩链接
-                       </span>
-                     )}
-                     </div>
-                      <button
-                            onClick={(e) => handleVerifyClick(record, e)}
-                            className="bg-blue-600 text-xs text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-colors"
-                          >
-                            验证 | 存疑
-                          </button>
-                   </div>
-                 </div>
-               </div>
-
-               {/* 验证信息 */}
-               <div className="py-2">
-                 {record.verifiedCount > 0 ? (
-                   <>
-                     <div className="flex items-center text-green-600 mb-2">
-                       <CheckCircle size={16} className="mr-2" />
-                       <span>{record.verifiedCount}人验证</span>
-                     </div>
-                     {record.verifiedBy && record.verifiedBy.length > 0 && (
-                       <div className="mt-1">
-                         <div className="ml-2 flex flex-wrap gap-2">
-                           {record.verifiedBy.map((verification, index) => (
-                             <a
-                               key={`verify-${record._id}-${verification.userId._id}-${index}`}
-                               href={`/users/${verification.userId._id}`}
-                               className="text-blue-600 hover:text-blue-800 hover:underline"
-                             >
-                               {verification.userId.name}
-                               {index < record.verifiedBy.length - 1 ? '、' : ''}
-                             </a>
-                           ))}
-                         </div>
-                       </div>
-                     )}
-                   </>
-                 ) : (
-                   <div className="text-gray-500">暂无验证</div>
-                 )}
-
-                      {record.reportedBy && record.reportedBy.length > 0 && (
-                        <div className="mt-2 pt-2 border-t">
-                          <span className="text-red-500">⚠️ {record.reportedBy.length} 人存疑</span>
-                         
+                    <div className="mt-1">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-gray-500">成绩证明:</span>
+                          {record.proofUrl ? (
+                            <a
+                              href={record.proofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-2 text-blue-600 hover:text-blue-800"
+                            >
+                              查看链接
+                            </a>
+                          ) : (
+                            <span className="ml-2 text-red-500">
+                              未提供成绩链接
+                            </span>
+                          )}
                         </div>
-                      )}                 
+                        <button
+                          onClick={(e) => handleVerifyClick(record, e)}
+                          className="bg-blue-600 text-xs text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          验证 | 存疑
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-               </div>
-             </div>
-           )}
-         </div>
-       ))}
+                  {/* 验证信息 */}
+                  <div className="py-2">
+                    {record.verifiedCount > 0 ? (
+                      <>
+                        <div className="flex items-center text-green-600 mb-2">
+                          <CheckCircle size={16} className="mr-2" />
+                          <span>{record.verifiedCount}人验证</span>
+                        </div>
+                        {record.verifiedBy && record.verifiedBy.length > 0 && (
+                          <div className="mt-1">
+                            <div className="ml-2 flex flex-wrap gap-2">
+                              {record.verifiedBy.map((verification, index) => (
+                                <a
+                                  key={`verify-${record._id}-${verification.userId._id}-${index}`}
+                                  href={`/users/${verification.userId._id}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  {verification.userId.name}
+                                  {index < record.verifiedBy.length - 1 ? '、' : ''}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-gray-500">暂无验证</div>
+                    )}
 
-       {filteredRecords.length === 0 && (
-         <div className="text-center py-8 text-gray-500">
-           没有找到相关记录
-         </div>
-       )}
-     </div>
-   </div>
- {/* 验证对话框 */}
- {showVerifyDialog && <VerifyDialog />}
-      </>
- );
+                    {record.reportedBy && record.reportedBy.length > 0 && (
+                      <div className="mt-2 pt-2 border-t">
+                        <span className="text-red-500">⚠️ {record.reportedBy.length} 人存疑</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {filteredRecords.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              没有找到相关记录
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 使用 MobileVerificationDialog 组件替代验证对话框 */}
+      <MobileVerificationDialog
+        isOpen={showVerifyDialog}
+        onClose={() => {
+          setShowVerifyDialog(false);
+          setVerifyingRecord(null);
+          setVerifyError('');
+        }}
+        record={verifyingRecord}
+        error={verifyError}
+        onVerify={() => handleVerifySubmit('verify')}
+        onReport={() => handleVerifySubmit('report')}
+      />
+    </>
+  );
 };
 
 export default MobileBQRankings;

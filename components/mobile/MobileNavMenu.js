@@ -60,7 +60,7 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
                   onClose();
                   onLogout();
                 }}
-                className={mobileStyles.nav.menu.logoutButton}
+                className={navItem}
               >
                 退出登录
               </button>

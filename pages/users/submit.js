@@ -357,13 +357,8 @@ export default function UserSubmitRecord() {
               </div>
             </div>
 
-            <div className={isMobile ? "fixed bottom-0 left-0 right-0 p-4 bg-white border-t" : "flex justify-between pt-4"}>
-              <Link
-                href={`/users/${session.user.id}`}
-                className={secondaryButtonClass}
-              >
-                返回个人中心
-              </Link>
+            <div className={isMobile ? "fixed bottom-0 left-0 right-0 p-8 bg-white border-t" : "flex justify-between pt-4"}>
+      
               <button type="submit" className={buttonClass}>
                 下一步
               </button>
@@ -384,9 +379,9 @@ export default function UserSubmitRecord() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">比赛名称</label>
+              
               {!isAddingNewRace ? (
-                <div className="mt-1 flex space-x-2">
+                <div className="mt-1">
                   <select
                     value={formData.raceId}
                     onChange={(e) => setFormData({...formData, raceId: e.target.value})}
@@ -405,13 +400,15 @@ export default function UserSubmitRecord() {
                       </option>
                     ))}
                   </select>
+                
                   <button
                     type="button"
                     onClick={() => setIsAddingNewRace(true)}
-                    className={secondaryButtonClass}
+                    className="mt-3 bg-blue-600 text-sm text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                   >
                     添加新比赛
                   </button>
+                 
                 </div>
               ) : (
                 <div className="mt-1 space-y-3">
@@ -543,9 +540,9 @@ export default function UserSubmitRecord() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 成绩证明链接
-                <span className="text-gray-500 text-xs ml-2">
-                  (官方成绩查询链接/Strava活动链接/Athlinks成绩链接)
-                </span>
+                <p className="text-gray-500 text-xs">
+                  官方成绩查询链接/Strava活动链接/Athlinks成绩链接
+                </p>
               </label>
               <input
                 type="url"
