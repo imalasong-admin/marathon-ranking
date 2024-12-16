@@ -43,7 +43,7 @@ export default function Login() {
         }
         setLoading(false);
       } else {
-        router.replace('/rankings');
+        router.replace('/');
       }
     } catch (err) {
       setError('登录失败，请重试');

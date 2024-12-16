@@ -5,7 +5,7 @@ import { states, getCitiesByState } from '/lib/us-cities-data';
 import { useSession, signOut } from 'next-auth/react';
 
 export default function DesktopEditProfile() {
-    const router = useRouter();
+  const router = useRouter();
   const { id } = router.query;
   const { data: session, status } = useSession();
 
@@ -27,13 +27,14 @@ export default function DesktopEditProfile() {
 
     fetchUserData();
   }, [session, status, id]);
-  
+
   // 状态定义
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  
+  const [chineseName, setChineseName] = useState('');
+
   // 添加修改密码相关状态
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -65,11 +66,12 @@ export default function DesktopEditProfile() {
     try {
       const res = await fetch(`/api/users/${id}`);
       const data = await res.json();
-      
+
       if (data.success) {
         setUserData(data.data);
         setBio(data.data.user.bio || '');
         setStravaUrl(data.data.user.stravaUrl || '');
+        setChineseName(data.data.user.chineseName || ''); 
         setLocationData({
           state: data.data.user.state || '',
           city: data.data.user.city || ''
@@ -103,7 +105,7 @@ export default function DesktopEditProfile() {
     }
   };
 
-// 添加修改密码处理函数
+  // 添加修改密码处理函数
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
@@ -143,7 +145,7 @@ export default function DesktopEditProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const res = await fetch(`/api/users/${id}/update`, {
         method: 'PATCH',
@@ -152,7 +154,8 @@ export default function DesktopEditProfile() {
           bio,
           stravaUrl,
           state: locationData.state,
-          city: locationData.city
+          city: locationData.city,
+          chineseName
         })
       });
 
@@ -177,6 +180,20 @@ export default function DesktopEditProfile() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <h1 className="text-2xl font-bold mb-6">编辑个人信息</h1>
 
+
+            {/* 添加中文名输入框 */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    中文名 [选填]
+  </label>
+  <input
+    type="text"
+    value={chineseName}
+    onChange={(e) => setChineseName(e.target.value)}
+    className="w-full rounded-md border-gray-300"
+    placeholder="请输入您的中文名..."
+  />
+</div>
         {/* 简介编辑 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -237,7 +254,7 @@ export default function DesktopEditProfile() {
             Strava链接
           </label>
           <input
-            type="url"
+            type="text"
             value={stravaUrl}
             onChange={(e) => setStravaUrl(e.target.value)}
             className="w-full rounded-md border-gray-300"

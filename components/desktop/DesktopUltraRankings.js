@@ -90,15 +90,10 @@ export default function DesktopUltraRankings() {
     };
   
     const handleVerifyClick = (record) => {
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-      setVerifyingRecord(record);
-      setError('');
-      setShowVerifyDialog(true);
-    };
-    
+        setVerifyingRecord(record);
+        setShowVerifyDialog(true);
+      };
+      
     const handleVerifySubmit = async (action) => {
       try {
         const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
@@ -216,14 +211,10 @@ export default function DesktopUltraRankings() {
                   
                       {/* 添加验证按钮 */}
                       <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (!session) {
-                            router.push('/login');
-                            return;
-                          }
-                          handleVerifyClick(record);
-                        }}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleVerifyClick(record);
+                              }}
                         className={`ml-2 ${
                           record.verificationStatus === 'verified' && record.reportedBy?.length > 0
                             ? 'text-yellow-500'

@@ -2,11 +2,26 @@
 import mongoose from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
-  name: {
+  name: {                 // 保持不变，确保系统正常运行
     type: String,
     required: [true, '请输入用户名'],
     unique: true,
     trim: true
+  },
+  firstName: {    // 新增，但不设为required
+    type: String,
+    trim: true,
+    default: ''
+  },
+  lastName: {     // 新增，但不设为required
+    type: String,
+    trim: true,
+    default: ''
+  },
+  chineseName: {  // 新增
+    type: String,
+    trim: true,
+    default: ''
   },
   email: {
     type: String,

@@ -3,10 +3,14 @@ import { useRouter } from 'next/router';
 import { states, getCitiesByState } from '/lib/us-cities-data';
 import { useSession, signOut } from 'next-auth/react';
 
+
+
 export default function MobileEditProfile() {
   const router = useRouter();
   const { id } = router.query;
   const { data: session, status } = useSession();
+
+  const [chineseName, setChineseName] = useState('');
 
   // States and effects remain the same as desktop version
   const [userData, setUserData] = useState(null);
@@ -45,11 +49,12 @@ export default function MobileEditProfile() {
     try {
       const res = await fetch(`/api/users/${id}`);
       const data = await res.json();
-      
+
       if (data.success) {
         setUserData(data.data);
         setBio(data.data.user.bio || '');
         setStravaUrl(data.data.user.stravaUrl || '');
+        setChineseName(data.data.user.chineseName || '');
         setLocationData({
           state: data.data.user.state || '',
           city: data.data.user.city || ''
@@ -120,7 +125,7 @@ export default function MobileEditProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const res = await fetch(`/api/users/${id}/update`, {
         method: 'PATCH',
@@ -128,6 +133,7 @@ export default function MobileEditProfile() {
         body: JSON.stringify({
           bio,
           stravaUrl,
+          chineseName,
           state: locationData.state,
           city: locationData.city
         })
@@ -154,7 +160,20 @@ export default function MobileEditProfile() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <h1 className="text-xl font-bold mb-4">编辑个人信息</h1>
 
+       
         <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    中文名 [选填]
+  </label>
+  <input
+    type="text"
+    value={chineseName}
+    onChange={(e) => setChineseName(e.target.value)}
+    className="w-full rounded-md border-gray-300 h-10"
+    placeholder="请输入您的中文名..."
+  />
+</div>
+<div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             个人简介
           </label>
@@ -210,7 +229,7 @@ export default function MobileEditProfile() {
             Strava链接
           </label>
           <input
-            type="url"
+            type="text"
             value={stravaUrl}
             onChange={(e) => setStravaUrl(e.target.value)}
             className="w-full rounded-md border-gray-300 h-10"

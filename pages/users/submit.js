@@ -72,14 +72,13 @@ export default function UserSubmitRecord() {
     ? "block w-full h-12 flex items-center justify-center text-gray-600"
     : "px-4 py-2 text-gray-600";
 
-
   useEffect(() => {
     if (step === 2) {
       const fetchRaces = async () => {
         try {
           const res = await fetch(`/api/races?year=${selectedYear}&type=${selectedType}`);
           const data = await res.json();
-          
+
           if (data.success) {
             const formattedRaces = data.races.map(race => ({
               _id: race._id,
@@ -127,7 +126,7 @@ export default function UserSubmitRecord() {
         setError(`只能添加 ${selectedYear} 年的比赛`);
         return;
       }
-  
+
       const seriesRes = await fetch('/api/series', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,14 +137,14 @@ export default function UserSubmitRecord() {
           website: newRaceWebsite.trim()
         })
       });
-  
+
       const seriesData = await seriesRes.json();
-      
+
       if (!seriesData.success) {
         setError(seriesData.message || '添加赛事失败');
         return;
       }
-  
+
       const raceRes = await fetch('/api/races', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,9 +153,9 @@ export default function UserSubmitRecord() {
           date: newRaceDate + 'T12:00:00.000Z'
         })
       });
-  
+
       const raceData = await raceRes.json();
-  
+
       if (raceData.success) {
         setRaces([...races, {
           _id: raceData.race._id,
@@ -186,45 +185,45 @@ export default function UserSubmitRecord() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-  
+
     try {
       if (isAddingNewRace) {
         setError('请先完成新比赛添加或点击取消');
         return;
       }
-  
+
       if (!formData.raceId) {
         setError('请选择比赛');
         return;
       }
-  
+
       if (selectedType === '超马' && !formData.ultraDistance) {
         setError('请选择参赛项目');
         return;
       }
-  
+
       if (!formData.hours && !formData.minutes && !formData.seconds) {
         setError('请填写完赛时间');
         return;
       }
-  
-      const totalSeconds = 
-        parseInt(formData.hours || 0) * 3600 + 
-        parseInt(formData.minutes || 0) * 60 + 
+
+      const totalSeconds =
+        parseInt(formData.hours || 0) * 3600 +
+        parseInt(formData.minutes || 0) * 60 +
         parseInt(formData.seconds || 0);
-  
+
       if (totalSeconds <= 0) {
         setError('请填写有效的完赛时间');
         return;
       }
-  
+
       const submitData = {
         raceId: formData.raceId,
         hours: parseInt(formData.hours || 0),
         minutes: parseInt(formData.minutes || 0),
         seconds: parseInt(formData.seconds || 0),
         totalSeconds,
-        proofUrl: formData.proofUrl || '',
+        proofUrl: formData.proofUrl,  // 不在前端格式化链接
         ...(selectedType === '超马' ? { ultraDistance: formData.ultraDistance } : {})
       };
 
@@ -286,11 +285,8 @@ export default function UserSubmitRecord() {
 
   return (
     <div className={containerClass}>
-
       {step === 1 ? (
         <div className="px-4">
-          
-          
           <form onSubmit={handleStepOneSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 text-red-500 p-4 rounded-md">
@@ -304,12 +300,12 @@ export default function UserSubmitRecord() {
               </label>
               <div className={isMobile ? "space-y-2" : "grid grid-cols-2 gap-4"}>
                 {raceTypes.map(type => (
-                  <label 
+                  <label
                     key={type}
                     className={`
                       flex items-center p-3 rounded-lg border cursor-pointer
-                      ${selectedType === type 
-                        ? 'border-blue-500 bg-blue-50' 
+                      ${selectedType === type
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200'}
                     `}
                   >
@@ -333,13 +329,13 @@ export default function UserSubmitRecord() {
               </label>
               <div className={isMobile ? "flex overflow-x-auto space-x-2 pb-2" : "grid grid-cols-5 gap-4"}>
                 {years.map(year => (
-                  <label 
+                  <label
                     key={year}
                     className={`
                       flex items-center justify-center p-3 rounded-lg border
                       ${isMobile ? 'min-w-[100px]' : ''}
-                      ${selectedYear === year 
-                        ? 'border-blue-500 bg-blue-50' 
+                      ${selectedYear === year
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200'}
                     `}
                   >
@@ -358,7 +354,6 @@ export default function UserSubmitRecord() {
             </div>
 
             <div className={isMobile ? "fixed bottom-0 left-0 right-0 p-8 bg-white border-t" : "flex justify-between pt-4"}>
-      
               <button type="submit" className={buttonClass}>
                 下一步
               </button>
@@ -370,7 +365,7 @@ export default function UserSubmitRecord() {
           <h1 className={titleClass}>
             提交 {selectedYear}年{selectedType} 成绩
           </h1>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 text-red-500 p-4 rounded-md">
@@ -379,7 +374,6 @@ export default function UserSubmitRecord() {
             )}
 
             <div>
-              
               {!isAddingNewRace ? (
                 <div className="mt-1">
                   <select
@@ -400,7 +394,7 @@ export default function UserSubmitRecord() {
                       </option>
                     ))}
                   </select>
-                
+
                   <button
                     type="button"
                     onClick={() => setIsAddingNewRace(true)}
@@ -408,7 +402,6 @@ export default function UserSubmitRecord() {
                   >
                     添加新比赛
                   </button>
-                 
                 </div>
               ) : (
                 <div className="mt-1 space-y-3">
@@ -440,7 +433,7 @@ export default function UserSubmitRecord() {
                     className={inputClass}
                   />
                   <input
-                    type="url"
+                    type="text"
                     value={newRaceWebsite}
                     onChange={(e) => setNewRaceWebsite(e.target.value)}
                     placeholder="官方网站（选填）"
@@ -545,10 +538,11 @@ export default function UserSubmitRecord() {
                 </p>
               </label>
               <input
-                type="url"
+                type="text"
                 value={formData.proofUrl}
                 onChange={(e) => setFormData({...formData, proofUrl: e.target.value})}
                 placeholder="请输入成绩证明链接"
+                maxLength={2000}
                 className={inputClass}
               />
             </div>
@@ -568,14 +562,14 @@ export default function UserSubmitRecord() {
           </form>
         </div>
       )}
-    
-    {/* 添加在最后 */}
-    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSuccessModal ? '' : 'hidden'}`}>
-      <div className="bg-white rounded-lg p-6 text-center">
-        <p className="text-lg mb-4">成绩提交成功！</p>
-        <div className="bg-blue-600 text-white py-2 px-4 rounded">确定</div>
+
+      {/* 添加在最后 */}
+      <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSuccessModal ? '' : 'hidden'}`}>
+        <div className="bg-white rounded-lg p-6 text-center">
+          <p className="text-lg mb-4">成绩提交成功！</p>
+          <div className="bg-blue-600 text-white py-2 px-4 rounded">确定</div>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }

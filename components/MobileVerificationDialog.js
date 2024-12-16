@@ -2,6 +2,7 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { urlUtils } from '../lib/urlUtils';
 
 const MobileVerificationDialog = ({
   isOpen,
@@ -50,7 +51,7 @@ const MobileVerificationDialog = ({
               <p className="text-gray-600">
                 证明链接：
                 <a
-                  href={record.proofUrl}
+                  href={urlUtils.getDisplayUrl(record.proofUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600"

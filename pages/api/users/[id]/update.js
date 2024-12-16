@@ -22,7 +22,8 @@ export default async function handler(req, res) {
     }
 
     await dbConnect();
-    const { bio, stravaUrl, state, city } = req.body;
+    // 添加 chineseName 到解构中
+    const { bio, stravaUrl, state, city, chineseName } = req.body;
 
     // 验证简介长度
     if (bio && bio.length > 500) {
@@ -35,20 +36,19 @@ export default async function handler(req, res) {
     }
 
     if (state && city) {
-      // 验证州是否有效
       if (!isValidState(state)) {
         return res.status(400).json({ message: '无效的州' });
       }
-      // 验证城市是否属于该州
       if (!isValidCityForState(state, city)) {
         return res.status(400).json({ message: '该城市不属于所选州' });
       }
     }
 
-    // 构建更新数据
+    // 构建更新数据，添加 chineseName
     const updateData = {};
     if (bio !== undefined) updateData.bio = bio;
     if (stravaUrl !== undefined) updateData.stravaUrl = stravaUrl;
+    if (chineseName !== undefined) updateData.chineseName = chineseName;
     if (state && city) {
       updateData.state = state;
       updateData.city = city;
@@ -74,7 +74,8 @@ export default async function handler(req, res) {
         bio: updatedUser.bio,
         stravaUrl: updatedUser.stravaUrl,
         state: updatedUser.state,
-        city: updatedUser.city
+        city: updatedUser.city,
+        chineseName: updatedUser.chineseName  // 添加到返回数据中
       }
     });
 

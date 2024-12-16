@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ExternalLink, CheckCircle } from 'lucide-react';
 import UserProfileInfo from '../../../components/UserProfileInfo';
 import VerificationDialog from '../../../components/VerificationDialog'; // 导入 VerificationDialog 组件
+import { urlUtils } from '../../../lib/urlUtils';
 
 // 辅助函数 - 保持不变
 const formatTime = (time) => {
@@ -269,7 +270,7 @@ export default function DesktopUserProfile() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {record.proofUrl ? (
                       <a
-                        href={record.proofUrl}
+                      href={urlUtils.getDisplayUrl(record.proofUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-500"

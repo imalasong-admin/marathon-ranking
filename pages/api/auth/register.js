@@ -7,25 +7,36 @@ import { isValidState, isValidCityForState } from '../../../lib/us-cities-data';
 import { ipLimiter, emailLimiter } from '../../../lib/rateLimiter';
 
 export default async function handler(req, res) {
-  
   if (req.method !== 'POST') {
     return res.status(405).json({ message: '只支持 POST 请求' });
   }
 
   try {
-    // 使用 Promise.all 处理两个限制器
     await Promise.all([
       new Promise((resolve) => ipLimiter(req, res, resolve)),
       new Promise((resolve) => emailLimiter(req, res, resolve))
     ]);
     await connectDB();
 
-    const { name, email, password, birthDate, gender, state, city } = req.body;
+    const { 
+      firstName, 
+      lastName, 
+      chineseName,
+      email, 
+      password, 
+      birthDate, 
+      gender, 
+      state, 
+      city 
+    } = req.body;
 
     // 检查必填字段
-    if (!name || !email || !password || !birthDate || !gender || !state || !city) {
-      return res.status(400).json({ message: '所有字段都是必填的' });
+    if (!firstName || !lastName || !email || !password || !birthDate || !gender || !state || !city) {
+      return res.status(400).json({ message: '所有字段都是必填的（中文名除外）' });
     }
+
+    // 构建完整名字
+    const name = `${firstName} ${lastName}`.trim();
 
     // 性别验证
     if (gender !== 'M' && gender !== 'F') {
@@ -65,12 +76,15 @@ export default async function handler(req, res) {
     // 创建新用户
     const user = await User.create({
       name,
+      firstName,
+      lastName,
+      chineseName: chineseName || '',  // 如果没有提供则使用空字符串
       email,
       password: hashedPassword,
       birthDate: new Date(birthDate),
       gender,
-      state,           // 添加州
-      city,            // 添加城市
+      state,
+      city,
       verificationCode,
       verificationExpires,
       emailVerified: false

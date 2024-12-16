@@ -70,12 +70,7 @@ const DesktopBQRankings = ({ records = [] }) => {
   };
 
   const handleVerifyClick = (record) => {
-    if (!session) {
-      router.push('/login');
-      return;
-    }
     setVerifyingRecord(record);
-    setVerifyError('');
     setShowVerifyDialog(true);
   };
 
@@ -254,14 +249,10 @@ const DesktopBQRankings = ({ records = [] }) => {
                   <div className="font-medium">
                     {formatTime(record.finishTime)}
                     <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (!session) {
-                          router.push('/login');
-                          return;
-                        }
-                        handleVerifyClick(record);
-                      }}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleVerifyClick(record);
+                              }}
                       className={`ml-2 ${
                         record.verificationStatus === 'verified' && record.reportedBy?.length > 0
                           ? 'text-yellow-500'

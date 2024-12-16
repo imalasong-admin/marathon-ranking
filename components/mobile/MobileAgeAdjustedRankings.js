@@ -4,8 +4,11 @@ import { useSession } from 'next-auth/react';
 import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { states } from '../../lib/us-cities-data';
+import { urlUtils } from '../../lib/urlUtils';
+import { useRouter } from 'next/router';
 
-const MobileAgeAdjustedRankings = ({ records = [] }) => {
+const MobileAgeAdjustedRankings = ({ records: initialRecords = [] }) => {
+    const [records, setRecords] = useState(initialRecords);
     const [searchTerm, setSearchTerm] = useState('');
     const { data: session } = useSession();
     const [expandedCard, setExpandedCard] = useState(null);
@@ -16,6 +19,8 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
       state: 'all'
     });
     const [races, setRaces] = useState([]);
+    const router = useRouter();
+
 
     // 验证相关状态
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
@@ -24,7 +29,11 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
   const [verifyError, setVerifyError] = useState('');
 
 
-    useEffect(() => {
+  useEffect(() => {
+    setRecords(initialRecords);
+  }, [initialRecords]);  
+  
+  useEffect(() => {
         fetchRaces();
       }, []);
      
@@ -59,9 +68,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
 
   const handleVerifySubmit = async (action) => {
     try {
-     
-
-      const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
+     const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -72,7 +79,6 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
 
       const data = await res.json();
       if (data.success) {
-        // 更新本地数据
         const updatedRes = await fetch('/api/records');
         const updatedData = await updatedRes.json();
         if (updatedData.success) {
@@ -83,7 +89,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
                      record.raceId?.seriesId?.raceType === '全程马拉松';
             })
             .sort((a, b) => a.totalSeconds - b.totalSeconds);
-          setRecords(filteredRecords);
+            setRecords(filteredRecords);
         }
         
         setShowVerifyDialog(false);
@@ -380,7 +386,7 @@ const MobileAgeAdjustedRankings = ({ records = [] }) => {
                             <span className="text-gray-500">成绩证明:</span>
                             {record.proofUrl ? (
                               <a 
-                                href={record.proofUrl}
+                              href={urlUtils.getDisplayUrl(record.proofUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="ml-2 text-blue-600 hover:text-blue-800"

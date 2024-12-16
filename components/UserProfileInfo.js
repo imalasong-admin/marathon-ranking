@@ -1,6 +1,7 @@
 // components/UserProfileInfo.js
 import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { urlUtils } from '../lib/urlUtils';
 import { useDeviceDetection } from '../lib/deviceDetection';
 
 const formatBirthDate = (dateString) => {
@@ -27,9 +28,13 @@ export default function UserProfileInfo({ user, isOwnProfile }) {
 
   if (isMobile) {
     return (
-      <div className="p-4">
+        <div className="p-4">
         <div className="flex flex-wrap items-center gap-x-2 mb-2">
           <span className="font-bold text-lg">{user.name}</span>
+          {/* 添加中文名显示 */}
+          {user.chineseName && (
+            <span className="text-gray-600">({user.chineseName})</span>
+          )}
           <span className="text-sm">
             [{user.gender === 'M' ? '男' : '女'}] {formatBirthDate(user.birthDate)}
           </span>
@@ -51,18 +56,18 @@ export default function UserProfileInfo({ user, isOwnProfile }) {
         </div>
 
         {user.stravaUrl && (
-          <div className="text-sm text-blue-600 hover:text-blue-800 truncate">
-            <a
-              href={user.stravaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline inline-flex items-center"
-            >
-              <span className="truncate">{user.stravaUrl}</span>
-              <ExternalLink size={14} className="ml-1 shrink-0" />
-            </a>
-          </div>
-        )}
+  <div className="text-sm text-blue-600 hover:text-blue-800 truncate">
+    <a
+      href={urlUtils.getDisplayUrl(user.stravaUrl)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:underline inline-flex items-center"
+    >
+      <span className="truncate">{urlUtils.getDisplayUrl(user.stravaUrl)}</span>
+      <ExternalLink size={14} className="ml-1 shrink-0" />
+    </a>
+  </div>
+)}
 
         <BioContent bio={user.bio} />
       </div>
@@ -74,6 +79,10 @@ export default function UserProfileInfo({ user, isOwnProfile }) {
       <div className="flex justify-between mb-2">
         <div className="flex items-center gap-1">
           <span className="font-bold text-xl">{user.name}</span>
+          {/* 添加中文名显示 */}
+          {user.chineseName && (
+            <span className="text-gray-600">({user.chineseName})</span>
+          )}
           <span className="text-base">
             [{user.gender === 'M' ? '男' : '女'}] {formatBirthDate(user.birthDate)}
           </span>

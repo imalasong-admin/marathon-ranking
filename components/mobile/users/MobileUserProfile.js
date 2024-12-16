@@ -4,7 +4,9 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Search, ChevronDown, ChevronUp, CheckCircle, ExternalLink } from 'lucide-react';
 import UserProfileInfo from '../../../components/UserProfileInfo';
-import MobileVerificationDialog from '../../../components/MobileVerificationDialog'; // 导入 MobileVerificationDialog 组件
+import MobileVerificationDialog from '../../../components/MobileVerificationDialog';
+import { urlUtils } from '../../../lib/urlUtils';
+import { useRouter } from 'next/router';
 
 // 辅助函数
 const formatTime = (time) => {
@@ -51,26 +53,16 @@ const MobileUserProfile = ({
   setProofUrl,
   isSubmittingProof,
   profileId
-}) => {
+ }) => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [submitError, setSubmitError] = useState('');
-  const [isUrlValid, setIsUrlValid] = useState(true);
   const { data: session } = useSession();
+  const router = useRouter();
 
   // 验证相关状态
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyingRecord, setVerifyingRecord] = useState(null);
   const [verifyError, setVerifyError] = useState('');
-
-  // 新增：URL验证函数
-  const validateUrl = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
 
   // 验证功能函数
   const handleVerifyClick = (record, e) => {
@@ -126,27 +118,21 @@ const MobileUserProfile = ({
   const handleUrlChange = (e) => {
     const url = e.target.value;
     setProofUrl(url);
-    setIsUrlValid(validateUrl(url) || url === '');
     setSubmitError('');
   };
 
-  // 新增：处理提交
+  // 处理提交 - 简化链接处理
   const handleSubmit = async (recordId) => {
     setSubmitError('');
+    const formattedUrl = urlUtils.format(proofUrl);
 
-    if (!proofUrl.trim()) {
-      setSubmitError('请输入链接');
+    if (!urlUtils.validate(formattedUrl)) {
+      setSubmitError('无效的URL');
       return;
     }
 
-    if (!validateUrl(proofUrl)) {
-      setSubmitError('请输入有效的链接');
-      return;
-    }
-
-    const result = await onSubmitProof(recordId);
+    const result = await onSubmitProof(recordId, formattedUrl);
     if (result?.success) {
-      // 提交成功后只收起输入框，不刷新页面
       setEditingRecordId(null);
       setProofUrl('');
       setExpandedCard(null);
@@ -258,7 +244,7 @@ const MobileUserProfile = ({
                         <div className="flex items-center">
                           <span className="mr-2">成绩证明:</span>
                           <a
-                            href={record.proofUrl}
+                            href={urlUtils.getDisplayUrl(record.proofUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 flex items-center"
@@ -276,7 +262,7 @@ const MobileUserProfile = ({
                                 onChange={handleUrlChange}
                                 placeholder="输入成绩链接"
                                 className={`w-full px-2 py-1 border rounded text-sm ${
-                                  !isUrlValid ? 'border-red-500' : ''
+                                  !urlUtils.validate(proofUrl) ? 'border-red-500' : ''
                                 }`}
                               />
                               {submitError && (
@@ -288,9 +274,9 @@ const MobileUserProfile = ({
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleSubmit(record._id)}
-                                disabled={isSubmittingProof || !proofUrl.trim() || !isUrlValid}
+                                disabled={isSubmittingProof || !proofUrl.trim() || !urlUtils.validate(proofUrl)}
                                 className={`text-sm px-3 py-1 rounded ${
-                                  isSubmittingProof || !proofUrl.trim() || !isUrlValid
+                                  isSubmittingProof || !proofUrl.trim() || !urlUtils.validate(proofUrl)
                                     ? 'bg-gray-100 text-gray-400'
                                     : 'bg-blue-500 text-white'
                                 }`}

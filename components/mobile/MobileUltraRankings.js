@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { Search, ChevronDown, ChevronUp, CheckCircle, ExternalLink, Users } from 'lucide-react';
 import { states } from '../../lib/us-cities-data';
 import MobileVerificationDialog from '../../components/MobileVerificationDialog'; // 导入 MobileVerificationDialog 组件
+import { urlUtils } from '../../lib/urlUtils';
 
 const MobileUltraRankings = ({ records: initialRecords = [] }) => {
   const { data: session } = useSession();
@@ -261,6 +262,9 @@ const MobileUltraRankings = ({ records: initialRecords = [] }) => {
               {expandedCard === record._id && (
                 <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
                   <div className="py-2 gap-2">
+                  {record.userId?.chineseName && (
+        <span className="ml-1">{record.userId.chineseName} </span>
+      )}
                     <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'} {record.age || '-'}]</span>
                  
                     <span className="ml-4">
@@ -281,7 +285,7 @@ const MobileUltraRankings = ({ records: initialRecords = [] }) => {
                           <span className="text-gray-500">成绩证明:</span>
                           {record.proofUrl ? (
                             <a
-                              href={record.proofUrl}
+                            href={urlUtils.getDisplayUrl(record.proofUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="ml-2 text-blue-600 hover:text-blue-800"

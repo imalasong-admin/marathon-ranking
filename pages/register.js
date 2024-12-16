@@ -9,7 +9,9 @@ export default function Register() {
   const isMobile = useDeviceDetection();
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
+    chineseName: '',
     email: '',
     password: '',
     birthDate: '',
@@ -59,8 +61,13 @@ export default function Register() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          name: `${formData.firstName} ${formData.lastName}`.trim(),  // 设置name字段为合并的姓名
+          chineseName: formData.chineseName || ''  // 确保空值时传递空字符串
+        })
       });
+  
 
       const data = await res.json();
 
@@ -122,19 +129,46 @@ export default function Register() {
             </div>
           )}
 
-          <div>
-            <label className="block text-base font-medium text-gray-700 mb-1">
-              Name [请填写报名比赛时的姓名]
-            </label>
-            <input
-              name="name"
-              type="text"
-              required
-              className={inputClass}
-              value={formData.name}
-              onChange={handleChange}
-            />
-          </div>
+<div>
+  <label className="block text-base font-medium text-gray-700 mb-1">
+    First Name [请填写报名比赛时的姓]
+  </label>
+  <input
+    name="firstName"
+    type="text"
+    required
+    className={inputClass}
+    value={formData.firstName}
+    onChange={handleChange}
+  />
+</div>
+
+<div>
+  <label className="block text-base font-medium text-gray-700 mb-1">
+    Last Name [请填写报名比赛时的名]
+  </label>
+  <input
+    name="lastName"
+    type="text"
+    required
+    className={inputClass}
+    value={formData.lastName}
+    onChange={handleChange}
+  />
+</div>
+
+<div>
+  <label className="block text-base font-medium text-gray-700 mb-1">
+    中文名 [选填]
+  </label>
+  <input
+    name="chineseName"
+    type="text"
+    className={inputClass}
+    value={formData.chineseName}
+    onChange={handleChange}
+  />
+</div>
 
           <div>
             <label className="block text-base font-medium text-gray-700 mb-1">

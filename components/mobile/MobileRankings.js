@@ -6,6 +6,7 @@ import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react
 import { states } from '../../lib/us-cities-data';
 import { formatTime, getTimeFromSeconds } from '../../lib/timeUtils';
 import MobileVerificationDialog from '../../components/MobileVerificationDialog'; // 导入 MobileVerificationDialog 组件
+import { urlUtils } from '../../lib/urlUtils';
 
 const MobileRankings = ({ records = [], initialGender = 'M' }) => {
   const { data: session } = useSession();
@@ -356,6 +357,9 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
               {expandedCard === record._id && (
                 <div className="px-4 pb-3 text-sm text-gray-600 border-t divide-y">
                   <div className="py-2 gap-2">
+                  {record.userId?.chineseName && (
+        <span className="ml-1">{record.userId.chineseName} </span>
+      )}
                     <span className="ml-1">[{record.gender === 'M' ? 'M' : 'F'} {record.age || '-'}]</span>
                     
                     <span className="ml-4">
@@ -378,7 +382,7 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
                           <span className="text-gray-500">成绩证明:</span>
                           {record.proofUrl ? (
                             <a
-                              href={record.proofUrl}
+                            href={urlUtils.getDisplayUrl(record.proofUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="ml-2 text-blue-600 hover:text-blue-800"

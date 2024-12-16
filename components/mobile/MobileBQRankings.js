@@ -7,6 +7,7 @@ import { states } from '../../lib/us-cities-data';
 import { formatTime, getTimeFromSeconds } from '../../lib/timeUtils';
 import { getBQDiff, formatBQTimeDiff } from '../../lib/bqStandards';
 import MobileVerificationDialog from '../../components/MobileVerificationDialog'; // 导入 MobileVerificationDialog 组件
+import { urlUtils } from '../../lib/urlUtils';
 
 const MobileBQRankings = ({ records = [] }) => {
   const { data: session } = useSession();
@@ -298,7 +299,7 @@ const MobileBQRankings = ({ records = [] }) => {
                           <span className="text-gray-500">成绩证明:</span>
                           {record.proofUrl ? (
                             <a
-                              href={record.proofUrl}
+                            href={urlUtils.getDisplayUrl(record.proofUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="ml-2 text-blue-600 hover:text-blue-800"

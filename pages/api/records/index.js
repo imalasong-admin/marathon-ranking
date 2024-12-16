@@ -15,7 +15,7 @@ export default async function handler(req, res) {
    const records = await Record.find()
      .populate({
        path: 'userId',
-       select: 'name gender birthDate state city'
+       select: 'name gender birthDate state city chineseName'
      })
      .populate({
        path: 'raceId',
@@ -72,6 +72,7 @@ export default async function handler(req, res) {
        gender: recordObj.userId?.gender,
        state: recordObj.userId?.state,
        city: recordObj.userId?.city,
+       chineseName: recordObj.userId?.chineseName,
        age,
        date: recordObj.raceId?.date,
        raceName: recordObj.raceId?.seriesId?.name,
