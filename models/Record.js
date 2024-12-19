@@ -57,6 +57,22 @@ const recordSchema = new mongoose.Schema({
  isBQ: {
   type: Boolean,
   default: false
+},
+
+raceAge: {
+  type: Number,
+  required: true
+},
+bqAge: {
+  type: Number,
+  required: true
+},
+bqDiff: {
+  type: Number,
+  required: function() {
+    // 只有全马需要此字段
+    return this.raceId?.seriesId?.raceType === '全程马拉松';
+  }
 }
 }, {
 timestamps: true

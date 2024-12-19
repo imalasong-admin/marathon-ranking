@@ -27,6 +27,11 @@ export default function RecordsManagement() {
   proofUrl: ''
 });
 
+// 临时添加状态 更新完records3个字段后删除
+const [isUpdating, setIsUpdating] = useState(false);
+const [updateStats, setUpdateStats] = useState(null);
+const [isAddingFields, setIsAddingFields] = useState(false);
+
   // 权限检查和数据加载
   useEffect(() => {
     if (status === 'loading') return;
@@ -91,7 +96,7 @@ export default function RecordsManagement() {
     }
   };
 
-// 添加更新函数
+// 添加更新函数 
 const handleUpdateStats = async () => {
     try {
       const res = await fetch('/api/stats/update', {
@@ -111,6 +116,55 @@ const handleUpdateStats = async () => {
     } catch (err) {
       console.error('更新统计错误:', err);
       setError('更新失败，请重试');
+    }
+  };
+
+  // 添加处理函数  更新完records3个字段后删除
+const handleUpdateFields = async () => {
+    if (!confirm('确定要更新所有成绩记录的计算字段吗？')) return;
+    
+    setIsUpdating(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/records/update-fields', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setUpdateStats(data.stats);
+        alert(`更新完成!\n成功: ${data.stats.success}\n失败: ${data.stats.error}`);
+        fetchRecords(); // 刷新记录列表
+      } else {
+        setError(data.message || '更新失败');
+      }
+    } catch (err) {
+      setError('更新过程出错');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  // 添加处理函数 更新完records3个字段后删除
+const handleAddFields = async () => {
+    if (!confirm('确定要添加新字段到所有记录吗？')) return;
+    
+    setIsAddingFields(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/add-record-fields', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert(`字段添加完成!\n处理记录数: ${data.matchedCount}\n修改记录数: ${data.modifiedCount}`);
+      } else {
+        setError(data.message || '字段添加失败');
+      }
+    } catch (err) {
+      setError('字段添加过程出错');
+    } finally {
+      setIsAddingFields(false);
     }
   };
 
@@ -271,8 +325,42 @@ const handleDelete = async (recordId) => {
   更新统计数据
 </button>
 
-        </div>
+ {/* 在导航按钮组中添加更新按钮  更新完records3个字段后删除 */}
+<button
+  onClick={handleUpdateFields}
+  disabled={isUpdating}
+  className={`px-4 py-2 ${
+    isUpdating 
+      ? 'bg-gray-400' 
+      : 'bg-yellow-600 hover:bg-yellow-700'
+  } text-white rounded-md`}
+>
+  {isUpdating ? '更新中...' : '更新计算字段'}
+</button>
+<button
+  onClick={handleAddFields}
+  disabled={isAddingFields}
+  className={`px-4 py-2 ${
+    isAddingFields 
+      ? 'bg-gray-400' 
+      : 'bg-purple-600 hover:bg-purple-700'
+  } text-white rounded-md`}
+>
+  {isAddingFields ? '添加字段中...' : '创建新字段'}
+</button>
 
+        </div>
+{/* 如果有更新统计，显示结果 */}
+{updateStats && (
+  <div className="mt-4 p-4 bg-green-50 rounded-md">
+    <h3 className="font-medium">更新结果</h3>
+    <p>总记录数: {updateStats.total}</p>
+    <p className="text-green-600">成功: {updateStats.success}</p>
+    {updateStats.error > 0 && (
+      <p className="text-red-600">失败: {updateStats.error}</p>
+    )}
+  </div>
+)}
         {/* 记录列表表格 */}
         <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

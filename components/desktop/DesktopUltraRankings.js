@@ -93,34 +93,36 @@ export default function DesktopUltraRankings() {
         setVerifyingRecord(record);
         setShowVerifyDialog(true);
       };
-      
-    const handleVerifySubmit = async (action) => {
-      try {
-        const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action,
-            reason: action === 'report' ? '对成绩真实性存疑' : ''
-          })
-        });
-    
-        const data = await res.json();
-        if (data.success) {
-          await fetchRecords();
-          setShowVerifyDialog(false);
-          setVerifyingRecord(null);
-          setError('');
-        } else {
-          setError(data.message || '操作失败');
-        }
-      } catch (err) {
-        console.error('验证操作错误:', err);
-        setError('操作失败，请重试');
+
+   // 处理验证提交
+  const handleVerifySubmit = async (action) => {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/records/${verifyingRecord._id}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await fetchRecords();
+        setShowVerifyDialog(false);
+        setVerifyingRecord(null);
+        setError('');
+      } else {
+        setError(data.message || '操作失败');
       }
-    };
+    } catch (err) {
+      setError('操作失败，请重试');
+    }
+  };
   
     if (loading) {
       return (

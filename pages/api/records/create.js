@@ -6,8 +6,8 @@ import Record from '../../../models/Record';
 import Race from '../../../models/Race';
 import User from '../../../models/User';
 import { calculateAdjustedSeconds } from '../../../lib/ageFactors';
-import { checkBQ, BQ_RACE_DATE } from '../../../lib/bqStandards';
-import { calculateAge } from '../../../lib/ageUtils';  // 添加这行导入
+import { checkBQ, BQ_RACE_DATE, getBQDiff } from '../../../lib/bqStandards';
+import { calculateAge } from '../../../lib/ageUtils';
 import { updateStatsForYear } from '../../../lib/statsService';
 
 export default async function handler(req, res) {
@@ -60,6 +60,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: '请选择超马项目' });
     }
 
+    // 计算年龄相关数据
+    const raceAge = calculateAge(user.birthDate, race.date);
+    const bqAge = calculateAge(user.birthDate, BQ_RACE_DATE);
+
     // 计算调整后的成绩
     const adjustedSeconds = calculateAdjustedSeconds(
       totalSeconds,
@@ -68,10 +72,10 @@ export default async function handler(req, res) {
       race.date
     );
 
-    // 检查是否达到BQ标准
-    const isBQ = race.seriesId?.raceType === '全程马拉松' ? 
-      checkBQ(totalSeconds, user.gender, calculateAge(user.birthDate, BQ_RACE_DATE)) : 
-      false;
+    // BQ 相关计算
+    const isMarathon = race.seriesId?.raceType === '全程马拉松';
+    const isBQ = isMarathon ? checkBQ(totalSeconds, user.gender, bqAge) : false;
+    const bqDiff = isMarathon ? getBQDiff(totalSeconds, user.gender, bqAge) : null;
 
     const recordData = {
       userId: session.user.id,
@@ -85,7 +89,11 @@ export default async function handler(req, res) {
       adjustedSeconds,
       proofUrl: proofUrl || '',
       verificationStatus: 'pending',
-      isBQ
+      isBQ,
+      // 新增字段
+      raceAge,
+      bqAge,
+      bqDiff
     };
 
     if (race.seriesId?.raceType === '超马') {
@@ -96,7 +104,7 @@ export default async function handler(req, res) {
 
     // 触发统计更新（不阻塞响应）
     const year = new Date(race.date).getFullYear();
-    if (race.seriesId?.raceType === '全程马拉松') {
+    if (isMarathon) {
       updateStatsForYear(year).catch(error => {
         console.error('统计数据更新失败:', error);
       });

@@ -1,3 +1,5 @@
+//models/Series.js
+
 import mongoose from 'mongoose';
 
 const SeriesSchema = new mongoose.Schema({

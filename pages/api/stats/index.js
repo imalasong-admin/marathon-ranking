@@ -2,6 +2,8 @@
 import connectDB from '../../../lib/mongodb';
 import { getStatsForYear } from '../../../lib/statsService';
 
+
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, message: '只支持 GET 请求' });

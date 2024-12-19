@@ -250,9 +250,9 @@ const DesktopBQRankings = ({ records = [] }) => {
                     {formatTime(record.finishTime)}
                     <button
                             onClick={(e) => {
-                                e.preventDefault();
-                                handleVerifyClick(record);
-                              }}
+                              e.preventDefault();
+                              handleVerifyClick(record);
+                            }}
                       className={`ml-2 ${
                         record.verificationStatus === 'verified' && record.reportedBy?.length > 0
                           ? 'text-yellow-500'

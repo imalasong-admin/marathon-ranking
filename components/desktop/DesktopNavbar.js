@@ -61,7 +61,12 @@ export default function Navbar() {
   >
     超马越野榜
   </Link>
-
+  <Link
+  href="/faq"
+  className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+>
+  常见问题
+</Link>
   {session?.user?.isAdmin && (
     <Link
       href="/admin"

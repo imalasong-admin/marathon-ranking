@@ -21,17 +21,13 @@ export default function MobileNavbar() {
     if (path === '/users/[id]/edit') {  // 编辑页面的路径
         return '个人中心';
       }
-      
+
     switch (path) {
       case '/':
         return '首页';
-        case '/stats':
-            return '2024马拉松风云榜';
+  
         case '/rankings':
-            if (router.query.sort === 'completion') {
-              return '2024马拉松完赛榜';
-            }
-            return gender === 'F' ? '2024马拉松女子最速100' : '2024马拉松男子最速100';
+       return '2024马拉松完赛榜'
     case '/age-adjusted-rankings':
             return '2024马拉松跑力榜';
         case '/ultra-rankings':
@@ -40,6 +36,8 @@ export default function MobileNavbar() {
   return '2024马拉松BQ榜';
       case '/users/submit':
         return '提交成绩';
+        case '/faq':
+  return '常见问题';
       case '/login':
         return '登录';
       case '/register':

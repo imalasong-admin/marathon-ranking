@@ -5,25 +5,27 @@ import { useRouter } from 'next/router';
 import { Search, ChevronDown, ChevronUp, CheckCircle, Users } from 'lucide-react';
 import { states } from '../../lib/us-cities-data';
 import { formatTime, getTimeFromSeconds } from '../../lib/timeUtils';
-import MobileVerificationDialog from '../../components/MobileVerificationDialog'; // 导入 MobileVerificationDialog 组件
-import { urlUtils } from '../../lib/urlUtils';
+import MobileVerificationDialog from '../../components/MobileVerificationDialog';
 
-const MobileRankings = ({ records = [], initialGender = 'M' }) => {
+
+
+const MobileRankings = ({ records = [] }) => {
   const { data: session } = useSession();
   const router = useRouter();
+
 
   // 基础状态
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCard, setExpandedCard] = useState(null);
   const [localRecords, setLocalRecords] = useState(records);
   const [filters, setFilters] = useState({
-    gender: initialGender,
+    // 直接在这里判断初始值
+    gender: 'all',
     ageGroup: 'all',
     selectedRace: null,
     state: 'all'
   });
   const [races, setRaces] = useState([]);
-  const [stats, setStats] = useState({ male: {runners: 0, races: 0}, female: {runners: 0, races: 0} });
 
   // 验证相关状态
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
@@ -49,67 +51,6 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
     fetchRaces();
   }, []);
 
-  // 更新初始数据
-  useEffect(() => {
-    setLocalRecords(records);
-  }, [records]);
-
-  // 计算统计数据
-  useEffect(() => {
-    const calculateStats = () => {
-      const uniqueRunners = new Map();
-      let maleRaces = 0;
-      let femaleRaces = 0;
-
-      records.forEach(record => {
-        const raceDate = new Date(record.raceId?.date);
-        if (raceDate.getFullYear() === 2024 &&
-            record.raceId?.seriesId?.raceType === '全程马拉松') {
-          const runnerId = record.userId?._id || record.userId;
-          if (!uniqueRunners.has(runnerId)) {
-            uniqueRunners.set(runnerId, {
-              gender: record.gender,
-              races: 1
-            });
-          } else {
-            uniqueRunners.get(runnerId).races++;
-          }
-
-          // 计算男女完赛场次
-          if (record.gender === 'M') {
-            maleRaces++;
-          } else {
-            femaleRaces++;
-          }
-        }
-      });
-
-      let maleRunners = 0;
-      let femaleRunners = 0;
-
-      uniqueRunners.forEach(runner => {
-        if (runner.gender === 'M') {
-          maleRunners++;
-        } else {
-          femaleRunners++;
-        }
-      });
-
-      setStats({
-        totalRunners: uniqueRunners.size,
-        male: {
-          runners: maleRunners,
-          races: maleRaces
-        },
-        female: {
-          runners: femaleRunners,
-          races: femaleRaces
-        }
-      });
-    };
-
-    calculateStats();
-  }, [records, router.query.sort]); // 添加 sort 到依赖数组
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -146,7 +87,7 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
 
   // 验证功能函数
   const handleVerifyClick = (record, e) => {
-    e.stopPropagation(); // 阻止事件冒泡
+    e.stopPropagation();
     if (!session) {
       router.push('/login');
       return;
@@ -194,125 +135,120 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
     }
   };
 
-  // 根据 URL 参数判断是否为完赛榜
-  const isCompletionRanking = router.query.sort === 'completion';
-
-  // 数据过滤逻辑
+  // 获取当前要显示的记录
   const filteredRecords = localRecords
-    .filter(record => {
-      if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      // 完赛榜不需要性别筛选，显示全部记录
-      if (!isCompletionRanking && record.gender !== initialGender) return false;
+  .filter(record => {
+      // 搜索词过滤
+      if (!record.userName.toLowerCase().includes(searchTerm.toLowerCase())) 
+        return false;
+      
+      // 完赛榜的性别过滤
+      if (filters.gender !== 'all' && record.gender !== filters.gender) 
+        return false;
+      
+      // 年龄组过滤
       if (filters.ageGroup !== 'all') {
         const group = AGE_GROUPS.find(g => g.value === filters.ageGroup);
-        if (group && (record.age < group.min || record.age > group.max)) return false;
+        if (group && (record.age < group.min || record.age > group.max)) 
+          return false;
       }
-      if (filters.state !== 'all' && record.state !== filters.state) return false;
-      if (filters.selectedRace && record.raceId?._id !== filters.selectedRace) return false;
+      
+      // 地区过滤
+      if (filters.state !== 'all' && record.state !== filters.state) 
+        return false;
+      
+      // 比赛过滤
+      if (filters.selectedRace && record.raceId?._id !== filters.selectedRace) 
+        return false;
+      
       return true;
-    })
-    // 如果不是完赛榜，只取前100名
-    .slice(0, isCompletionRanking ? undefined : 100);
+    });
+  
+
+ 
+
 
   return (
-    <>
-      <div className="flex flex-col min-h-screen bg-gray-50">
-        <div className="sticky top-0 bg-white shadow-sm z-10">
-          <div className="bg-blue-50 px-3 py-2 text-sm">
-            <div className="flex items-center gap-2">
-              <Users size={16} className="text-blue-600" />
-              {router.query.sort === 'completion' ? (
-                <div className="text-gray-700">
-                  2024年度共有<span className="font-medium text-blue-600">{stats.totalRunners}</span>位跑者
-                  完成<span className="font-medium text-blue-600">{records.length}</span>场马拉松，
-                  其中<span className="font-medium text-blue-600">{stats.male.runners}</span>位男跑者
-                  完成<span className="font-medium text-blue-600">{stats.male.races}</span>场，
-                  <span className="font-medium text-blue-600">{stats.female.runners}</span>位女跑者
-                  完成<span className="font-medium text-blue-600">{stats.female.races}</span>场。
-                  <span>
-                        <button 
-                        onClick={() => window.location.href='/users/submit'}
-                        className="bg-blue-600 text-white px-4 text-right rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-xs font-medium"
-                      >
-                        提交成绩
-                      </button>
-                      </span>
-                </div>
-            
-              ) : (
-                // 原有的性别相关显示逻辑保持不变
-                <span className="text-gray-700">
-                  2024年度有<span className="font-medium text-blue-600">
-                    {initialGender === 'M' ? stats.male.runners : stats.female.runners}
-                  </span>
-                  位{initialGender === 'M' ? '男' : '女'}跑者，跑了
-                  <span className="font-medium text-blue-600">
-                    {initialGender === 'M' ? stats.male.races : stats.female.races}
-                  </span>
-                  场马拉松比赛。下面是最快的100场。
-                </span>
-              )}
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="sticky top-0 bg-white shadow-sm z-10">
+      
+
+        {/* 搜索框 */}
+        <div className="relative px-2 py-2">
+          <input
+            type="text"
+            placeholder="搜索跑者姓名..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-1 pl-8 pr-4 border rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+          />
+          <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
+        </div>
+
+ 
+       {/* 筛选器区域 */}
+       <div className="mt-1 bg-gray-50 rounded-md overflow-x-auto">
+          <div className="flex flex-row items-center gap-2 min-w-max py-1 px-2">
+            {/* 性别筛选 */}
+            <div>
+              <select
+                value={filters.gender}
+                onChange={(e) => setFilters(prev => ({ ...prev, gender: e.target.value }))}
+                className="rounded-md border-gray-300"
+              >
+                
+                    <option value="all">全部性别</option>
+                    <option value="M">男子</option>
+                    <option value="F">女子</option>
+             
+              </select>
             </div>
-          </div>
-          {/* 搜索框 */}
-          <div className="relative px-2 py-2">
-            <input
-              type="text"
-              placeholder="搜索跑者姓名..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full py-1 pl-8 pr-4 border rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-            />
-            <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-400" />
-          </div>
+            <div>
+              <select
+                value={filters.ageGroup}
+                onChange={(e) => setFilters(prev => ({ ...prev, ageGroup: e.target.value }))}
+                className="rounded-md border-gray-300"
+              >
+                {AGE_GROUPS.map(group => (
+                  <option key={group.value} value={group.value}>{group.label}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="mt-1 bg-gray-50 rounded-md overflow-x-auto">
-            <div className="flex flex-row items-center gap-2 min-w-max py-1 px-2">
-              <div>
-                <select
-                  value={filters.ageGroup}
-                  onChange={(e) => setFilters(prev => ({ ...prev, ageGroup: e.target.value }))}
-                  className="rounded-md border-gray-300"
-                >
-                  {AGE_GROUPS.map(group => (
-                    <option key={group.value} value={group.value}>{group.label}</option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <select
+                value={filters.state}
+                onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
+                className="rounded-md border-gray-300"
+              >
+                <option value="all">North America</option>
+                {states.map(state => (
+                  <option key={state.value} value={state.value}>{state.label}</option>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <select
-                  value={filters.state}
-                  onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
-                  className="rounded-md border-gray-300"
-                >
-                  <option value="all">North America</option>
-                  {states.map(state => (
-                    <option key={state.value} value={state.value}>{state.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <select
-                  value={filters.selectedRace || 'all'}
-                  onChange={(e) => setFilters(prev => ({
-                    ...prev,
-                    selectedRace: e.target.value === 'all' ? null : e.target.value
-                  }))}
-                  className="rounded-md border-gray-300"
-                >
-                  <option value="all">All Races</option>
-                  {races.map(race => (
-                    <option key={race._id} value={race._id}>
-                      {race.seriesId?.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <select
+                value={filters.selectedRace || 'all'}
+                onChange={(e) => setFilters(prev => ({
+                  ...prev,
+                  selectedRace: e.target.value === 'all' ? null : e.target.value
+                }))}
+                className="rounded-md border-gray-300"
+              >
+                <option value="all">All Races</option>
+                {races.map(race => (
+                  <option key={race._id} value={race._id}>
+                    {race.seriesId?.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
+      </div>
+
 
         <div className="flex-1 p-2 space-y-2">
           {filteredRecords.map((record, index) => (
@@ -450,7 +386,7 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
             </div>
           )}
         </div>
-      </div>
+      
 
       {/* 使用 MobileVerificationDialog 组件替代验证对话框 */}
       <MobileVerificationDialog
@@ -464,9 +400,9 @@ const MobileRankings = ({ records = [], initialGender = 'M' }) => {
         error={verifyError}
         onVerify={() => handleVerifySubmit('verify')}
         onReport={() => handleVerifySubmit('report')}
-      />
-    </>
-  );
-};
+        />
+        </div>
+      );
+    };
 
 export default MobileRankings;

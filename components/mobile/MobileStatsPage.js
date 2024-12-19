@@ -1,13 +1,81 @@
 // components/mobile/MobileStatsPage.js
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Trophy, Map, Timer, Award, Flag, ChevronDown } from 'lucide-react';
+import { Trophy, Map, Timer, Award, Flag, ChevronDown, Users, Zap } from 'lucide-react';
 import {
   MobilePageContainer,
   MobileTitle,
   MobileCard,
   MobileCollapsible
 } from './common';
+import { useState, useEffect } from 'react';
+
+// 复制这些展示组件（先放在 MobileStatsPage 组件上方）
+const TopTenDisplay = ({ records, gender }) => {
+    const formatTime = (time) => {
+      if (!time) return '-';
+      return `${time.hours}:${String(time.minutes).padStart(2, '0')}:${String(time.seconds).padStart(2, '0')}`;
+    };
+  
+    const formatDate = (dateString) => {
+      if (!dateString) return '-';
+      try {
+        return new Date(dateString).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          timeZone: 'UTC'
+        });
+      } catch (error) {
+        return '-';
+      }
+    };
+  
+    return (
+      <div className="space-y-2">
+        {records.map((record, index) => (
+          <div 
+            key={record._id}
+            className={`p-2 rounded ${
+                index < 3 ? `bg-${gender === 'M' ? 'blue' : 'pink'}-100 bg-opacity-50` : ''
+              }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className={`font-bold ${
+                  index < 3 ? `text-${gender === 'M' ? 'blue' : 'pink'}-600` : 'text-gray-600'
+                }`}>
+                  #{index + 1}
+                </span>
+                <div>              
+                  <a 
+                    href={`/users/${record.userId?._id || record.userId}`}
+                    className="text-blue-600 hover:underline flex-1"
+                  >
+                    {record.userName}
+                  </a>
+                  <span className="ml-2 text-sm text-gray-600">
+                    ({record.gender === 'M' ? 'M' : 'F'} {record.age}
+                    {record.state && record.city && (
+                      <span className="ml-2">
+                        {record.state}
+                      </span>
+                    )})
+                  </span>
+                </div> 
+              </div>            
+              <span className="font-mono font-bold">
+                {formatTime(record.finishTime)}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600">
+              {record.raceId?.seriesId?.name} ({formatDate(record.raceId?.date)})
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
 const StatItem = ({ label, value, unit = '' }) => (
     <div className="flex justify-between items-center py-2">
@@ -213,20 +281,49 @@ const StatsBarChart = ({ data }) => {
       </div>
     );
   };
+
   
-export const MobileStatsPage = ({ stats }) => {
-  if (!stats) {
+  
+  export const MobileStatsPage = ({ stats }) => {
+    // 添加 top10 数据状态
+    const [topData, setTopData] = useState(null);
+    const [topLoading, setTopLoading] = useState(true);
+  
+    // 添加获取 top10 数据的 useEffect
+    useEffect(() => {
+      const fetchTopData = async () => {
+        try {
+  
+          const res = await fetch('/api/records?top=true');
+          const data = await res.json();
+   
+          if (data.success) {
+            setTopData(data.data);
+    
+          }
+        } catch (error) {
+             console.error('获取 Top 10 数据失败:', error);
+        } finally {
+          setTopLoading(false);
+        }
+      };
+  
+      fetchTopData();
+    }, []);
+  
+    // 原有的空数据检查
+    if (!stats) {
+      return (
+        <MobilePageContainer>
+          <div className="text-center py-8 text-gray-500">
+            暂无统计数据
+          </div>
+        </MobilePageContainer>
+      );
+    }
+  
     return (
       <MobilePageContainer>
-        <div className="text-center py-8 text-gray-500">
-          暂无统计数据
-        </div>
-      </MobilePageContainer>
-    );
-  }
-
-  return (
-    <MobilePageContainer>
 
 <MobileCard className="bg-gradient-to-br from-blue-50 to-white p-2 mb-2 rounded-xl shadow-sm">
   <div className="flex items-start gap-3">
@@ -354,19 +451,86 @@ export const MobileStatsPage = ({ stats }) => {
         <BQStatsChart stateStats={stats.stateStats} />
       </MobileCollapsible>
 
-       {/* 马拉松风云榜链接 */}
-<div 
-  onClick={() => window.location.href = '/stats'} 
-  className="mb-2 cursor-pointer"
->
-  <div className="flex items-center justify-between bg-blue-50 px-3 py-3 rounded-lg">
-    <div className="flex items-center gap-2">
-      <Trophy size={14} className="text-blue-600" />
-      <span className="text-sm font-medium text-gray-900">2024马拉松风云榜</span>
-    </div>
-    <ChevronDown size={16} className="text-gray-900" />
-  </div>
-</div>
+ {/* 添加 Top 10 展示 */}
+ {!topLoading && topData && (
+        <>
+          <MobileCollapsible
+            icon={Trophy}
+            title="2024马拉松男子最速 Top 10"
+            color="blue"
+          >
+            <TopTenDisplay records={topData.topRecords.male || []} gender="M" />
+            <div className="text-sm sm:text-base font-medium text-gray-800 text-right mt-2">
+              更多男子排名，请看
+              <a 
+                href="/rankings?gender=M" 
+                className="font-medium text-blue-600 ml-1"
+              >
+                2024马拉松男子百强榜
+              </a>
+            </div>
+          </MobileCollapsible>
+
+          <MobileCollapsible
+            icon={Trophy}
+            title="2024马拉松女子最速 Top 10"
+            color="green"
+          >
+            <TopTenDisplay records={topData.topRecords.female || []} gender="F" />
+            <div className="text-sm sm:text-base font-medium text-gray-800 text-right mt-2">
+              更多女子排名，请看
+              <a 
+                href="/rankings?gender=F" 
+                className="font-medium text-blue-600 ml-1"
+              >
+                2024马拉松女子百强榜
+              </a>
+            </div>
+          </MobileCollapsible>
+
+     {/* 添加跑力榜 Top 10 */}
+     <MobileCollapsible
+      icon={Zap}
+      title="2024马拉松跑力最强 Top 10"
+      color="purple"
+    >
+      <TopTenDisplay 
+        records={topData.topAdjustedRecords || []} 
+        gender="A"  // 跑力榜不分性别
+      />
+      <div className="text-sm sm:text-base font-medium text-gray-800 text-right mt-2">
+        更多跑力排名，请看
+        <a 
+          href="/age-adjusted-rankings" 
+          className="font-medium text-blue-600 ml-1"
+        >
+          2024马拉松跑力榜
+        </a>
+      </div>
+    </MobileCollapsible>
+
+    {/* 添加 BQ 榜 Top 10 */}
+    <MobileCollapsible
+      icon={Trophy}
+      title="2024马拉松BQ Top 10"
+      color="green"
+    >
+      <TopTenDisplay 
+        records={topData.bqTopRecords || []} 
+        gender="B"  // BQ榜不分性别
+      />
+      <div className="text-sm sm:text-base font-medium text-gray-800 text-right mt-2">
+        更多BQ成绩，请看
+        <a 
+          href="/bq-rankings" 
+          className="font-medium text-blue-600 ml-1"
+        >
+          2024马拉松BQ榜
+        </a>
+      </div>
+    </MobileCollapsible>
+  </>
+)}
     </MobilePageContainer>
   );
 };
