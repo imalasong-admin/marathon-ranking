@@ -143,17 +143,17 @@ export default function RegisterStep2() {
           返回上一步
         </button>
 
-        <h2 className="text-center text-2xl font-bold text-gray-900 mb-6">
+        <h2 className="text-center text-2xl font-bold text-gray-900 mb-4">
           基本信息
         </h2>
 
-        <div className="bg-yellow-50 p-4 rounded-lg mb-6">
+        <div className="bg-yellow-50 p-2 rounded-lg mb-4">
           <p className="text-xl text-gray-700 text-center">
-            请确保信息与报名比赛时填写的一致
+            请确保与报名比赛时填写一致
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-2" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}

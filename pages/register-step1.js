@@ -57,35 +57,35 @@ export default function RegisterStep1() {
     return (
         <div className={containerClass}>
           <div className={`${formContainerClass} max-w-lg`}>
-            <h2 className="text-center text-3xl font-bold text-blue-600 mb-8">
+            <h2 className="text-center text-3xl font-bold text-blue-600 mb-2">
               欢迎加入
             </h2>
             
-            <div className="bg-blue-50 rounded-lg p-6 mb-8">
-              <h3 className="text-xl font-semibold text-center text-gray-800 mb-4">
+            <div className="bg-blue-50 rounded-lg p-3 mb-2">
+              <h3 className="text-xl font-semibold text-center text-gray-800 mb-2">
                 北美华人马拉松跑者
               </h3>
               
-              <div className="space-y-3 text-gray-600">
+              <div className="space-y-2 text-gray-600">
                 <p className="text-center">有多少人？跑了多少场比赛？</p>
                 <p className="text-center">取得了怎样的成绩？</p>
                 <p className="text-center">性别、年龄段、地区是如何分布的？</p>
-                <div className="text-center space-y-1">
+                <div className="text-center">
                   <p>谁跑得快？谁跑得强？</p>
                   <p>谁跑得长？谁跑得多？</p>
                 </div>
-                <p className="text-center font-medium mt-4">
+                <p className="text-center font-medium mt-2">
                   这些都是有意义且有意思的数据
                 </p>
               </div>
     
-              <div className="text-center mt-6 text-gray-700">
+              <div className="text-center mt-2 text-gray-700">
                 <p className="font-medium">欢迎长期居住在北美地区的华人跑者</p>
                 <p className="font-medium">共同丰富这些数据</p>
               </div>
             </div>
     
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
               {error && (
                 <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
                   {error}

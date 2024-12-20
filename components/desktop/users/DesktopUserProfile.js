@@ -186,9 +186,6 @@ export default function DesktopUserProfile() {
 
   const { user, records } = userData.data;
 
-  if (!records || records.length === 0) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">

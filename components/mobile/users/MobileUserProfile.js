@@ -147,9 +147,6 @@ const MobileUserProfile = ({
 
   const { user, records } = userData.data;
 
-  if (!records || records.length === 0) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <>

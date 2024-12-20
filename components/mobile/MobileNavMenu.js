@@ -71,7 +71,7 @@ export default function MobileNavMenu({ isOpen, onClose, session, onLogout }) {
                 登录
               </Link>
               
-              <Link href="/register" className={navItem} onClick={onClose}>
+              <Link href="/register-step1" className={navItem} onClick={onClose}>
                 注册
               </Link>
             </>
