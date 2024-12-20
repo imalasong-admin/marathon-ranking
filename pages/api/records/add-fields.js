@@ -1,8 +1,8 @@
 // pages/api/admin/records/add-fields.js
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]';
-import connectDB from '../../../../lib/mongodb';
-import Record from '../../../../models/Record';
+import { authOptions } from '../../../lib/auth'  // 应该从统一的 lib/auth 导入
+import connectDB from '../../../lib/mongodb'     // 回退三级到项目根目录
+import Record from '../../../models/Record'      // 回退三级到项目根目录
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

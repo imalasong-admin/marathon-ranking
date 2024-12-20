@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { signIn } from 'next-auth/react';
 import { states, getCitiesByState } from '../lib/us-cities-data';
 import { useDeviceDetection } from '../lib/deviceDetection';
+import { ArrowLeft } from 'lucide-react';
 
 export default function RegisterStep2() {
   const isMobile = useDeviceDetection();
@@ -19,12 +21,14 @@ export default function RegisterStep2() {
   const [availableCities, setAvailableCities] = useState([]);
 
   useEffect(() => {
-    const storedData = localStorage.getItem('registerData');
+    // 检查是否有第一步的数据
+    const storedData = sessionStorage.getItem('registerData');
     if (!storedData) {
       router.push('/register-step1');
       return;
     }
 
+    // 城市列表处理
     if (formData.state) {
       const cities = getCitiesByState(formData.state);
       setAvailableCities(cities);
@@ -37,6 +41,10 @@ export default function RegisterStep2() {
     }
   }, [formData.state, router]);
 
+  const handleBack = () => {
+    router.push('/register-step1');
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -48,7 +56,7 @@ export default function RegisterStep2() {
     e.preventDefault();
     setError('');
 
-    // Validate birth date
+    // 日期验证
     const birthYear = new Date(formData.birthDate).getFullYear();
     if (birthYear > 2010) {
       setError('必须年满14周岁才能注册');
@@ -59,16 +67,16 @@ export default function RegisterStep2() {
       return;
     }
 
-    const storedData = JSON.parse(localStorage.getItem('registerData'));
-    const completeFormData = {
-      ...formData,
-      email: storedData.email,
-      password: storedData.password,
-      name: `${formData.firstName} ${formData.lastName}`.trim(),
-      chineseName: formData.chineseName || ''
-    };
-
     try {
+      const storedData = JSON.parse(sessionStorage.getItem('registerData'));
+      const completeFormData = {
+        ...formData,
+        email: storedData.email,
+        password: storedData.password,
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        chineseName: formData.chineseName || ''
+      };
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,6 +86,9 @@ export default function RegisterStep2() {
       const data = await res.json();
 
       if (data.success) {
+        // 清除临时存储的注册数据
+        sessionStorage.removeItem('registerData');
+        
         const signInResult = await signIn('credentials', {
           redirect: false,
           email: completeFormData.email,
@@ -122,14 +133,29 @@ export default function RegisterStep2() {
 
   return (
     <div className={containerClass}>
-      <div className={formContainerClass}>
-        <h2 className="text-center text-2xl font-bold text-gray-900">
-          完成注册
+      <div className={`${formContainerClass} max-w-lg`}>
+        {/* 返回按钮 */}
+        <button
+          onClick={handleBack}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft className="w-5 h-5 mr-1" />
+          返回上一步
+        </button>
+
+        <h2 className="text-center text-2xl font-bold text-gray-900 mb-6">
+          基本信息
         </h2>
-<div className="block text-center font-medium text-red-700 mb-1">请和注册比赛所填信息保持一致</div>
-        <form className="space-y-2" onSubmit={handleSubmit}>
+
+        <div className="bg-yellow-50 p-4 rounded-lg mb-6">
+          <p className="text-xl text-gray-700 text-center">
+            请确保信息与报名比赛时填写的一致
+          </p>
+        </div>
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
